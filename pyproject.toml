@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "financial-market-data-platform"
+version = "0.1.0"
+description = "Real-time Financial Market Data Platform — Streaming-First Hybrid Lakehouse, Modular FastAPI Backend, and Isolated LangGraph Intelligence Plane"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+authors = [
+    { name = "Platform Architecture Team" }
+]
+dependencies = [
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.0",
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "httpx>=0.27.0",
+    "websockets>=12.0",
+    "confluent-kafka>=2.4.0",
+    "redis>=5.0.4",
+    "clickhouse-connect>=0.7.10",
+    "sqlalchemy[asyncio]>=2.0.30",
+    "asyncpg>=0.29.0",
+    "prometheus-client>=0.20.0",
+]
+
+[project.optional-dependencies]
+lakehouse = [
+    "pyarrow>=16.0.0",
+    "pyiceberg[s3fs]>=0.6.1",
+    "pyspark>=3.5.1",
+    "dbt-core>=1.8.0",
+    "dbt-clickhouse>=1.8.0",
+    "great-expectations>=0.18.15",
+]
+intelligence = [
+    "langgraph>=0.1.0",
+    "numpy>=1.26.4",
+]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.7",
+    "ruff>=0.4.4",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q --tb=short"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+

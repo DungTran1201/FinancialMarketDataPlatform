@@ -1,0 +1,21 @@
+name: "fmdp_gold_analytics"
+version: "0.1.0"
+config-version: 2
+
+profile: "fmdp_clickhouse"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  fmdp_gold_analytics:
+    marts:
+      +materialized: incremental
+

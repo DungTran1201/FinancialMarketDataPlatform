@@ -1,0 +1,331 @@
+name: fmdp
+
+# =============================================================================
+# Real-time Financial Market Data Platform — Docker Compose Blueprint
+# Profiles:
+#   - core          : Kafka (KRaft), Redis, ClickHouse, PostgreSQL, Collectors,
+#                     Hot/OLAP Consumers, and FastAPI Modular Backend.
+#   - intelligence  : LangGraph Agent Worker (isolated from core ingestion).
+#   - lakehouse     : MinIO, Bronze Archiver, Airflow/Spark/dbt batch profile.
+#   - observability : Prometheus and Grafana.
+#   - bi            : Apache Superset.
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # PLANE B: Transactional Control Database (PostgreSQL 16)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: fmdp-postgres
+    profiles: ["core", "lakehouse", "intelligence", "bi"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fmdp_control}
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:-fmdp_pg_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-change_me_local_pg_admin_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./deploy/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_ADMIN_USER:-fmdp_pg_admin} -d ${POSTGRES_DB:-fmdp_control}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_control_net
+
+  # ---------------------------------------------------------------------------
+  # PLANE A: Hot State & Query Cache (Redis 7)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7.2-alpine
+    container_name: fmdp-redis
+    profiles: ["core", "intelligence"]
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-change_me_local_redis_password}
+      --maxmemory 256mb
+      --maxmemory-policy volatile-lru
+      --save ""
+      --appendonly no
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-change_me_local_redis_password}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data_plane_net
+      - app_control_net
+
+  # ---------------------------------------------------------------------------
+  # PLANE A: Event Streaming Backbone (Apache Kafka in KRaft Mode — No ZooKeeper)
+  # ---------------------------------------------------------------------------
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: fmdp-kafka
+    profiles: ["core", "lakehouse", "intelligence"]
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_NUM_PARTITIONS: 6
+      KAFKA_LOG_RETENTION_HOURS: 72
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks:
+      - data_plane_net
+
+  # ---------------------------------------------------------------------------
+  # PLANE A: Real-Time & Historical OLAP Database (ClickHouse)
+  # ---------------------------------------------------------------------------
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.3-alpine
+    container_name: fmdp-clickhouse
+    profiles: ["core", "lakehouse", "intelligence", "bi"]
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-market_data}
+      CLICKHOUSE_USER: ${CLICKHOUSE_INGEST_USER:-fmdp_ingest_writer}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_INGEST_PASSWORD:-change_me_local_ch_ingest_password}
+    ports:
+      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"
+      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./deploy/clickhouse/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data_plane_net
+      - app_control_net
+
+  # ---------------------------------------------------------------------------
+  # PLANE A: Data Lake Object Storage (MinIO S3-Compatible)
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: fmdp-minio
+    profiles: ["lakehouse"]
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-fmdp_minio_admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change_me_local_minio_password}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data_plane_net
+
+  # ---------------------------------------------------------------------------
+  # PLANE B: FastAPI Modular Monolith Backend
+  # ---------------------------------------------------------------------------
+  backend-api:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-backend-api
+    profiles: ["core"]
+    command: ["uvicorn", "src.backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    env_file:
+      - .env.example
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      CLICKHOUSE_HOST: clickhouse
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - frontend_net
+      - app_control_net
+      - data_plane_net
+
+  # ---------------------------------------------------------------------------
+  # PLANE A: Real-Time WebSocket Collector Worker
+  # ---------------------------------------------------------------------------
+  collector-ws:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-collector-ws
+    profiles: ["core"]
+    command: ["python", "-m", "src.collectors.main_ws"]
+    env_file:
+      - .env.example
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      POSTGRES_HOST: postgres
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - data_plane_net
+      - app_control_net
+
+  # ---------------------------------------------------------------------------
+  # PLANE A: Hot Cache Streaming Consumer Worker (Kafka -> Redis)
+  # ---------------------------------------------------------------------------
+  consumer-hot-redis:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-consumer-hot-redis
+    profiles: ["core"]
+    command: ["python", "-m", "src.consumers.hot_redis.main"]
+    env_file:
+      - .env.example
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      REDIS_HOST: redis
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - data_plane_net
+
+  # ---------------------------------------------------------------------------
+  # PLANE A: Analytics Micro-Batch Consumer Worker (Kafka -> ClickHouse)
+  # ---------------------------------------------------------------------------
+  consumer-analytics-ch:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-consumer-analytics-ch
+    profiles: ["core"]
+    command: ["python", "-m", "src.consumers.analytics_ch.main"]
+    env_file:
+      - .env.example
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      CLICKHOUSE_HOST: clickhouse
+    depends_on:
+      kafka:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - data_plane_net
+
+  # ---------------------------------------------------------------------------
+  # PLANE C: Isolated LangGraph Agent Worker (Intelligence Plane)
+  # ---------------------------------------------------------------------------
+  agent-worker:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-agent-worker
+    profiles: ["intelligence"]
+    command: ["python", "-m", "src.agent.main"]
+    env_file:
+      - .env.example
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      CLICKHOUSE_HOST: clickhouse
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    networks:
+      - app_control_net
+      - data_plane_net
+
+  # ---------------------------------------------------------------------------
+  # OBSERVABILITY PLANE: Prometheus & Grafana
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: fmdp-prometheus
+    profiles: ["observability"]
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - app_control_net
+      - data_plane_net
+
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: fmdp-grafana
+    profiles: ["observability"]
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - frontend_net
+      - app_control_net
+
+  # ---------------------------------------------------------------------------
+  # BI & VISUALIZATION: Apache Superset
+  # ---------------------------------------------------------------------------
+  superset:
+    image: apache/superset:3.1.3
+    container_name: fmdp-superset
+    profiles: ["bi"]
+    ports:
+      - "8088:8088"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - frontend_net
+      - app_control_net
+
+networks:
+  frontend_net:
+    driver: bridge
+  app_control_net:
+    driver: bridge
+  data_plane_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  kafka_data:
+  clickhouse_data:
+  minio_data:
+  prometheus_data:
+
