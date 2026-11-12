@@ -1,0 +1,17 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-CTX-TPL"
+  name: "System Context Model Template"
+  description: "Reusable YAML schema for external systems and actors."
+  status: "TEMPLATE"
+  canonical_model: false
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "architecture-modeler"
+  source_documents:
+    - "docs/templates/architecture/system-context.template.md"
+
+external_systems: []
+actors: []
+trust_boundaries: []

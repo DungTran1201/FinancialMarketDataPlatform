@@ -1,0 +1,22 @@
+version: "1.0"
+work_item_id: "WORK-ITEM-XXX"
+change_type: "DOCS"
+risk_tier: "R2"
+approval_gate: "G3_PLAN_REVIEW"
+
+signal_flags:
+  business_process: false
+  api: false
+  data: false
+  lifecycle: false
+  external_integration: false
+  security: false
+  ui: false
+  ai_or_agent: false
+
+planned_artifacts:
+  - artifact_type: "documentation"
+    path: "[TO BE COMPLETED]"
+    action: "CREATED" # CREATED | UPDATED | REVIEWED | UNCHANGED | DEPRECATED
+    reason: "[TO BE COMPLETED]"
+

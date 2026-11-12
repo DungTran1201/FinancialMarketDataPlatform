@@ -1,0 +1,36 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-BR-001"
+  name: "Canonical Business & Domain Rules Model"
+  description: "Deterministic financial, ordering, and governance invariants."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "requirements-engineer"
+  source_documents:
+    - "docs/specifications/data-dictionary.md"
+    - "docs/specifications/data-contracts.md"
+
+business_rules:
+  - id: "BR-001"
+    name: "Exact Decimal Financial Precision"
+    expression: "All monetary prices and quantities must use Decimal(38, 18) and never IEEE-754 floats."
+    related_requirements: ["FR-03", "FR-07"]
+    status: "BASELINED"
+  - id: "BR-002"
+    name: "OHLCV Candle Invariant"
+    expression: "high_price >= low_price AND high_price >= open_price AND high_price >= close_price AND base_volume >= 0"
+    related_requirements: ["FR-07"]
+    status: "BASELINED"
+  - id: "BR-003"
+    name: "Monotonic Hot State Timestamp Guard"
+    expression: "Redis hot state updates only apply when incoming.exchange_event_time_ms >= stored.exchange_event_time_ms."
+    related_requirements: ["FR-04"]
+    status: "BASELINED"
+  - id: "BR-004"
+    name: "Deterministic Agent Quantitative Execution"
+    expression: "LLMs must never compute financial arithmetic or execute raw SQL; all metrics come from ControlledToolGateway."
+    related_requirements: ["FR-09"]
+    status: "BASELINED"

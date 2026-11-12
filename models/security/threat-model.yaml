@@ -1,0 +1,64 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-SEC-001"
+  name: "Platform Security & Trust Boundary Model"
+  description: "Canonical STRIDE threat model and mitigating controls across the 5 platform trust zones."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "security-reviewer"
+  source_documents:
+    - "docs/architecture/10-security-and-governance.md"
+    - "docs/diagrams/security/16-security-trust-boundaries.md"
+
+trust_zones:
+  - id: "ZONE-1"
+    name: "External Untrusted Networks"
+  - id: "ZONE-2"
+    name: "API Edge & Access Control Boundary (frontend_net)"
+  - id: "ZONE-3"
+    name: "Control Plane Zone (app_control_net)"
+  - id: "ZONE-4"
+    name: "Intelligence Sandbox (agent-worker)"
+  - id: "ZONE-5"
+    name: "Core Data Plane Zone (data_plane_net)"
+
+threats:
+  - id: "THR-001"
+    stride: "Elevation of Privilege / Tampering"
+    target: "COMP-008 (ControlledToolGateway)"
+    description: "LLM prompt injection attempting to execute arbitrary SQL or mutate financial data."
+    severity: "CRITICAL"
+    mitigated_by: ["CTRL-001", "CTRL-002"]
+  - id: "THR-002"
+    stride: "Denial of Service"
+    target: "COMP-006 (backend-api) & ClickHouse"
+    description: "Unbounded historical candle/trade range query exhausting ClickHouse memory or blocking FastAPI loop."
+    severity: "HIGH"
+    mitigated_by: ["CTRL-003"]
+  - id: "THR-003"
+    stride: "Information Disclosure"
+    target: "Credentials & API Keys"
+    description: "Leakage of database, exchange, or LLM API credentials in logs or git repository."
+    severity: "CRITICAL"
+    mitigated_by: ["CTRL-004"]
+
+controls:
+  - id: "CTRL-001"
+    name: "10-Tool Read-Only Whitelist & Pydantic Schema Firewall"
+    mitigates: ["THR-001"]
+    verification_test: "TC-004"
+  - id: "CTRL-002"
+    name: "ClickHouse Read-Only Database Role (fmdp_agent_ro, readonly=1)"
+    mitigates: ["THR-001"]
+    verification_test: "TC-004"
+  - id: "CTRL-003"
+    name: "BoundedTimeRange Guard & Sliding-Window Rate Limiter"
+    mitigates: ["THR-002"]
+    verification_test: "TC-005"
+  - id: "CTRL-004"
+    name: "Environment Secret Isolation & Structured Log Redaction"
+    mitigates: ["THR-003"]
+    verification_test: "TC-006"

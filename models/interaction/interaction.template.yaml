@@ -1,0 +1,20 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-SEQ-TPL"
+  name: "Interaction Sequence Model Template"
+  description: "Reusable YAML schema for runtime interaction sequences."
+  status: "TEMPLATE"
+  canonical_model: false
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "architecture-modeler"
+  source_documents:
+    - "docs/templates/behavior/sequence-diagram.template.md"
+
+interactions:
+  - id: "SEQ-001"
+    name: "[TO BE COMPLETED]"
+    participants: []
+    steps: []
+    diagram_id: "DIAG-SEQ-001"

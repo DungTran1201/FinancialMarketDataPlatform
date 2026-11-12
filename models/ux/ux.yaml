@@ -1,0 +1,17 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-UX-001"
+  name: "Product UX & Information Architecture Model (Uninitialized Baseline)"
+  description: "Structural container for future Website UX screens and flows. Intentionally unpopulated until Website Discovery begins."
+  status: "DRAFT"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "ux-modeler"
+  source_documents:
+    - "docs/product/11-ux/README.md"
+
+navigation_groups: []
+screens: []
+user_flows: []

@@ -1,0 +1,113 @@
+version: "2.0"
+metadata:
+  name: "Artifact Selection Matrix"
+  description: "Determines mandatory and conditional artifacts per change type, risk tier, and domain signal."
+
+common_work_item_artifacts:
+  - "work-items/<ID>/request.md"
+  - "work-items/<ID>/discovery.md"
+  - "work-items/<ID>/impact-analysis.md"
+  - "work-items/<ID>/artifact-plan.yaml"
+  - "work-items/<ID>/implementation-plan.md"
+  - "work-items/<ID>/verification-plan.md"
+  - "work-items/<ID>/review.md"
+  - "work-items/<ID>/state.yaml"
+
+change_types:
+  FEAT:
+    description: "New product, website, backend, or data platform feature"
+    baseline_artifacts:
+      - "models/requirements/requirements.yaml"
+      - "docs/product/02-requirements/"
+      - "docs/product/12-testing/"
+    conditional_by_signal:
+      business_process:
+        - "models/process/processes.yaml"
+        - "docs/product/03-business-process/"
+        - "docs/diagrams/process/"
+      use_case:
+        - "docs/product/04-use-cases/"
+        - "docs/diagrams/use-case/"
+      api:
+        - "models/api/api.yaml"
+        - "docs/product/08-api/"
+        - "docs/diagrams/sequence/"
+      domain:
+        - "models/domain/domain.yaml"
+        - "docs/product/07-domain/"
+        - "docs/diagrams/domain/"
+      state:
+        - "models/state/state-machines.yaml"
+        - "docs/product/09-behavior/"
+        - "docs/diagrams/state/"
+      ux:
+        - "models/ux/ux.yaml"
+        - "docs/product/11-ux/"
+        - "docs/diagrams/ux/"
+      security:
+        - "models/security/threat-model.yaml"
+        - "docs/product/10-security/"
+        - "docs/diagrams/security/"
+  ARCH:
+    description: "System, Data Platform, Backend, or Agent architecture modification"
+    baseline_artifacts:
+      - "models/architecture/architecture.yaml"
+      - "models/architecture/components.yaml"
+      - "docs/architecture/adr/"
+      - "docs/diagrams/architecture/"
+    conditional_by_signal:
+      deployment:
+        - "models/deployment/deployment.yaml"
+        - "docs/product/13-operations/"
+        - "docs/diagrams/deployment/"
+      security:
+        - "models/security/threat-model.yaml"
+        - "docs/diagrams/security/"
+  DATA:
+    description: "Ingestion, Kafka schema, ClickHouse OLAP, Iceberg Lakehouse, Spark, or dbt change"
+    baseline_artifacts:
+      - "docs/specifications/data-contracts.md"
+      - "docs/specifications/data-dictionary.md"
+      - "models/domain/entities.yaml"
+      - "models/testing/testing.yaml"
+    conditional_by_signal:
+      api:
+        - "models/api/api.yaml"
+        - "docs/specifications/api-specification.md"
+      pipeline:
+        - "docs/diagrams/data-platform/"
+  SEC:
+    description: "Authentication, RBAC, secrets, trust boundaries, or Agent Tool Gateway guardrails"
+    baseline_artifacts:
+      - "models/security/threat-model.yaml"
+      - "docs/product/10-security/"
+      - "docs/diagrams/security/"
+      - "models/testing/testing.yaml"
+    conditional_by_signal:
+      api:
+        - "models/api/api.yaml"
+  INFRA:
+    description: "Docker Compose, CI/CD, Prometheus/Grafana observability, or runtime configuration"
+    baseline_artifacts:
+      - "models/deployment/deployment.yaml"
+      - "docs/product/13-operations/"
+      - "docs/diagrams/deployment/"
+    conditional_by_signal: {}
+  BUG:
+    description: "Defect fix restoring conformance to existing specifications"
+    baseline_artifacts:
+      - "models/testing/testing.yaml"
+    conditional_by_signal:
+      contract_mismatch:
+        - "models/api/api.yaml"
+  REFACTOR:
+    description: "Internal structure improvement preserving external behavior and contracts"
+    baseline_artifacts:
+      - "models/architecture/components.yaml"
+    conditional_by_signal: {}
+  DOCS:
+    description: "Documentation framework, template, model synchronization, or governance update"
+    baseline_artifacts:
+      - "docs/product/14-governance/"
+    conditional_by_signal: {}
+

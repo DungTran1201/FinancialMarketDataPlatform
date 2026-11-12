@@ -1,0 +1,20 @@
+version: "1.0"
+work_item:
+  id: "WORK-ITEM-XXX"
+  title: "[TO BE COMPLETED]"
+  type: "DOCS" # FEAT | BUG | ARCH | DOCS | DATA | SEC | INFRA | REFACTOR
+  risk_tier: "R2" # R1 | R2 | R3
+  status: "INTAKE" # INTAKE | DISCOVERY | IMPACT | DESIGN | PLAN_REVIEW | IMPLEMENT | VERIFY | SYNC | RELEASE | DONE
+  current_gate: "G0_DISCOVERY"
+  ready_for_stop: false
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  selected_artifacts: []
+  affected_artifacts: []
+  history:
+    - timestamp: "2026-11-12T00:00:00Z"
+      from_state: null
+      to_state: "INTAKE"
+      actor: "discovery-analyst"
+      note: "Template initialized"
+

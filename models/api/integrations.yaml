@@ -1,0 +1,45 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-INT-001"
+  name: "Kafka Topic & External Integration Contracts"
+  description: "Canonical registry of Kafka topics and external provider integrations."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "api-architect"
+  source_documents:
+    - "docs/specifications/data-contracts.md"
+
+kafka_topics:
+  - topic: "market.raw.trades.v1"
+    contract: "MarketTradeEventV1"
+    partition_key: "{provider}:{symbol}"
+    partitions: 6
+    retention_hours: 72
+  - topic: "market.raw.klines.v1"
+    contract: "MarketKlineEventV1"
+    partition_key: "{provider}:{symbol}:{interval}"
+    partitions: 6
+    retention_hours: 72
+  - topic: "market.raw.tickers.v1"
+    contract: "MarketTickerEventV1"
+    partition_key: "{provider}:{symbol}"
+    partitions: 6
+    retention_hours: 24
+  - topic: "market.raw.orderbook.v1"
+    contract: "OrderBookSnapshotEventV1"
+    partition_key: "{provider}:{symbol}"
+    partitions: 6
+    retention_hours: 24
+  - topic: "market.anomalies.v1"
+    contract: "MarketAnomalyEventV1"
+    partition_key: "{provider}:{symbol}"
+    partitions: 3
+    retention_hours: 168
+  - topic: "market.dlq.v1"
+    contract: "DeadLetterEnvelopeV1"
+    partition_key: "{source_topic}:{symbol}"
+    partitions: 3
+    retention_hours: 336

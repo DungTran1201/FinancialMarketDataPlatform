@@ -1,0 +1,64 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-TEST-001"
+  name: "Platform Verification & Test Case Catalog"
+  description: "Tracks implemented architectural, unit, contract, and documentation validation test cases."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "qa-reviewer"
+  source_documents:
+    - "tests/architecture/test_clean_architecture_boundaries.py"
+    - "tests/unit/test_contracts_and_guardrails.py"
+
+test_cases:
+  - id: "TC-001"
+    title: "Deterministic UUIDv5 Event ID & Partition Key Ordering"
+    test_type: "unit"
+    priority: "P0"
+    requirement_refs: ["FR-03"]
+    acceptance_criteria_refs: ["AC-001"]
+    test_path: "tests/unit/test_contracts_and_guardrails.py"
+    status: "BASELINED"
+  - id: "TC-002"
+    title: "Kline & Trade Financial Invariant Validation"
+    test_type: "unit"
+    priority: "P0"
+    requirement_refs: ["FR-07", "BR-001", "BR-002"]
+    acceptance_criteria_refs: ["AC-001"]
+    test_path: "tests/unit/test_contracts_and_guardrails.py"
+    status: "BASELINED"
+  - id: "TC-003"
+    title: "Hot Redis Read & Transparent ClickHouse Fallback"
+    test_type: "unit"
+    priority: "P0"
+    requirement_refs: ["FR-04", "NFR-003"]
+    acceptance_criteria_refs: ["AC-002"]
+    test_path: "tests/unit/test_contracts_and_guardrails.py"
+    status: "BASELINED"
+  - id: "TC-004"
+    title: "Controlled Tool Gateway Whitelist, RBAC & Row Cap Enforcement"
+    test_type: "security"
+    priority: "P0"
+    requirement_refs: ["FR-09", "BR-004", "CTRL-001", "CTRL-002"]
+    acceptance_criteria_refs: ["AC-003"]
+    test_path: "tests/unit/test_contracts_and_guardrails.py"
+    status: "BASELINED"
+  - id: "TC-005"
+    title: "BoundedTimeRange Query Guardrail"
+    test_type: "unit"
+    priority: "P0"
+    requirement_refs: ["FR-05", "CTRL-003"]
+    acceptance_criteria_refs: []
+    test_path: "tests/unit/test_contracts_and_guardrails.py"
+    status: "BASELINED"
+  - id: "TC-006"
+    title: "Clean Architecture & Three-Plane Dependency Isolation"
+    test_type: "architecture"
+    priority: "P0"
+    requirement_refs: ["FR-09", "NFR-003", "CTRL-004"]
+    acceptance_criteria_refs: []
+    test_path: "tests/architecture/test_clean_architecture_boundaries.py"
+    status: "BASELINED"

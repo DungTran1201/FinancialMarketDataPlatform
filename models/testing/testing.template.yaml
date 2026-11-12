@@ -1,0 +1,22 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-TEST-TPL"
+  name: "Test Case Catalog Template"
+  description: "Reusable YAML schema for deterministic test cases traced to requirements."
+  status: "TEMPLATE"
+  canonical_model: false
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "qa-reviewer"
+  source_documents:
+    - "docs/templates/testing/test-case.template.md"
+
+test_cases:
+  - id: "TC-001"
+    title: "[TO BE COMPLETED]"
+    test_type: "unit"
+    priority: "P0"
+    requirement_refs: []
+    acceptance_criteria_refs: []
+    test_path: "tests/[TO-BE-COMPLETED]"

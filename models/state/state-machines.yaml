@@ -1,0 +1,41 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-STATE-001"
+  name: "Platform State Machines Model"
+  description: "Authoritative state machines for Agent Runs, Backfill Jobs, Work Items, and Artifact Status."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "architecture-modeler"
+  source_documents:
+    - "docs/architecture/06-agentic-intelligence-architecture.md"
+    - ".agents/config/phase-gates.yaml"
+    - ".agents/config/status-lifecycle.yaml"
+
+state_machines:
+  - id: "STATE-001"
+    name: "AgentRunLifecycleStateMachine"
+    entity_ref: "DOM-014"
+    initial_state: "QUEUED"
+    terminal_states: ["COMPLETED", "FAILED", "CANCELLED"]
+    states: ["QUEUED", "RUNNING", "COMPLETED", "FAILED", "CANCELLED"]
+    transitions:
+      - from: "QUEUED"
+        to: "RUNNING"
+        trigger: "agent_worker_claim"
+      - from: "RUNNING"
+        to: "COMPLETED"
+        trigger: "report_validated_and_persisted"
+      - from: "RUNNING"
+        to: "FAILED"
+        trigger: "unrecoverable_error_or_timeout"
+      - from: "QUEUED"
+        to: "CANCELLED"
+        trigger: "operator_cancel"
+  - id: "STATE-002"
+    name: "WorkItemLifecycleStateMachine"
+    initial_state: "INTAKE"
+    terminal_states: ["DONE"]
+    states: ["INTAKE", "DISCOVERY", "IMPACT", "DESIGN", "PLAN_REVIEW", "IMPLEMENT", "VERIFY", "SYNC", "RELEASE", "DONE"]

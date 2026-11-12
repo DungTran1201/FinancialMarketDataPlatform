@@ -1,0 +1,146 @@
+version: "1.0"
+metadata:
+  name: "FinancialMarketDataPlatform Documentation Map"
+  description: "Maps lifecycle phases, shared platform architecture, canonical models, diagrams, and templates."
+  updated_at: "2026-11-12"
+
+shared_platform_baselines:
+  architecture:
+    path: "docs/architecture/"
+    adr_path: "docs/architecture/adr/"
+    canonical_models:
+      - "models/architecture/architecture.yaml"
+      - "models/architecture/components.yaml"
+    diagrams:
+      - "docs/diagrams/system/"
+      - "docs/diagrams/data-platform/"
+      - "docs/diagrams/backend/"
+      - "docs/diagrams/agent/"
+      - "docs/diagrams/deployment/"
+      - "docs/diagrams/security/"
+  specifications:
+    path: "docs/specifications/"
+    canonical_models:
+      - "models/requirements/requirements.yaml"
+      - "models/domain/domain.yaml"
+      - "models/api/api.yaml"
+
+product_lifecycle_phases:
+  phase_00_discovery:
+    id: "PHASE-00"
+    path: "docs/product/00-discovery/"
+    templates_dir: "docs/templates/discovery/"
+    canonical_models:
+      - "models/context/system-context.yaml"
+      - "models/context/actors.yaml"
+    diagrams_dir: "docs/diagrams/context/"
+  phase_01_planning:
+    id: "PHASE-01"
+    path: "docs/product/01-planning/"
+    templates_dir: "docs/templates/planning/"
+    canonical_models: []
+    diagrams_dir: "docs/diagrams/system/"
+  phase_02_requirements:
+    id: "PHASE-02"
+    path: "docs/product/02-requirements/"
+    templates_dir: "docs/templates/requirements/"
+    canonical_models:
+      - "models/requirements/requirements.yaml"
+      - "models/requirements/business-rules.yaml"
+      - "models/requirements/acceptance-criteria.yaml"
+    diagrams_dir: "docs/diagrams/context/"
+  phase_03_business_process:
+    id: "PHASE-03"
+    path: "docs/product/03-business-process/"
+    templates_dir: "docs/templates/business-process/"
+    canonical_models:
+      - "models/process/processes.yaml"
+      - "models/process/process-dependencies.yaml"
+    diagrams_dir: "docs/diagrams/process/"
+  phase_04_use_cases:
+    id: "PHASE-04"
+    path: "docs/product/04-use-cases/"
+    nested_paths:
+      - "docs/product/04-use-cases/specifications/"
+    templates_dir: "docs/templates/use-cases/"
+    canonical_models:
+      - "models/interaction/interactions.yaml"
+    diagrams_dir: "docs/diagrams/use-case/"
+  phase_05_system_analysis:
+    id: "PHASE-05"
+    path: "docs/product/05-system-analysis/"
+    templates_dir: "docs/templates/architecture/"
+    canonical_models:
+      - "models/context/system-context.yaml"
+      - "models/architecture/architecture.yaml"
+    diagrams_dir: "docs/diagrams/context/"
+  phase_06_architecture:
+    id: "PHASE-06"
+    path: "docs/product/06-architecture/"
+    nested_paths:
+      - "docs/product/06-architecture/adr/"
+    templates_dir: "docs/templates/architecture/"
+    canonical_models:
+      - "models/architecture/architecture.yaml"
+      - "models/architecture/components.yaml"
+    diagrams_dir: "docs/diagrams/architecture/"
+  phase_07_domain:
+    id: "PHASE-07"
+    path: "docs/product/07-domain/"
+    templates_dir: "docs/templates/domain/"
+    canonical_models:
+      - "models/domain/domain.yaml"
+      - "models/domain/entities.yaml"
+      - "models/domain/aggregates.yaml"
+    diagrams_dir: "docs/diagrams/domain/"
+  phase_08_api:
+    id: "PHASE-08"
+    path: "docs/product/08-api/"
+    templates_dir: "docs/templates/api/"
+    canonical_models:
+      - "models/api/api.yaml"
+      - "models/api/integrations.yaml"
+    diagrams_dir: "docs/diagrams/api/"
+  phase_09_behavior:
+    id: "PHASE-09"
+    path: "docs/product/09-behavior/"
+    templates_dir: "docs/templates/behavior/"
+    canonical_models:
+      - "models/interaction/interactions.yaml"
+      - "models/state/state-machines.yaml"
+    diagrams_dir: "docs/diagrams/sequence/"
+  phase_10_security:
+    id: "PHASE-10"
+    path: "docs/product/10-security/"
+    templates_dir: "docs/templates/security/"
+    canonical_models:
+      - "models/security/threat-model.yaml"
+    diagrams_dir: "docs/diagrams/security/"
+  phase_11_ux:
+    id: "PHASE-11"
+    path: "docs/product/11-ux/"
+    templates_dir: "docs/templates/ux/"
+    canonical_models:
+      - "models/ux/ux.yaml"
+    diagrams_dir: "docs/diagrams/ux/"
+  phase_12_testing:
+    id: "PHASE-12"
+    path: "docs/product/12-testing/"
+    templates_dir: "docs/templates/testing/"
+    canonical_models:
+      - "models/testing/testing.yaml"
+    diagrams_dir: "docs/diagrams/sequence/"
+  phase_13_operations:
+    id: "PHASE-13"
+    path: "docs/product/13-operations/"
+    templates_dir: "docs/templates/operations/"
+    canonical_models:
+      - "models/deployment/deployment.yaml"
+    diagrams_dir: "docs/diagrams/deployment/"
+  phase_14_governance:
+    id: "PHASE-14"
+    path: "docs/product/14-governance/"
+    templates_dir: "docs/templates/governance/"
+    canonical_models: []
+    diagrams_dir: "docs/diagrams/system/"
+

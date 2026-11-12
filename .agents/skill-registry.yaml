@@ -1,0 +1,25 @@
+version: "1.0"
+metadata:
+  name: "FinancialMarketDataPlatform Skill Registry"
+  updated_at: "2026-11-12"
+
+active_skills:
+  - project-discovery
+  - documentation-creation
+  - requirements-engineering
+  - srs-generation
+  - architecture-modeling
+  - process-modeling
+  - use-case-modeling
+  - domain-modeling
+  - api-contract
+  - diagram-modeling
+  - ux-modeling
+  - security-threat-modeling
+  - test-modeling
+  - documentation-review
+  - traceability-audit
+  - documentation-validation
+
+inactive_candidates: []
+

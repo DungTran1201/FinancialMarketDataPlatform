@@ -55,10 +55,26 @@ A production-oriented **Real-time Financial Market Data Platform** built on an *
 - [API Specification](docs/specifications/api-specification.md)
 - [Non-Functional Requirements (NFR) Specification](docs/specifications/non-functional-requirements.md)
 
+### Documentation Engineering Framework (`DOCS-001`)
+- [AGENTS.md — Primary Agent Operating Manual](AGENTS.md)
+- [.agents/ — Agent Governance OS (Roles, Rules, Skills, Registries, Hooks)](.agents/README.md)
+- [docs/README.md — Master Documentation System Index](docs/README.md)
+- [docs/product/ — 15-Phase Product Documentation Lifecycle (`00-discovery` .. `14-governance`)](docs/product/README.md)
+- [docs/templates/ — 57 Reusable Document Templates across 14 Categories](docs/templates/README.md)
+- [docs/features/ — Reusable Feature Package Engineering Pattern](docs/features/README.md)
+- [docs/diagrams/ — Unified 18-Category Diagram Engineering Subsystem](docs/diagrams/README.md)
+- [models/ — Canonical Machine-Readable YAML Model Layer (12 Domains)](models/README.md)
+- [work-items/ — Work-Item Lifecycle Control Subsystem (`DOCS-001`)](work-items/README.md)
+- [tools/ — Automated Validation Suite & Hook Scripts](tools/README.md)
+
 ---
 
-## 3. Running Architectural & Contract Verification Tests
+## 3. Running Architectural & Documentation Verification Suites
 
 ```powershell
+# Run Clean Architecture & Contract Unit Tests
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
+
+# Run 10-Validator Documentation Engineering Suite
+.\.venv\Scripts\python.exe tools/validators/run_all.py
 ```

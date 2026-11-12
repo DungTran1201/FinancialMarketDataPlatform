@@ -1,0 +1,48 @@
+version: "1.0"
+metadata:
+  name: "Artifact Status Lifecycle Governance"
+  description: "Defines valid lifecycle statuses and promotion rules for documents, models, and diagrams."
+
+statuses:
+  TEMPLATE:
+    description: "Reusable unpopulated blueprint in docs/templates/ or models/*.template.yaml"
+    can_transition_to: ["DRAFT"]
+    requires_human_approval: false
+  DRAFT:
+    description: "Initial authoring in progress; may contain [TO BE COMPLETED] or [OPEN QUESTION] placeholders."
+    can_transition_to: ["PROPOSED", "IN_REVIEW", "DEPRECATED"]
+    requires_human_approval: false
+  PROPOSED:
+    description: "Structurally complete proposal awaiting stakeholder or architect review."
+    can_transition_to: ["IN_REVIEW", "DRAFT", "APPROVED", "DEPRECATED"]
+    requires_human_approval: false
+  IN_REVIEW:
+    description: "Under active audit by human engineer or documentation-auditor."
+    can_transition_to: ["REVIEW_REQUIRED", "APPROVED", "DRAFT"]
+    requires_human_approval: false
+  REVIEW_REQUIRED:
+    description: "Audit identified unresolved questions, conflicts, or missing evidence."
+    can_transition_to: ["IN_REVIEW", "DRAFT", "DEPRECATED"]
+    requires_human_approval: false
+  APPROVED:
+    description: "Verified against authoritative evidence and approved by human owner / architecture decision."
+    can_transition_to: ["BASELINED", "IN_REVIEW", "SUPERSEDED", "DEPRECATED"]
+    requires_human_approval: true
+  BASELINED:
+    description: "Locked reference baseline for downstream lifecycle phases; modifications require a Work Item and Impact Analysis."
+    can_transition_to: ["IN_REVIEW", "SUPERSEDED"]
+    requires_human_approval: true
+  DEPRECATED:
+    description: "Artifact is no longer active; retained for historical audit trail."
+    can_transition_to: []
+    requires_human_approval: true
+  SUPERSEDED:
+    description: "Replaced by a newer versioned artifact ID (must record superseded_by reference)."
+    can_transition_to: []
+    requires_human_approval: true
+
+promotion_rules:
+  - "No artifact containing [TO BE COMPLETED] or unresolved [OPEN QUESTION] may be marked APPROVED or BASELINED."
+  - "No speculative product feature requirement may be marked APPROVED without explicit user confirmation."
+  - "Existing Phase 0 Data Platform architecture and specifications are marked BASELINED."
+

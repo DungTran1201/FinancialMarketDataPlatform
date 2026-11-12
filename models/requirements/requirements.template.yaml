@@ -1,0 +1,24 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-REQ-TPL"
+  name: "Requirements Model Template"
+  description: "Reusable schema for functional and non-functional requirements."
+  status: "TEMPLATE"
+  canonical_model: false
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "requirements-engineer"
+  source_documents:
+    - "docs/templates/requirements/SRS.template.md"
+
+capabilities: []
+functional_requirements:
+  - id: "WEB-FR-001"
+    title: "[TO BE COMPLETED]"
+    scope: "product_website" # data_platform | product_website
+    priority: "MANDATORY"
+    status: "DRAFT"
+    statement: "[TO BE COMPLETED]"
+    source_ref: "docs/product/02-requirements/SRS.md"
+non_functional_requirements: []

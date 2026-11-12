@@ -1,0 +1,28 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-SEQ-001"
+  name: "Platform Runtime Interaction Sequences"
+  description: "Canonical interaction flows for hot reads, async jobs, and Agent workflows."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "architecture-modeler"
+  source_documents:
+    - "docs/diagrams/backend/09-backend-request-lifecycle.md"
+    - "docs/diagrams/agent/13-agent-workflow-sequence.md"
+
+interactions:
+  - id: "SEQ-001"
+    name: "Synchronous Market Price Read with ClickHouse Fallback"
+    participants: ["API Client", "FastAPI Router", "MarketQueryHandler", "Redis", "ClickHouse"]
+    related_apis: ["API-001"]
+    diagram_id: "DIAG-SEQ-009"
+    status: "BASELINED"
+  - id: "SEQ-002"
+    name: "Asynchronous LangGraph Agent Investigation Workflow"
+    participants: ["Analyst / Anomaly Detector", "FastAPI / Consumer", "PostgreSQL", "LangGraph Orchestrator", "ControlledToolGateway", "ClickHouse"]
+    related_apis: ["API-008", "API-009"]
+    diagram_id: "DIAG-SEQ-013"
+    status: "BASELINED"

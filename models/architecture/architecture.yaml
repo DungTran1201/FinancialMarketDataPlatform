@@ -1,0 +1,54 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-ARCH-001"
+  name: "Three-Plane Platform Architecture Model"
+  description: "Authoritative structural model of Plane A, Plane B, Plane C, and ADRs."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "architecture-modeler"
+  source_documents:
+    - "docs/architecture/00-architecture-overview.md"
+    - "docs/architecture/02-system-container-architecture.md"
+
+planes:
+  - id: "PLANE-A"
+    name: "Data Plane"
+    responsibility: "Ingestion, Kafka streaming, Redis hot state, ClickHouse OLAP, and MinIO/Iceberg Lakehouse."
+    depends_on_planes: []
+  - id: "PLANE-B"
+    name: "Application & Control Plane"
+    responsibility: "FastAPI Modular Monolith, Auth/RBAC, PostgreSQL control state, and Apache Superset BI."
+    depends_on_planes: ["PLANE-A"]
+  - id: "PLANE-C"
+    name: "Intelligence Plane"
+    responsibility: "Isolated LangGraph Agent Orchestrator and Read-Only Controlled Tool Gateway."
+    depends_on_planes: ["PLANE-A", "PLANE-B"]
+
+decisions:
+  - id: "ADR-001"
+    title: "Overall Three-Plane Architecture & Streaming-First Hybrid Lakehouse"
+    path: "docs/architecture/adr/ADR-001-overall-architecture.md"
+    status: "APPROVED"
+  - id: "ADR-002"
+    title: "Event-Driven Data Platform & Streaming vs. Batch Boundaries"
+    path: "docs/architecture/adr/ADR-002-event-driven-data-platform.md"
+    status: "APPROVED"
+  - id: "ADR-003"
+    title: "Polyglot Storage Strategy & Workload Separation"
+    path: "docs/architecture/adr/ADR-003-storage-strategy.md"
+    status: "APPROVED"
+  - id: "ADR-004"
+    title: "Modular Monolith Backend with Clean/Hexagonal Architecture & Selective CQRS"
+    path: "docs/architecture/adr/ADR-004-backend-architecture.md"
+    status: "APPROVED"
+  - id: "ADR-005"
+    title: "High-Performance Query Routing & Tiered Caching Strategy"
+    path: "docs/architecture/adr/ADR-005-query-and-caching-strategy.md"
+    status: "APPROVED"
+  - id: "ADR-006"
+    title: "Isolated Agentic Intelligence Plane & Deterministic Tool Gateway"
+    path: "docs/architecture/adr/ADR-006-agent-integration.md"
+    status: "APPROVED"

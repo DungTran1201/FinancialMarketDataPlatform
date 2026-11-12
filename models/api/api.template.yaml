@@ -1,0 +1,22 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-API-TPL"
+  name: "API Contract Model Template"
+  description: "Reusable YAML schema for REST, WebSocket, and SSE endpoints."
+  status: "TEMPLATE"
+  canonical_model: false
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "api-architect"
+  source_documents:
+    - "docs/templates/api/API-contract.template.md"
+
+endpoints:
+  - id: "WEB-API-001"
+    method: "GET"
+    path: "/api/v1/[TO-BE-COMPLETED]"
+    auth_role: "viewer"
+    timeout_ms: 2000
+    rate_limit_per_min: 120
+    related_requirements: []

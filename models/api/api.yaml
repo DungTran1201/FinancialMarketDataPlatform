@@ -1,0 +1,103 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-API-001"
+  name: "Platform REST, WebSocket & SSE API Catalog"
+  description: "Structured representation of baseline platform endpoints."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "api-architect"
+  source_documents:
+    - "docs/specifications/api-specification.md"
+    - "docs/architecture/09-api-and-integration-architecture.md"
+
+endpoints:
+  - id: "API-001"
+    method: "GET"
+    path: "/api/v1/market/prices/{symbol}"
+    domain: "market"
+    auth_role: "viewer"
+    timeout_ms: 1500
+    rate_limit_per_min: 120
+    backing_store: "redis_with_clickhouse_fallback"
+    related_requirements: ["FR-04", "NFR-001"]
+  - id: "API-002"
+    method: "GET"
+    path: "/api/v1/market/snapshots/{symbol}"
+    domain: "market"
+    auth_role: "viewer"
+    timeout_ms: 2000
+    rate_limit_per_min: 120
+    backing_store: "redis_with_clickhouse_fallback"
+    related_requirements: ["FR-04"]
+  - id: "API-003"
+    method: "WS"
+    path: "/ws/v1/market/stream"
+    domain: "market"
+    auth_role: "viewer"
+    backing_store: "redis_pubsub"
+    related_requirements: ["FR-04"]
+  - id: "API-004"
+    method: "GET"
+    path: "/api/v1/historical/klines/{symbol}"
+    domain: "historical"
+    auth_role: "viewer"
+    timeout_ms: 5000
+    rate_limit_per_min: 120
+    backing_store: "clickhouse"
+    related_requirements: ["FR-05", "NFR-002"]
+  - id: "API-005"
+    method: "GET"
+    path: "/api/v1/historical/trades/{symbol}"
+    domain: "historical"
+    auth_role: "viewer"
+    timeout_ms: 5000
+    rate_limit_per_min: 120
+    backing_store: "clickhouse"
+    related_requirements: ["FR-05"]
+  - id: "API-006"
+    method: "POST"
+    path: "/api/v1/historical/backfill-jobs"
+    domain: "historical"
+    auth_role: "operator"
+    timeout_ms: 3000
+    rate_limit_per_min: 10
+    backing_store: "postgresql_and_airflow"
+    related_requirements: ["FR-02"]
+  - id: "API-007"
+    method: "GET"
+    path: "/api/v1/analytics/statistics/{symbol}"
+    domain: "analytics"
+    auth_role: "viewer"
+    timeout_ms: 5000
+    rate_limit_per_min: 30
+    backing_store: "clickhouse_mv_and_redis_cache"
+    related_requirements: ["FR-05"]
+  - id: "API-008"
+    method: "POST"
+    path: "/api/v1/agents/runs"
+    domain: "agent_api"
+    auth_role: "analyst"
+    timeout_ms: 3000
+    rate_limit_per_min: 5
+    backing_store: "postgresql_and_redis_queue"
+    related_requirements: ["FR-09"]
+  - id: "API-009"
+    method: "GET"
+    path: "/api/v1/agents/runs/{run_id}"
+    domain: "agent_api"
+    auth_role: "analyst"
+    timeout_ms: 2000
+    rate_limit_per_min: 60
+    backing_store: "postgresql"
+    related_requirements: ["FR-09"]
+  - id: "API-010"
+    method: "GET"
+    path: "/api/v1/health/live"
+    domain: "platform"
+    auth_role: "public"
+    timeout_ms: 1000
+    backing_store: "in_process"
+    related_requirements: ["FR-10"]

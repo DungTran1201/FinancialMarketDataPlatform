@@ -28,3 +28,8 @@ jobs:
         run: |
           pytest tests/
 
+      - name: Run Documentation Engineering Validation Suite
+        run: |
+          python tools/validators/run_all.py
+
+

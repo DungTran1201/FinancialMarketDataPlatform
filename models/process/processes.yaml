@@ -1,0 +1,37 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-PROC-001"
+  name: "Platform Operational Processes Model"
+  description: "Canonical operational processes across Data, Control, and Intelligence planes."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "process-modeler"
+  source_documents:
+    - "docs/architecture/04-data-platform-architecture.md"
+    - "docs/architecture/08-data-flow-and-event-contracts.md"
+
+processes:
+  - id: "PROC-001"
+    name: "Real-Time Market Streaming & Hot/OLAP Projection"
+    trigger: "Binance WebSocket event frame arrival"
+    actors: ["collector-ws", "kafka", "consumer-hot-redis", "consumer-analytics-ch"]
+    related_requirements: ["FR-01", "FR-03", "FR-04", "FR-05"]
+    diagram_id: "DIAG-DATA-005"
+    status: "BASELINED"
+  - id: "PROC-002"
+    name: "Medallion Lakehouse Bronze-Silver-Gold Pipeline"
+    trigger: "Scheduled Airflow DAG / Kafka Bronze flush"
+    actors: ["consumer-lakehouse-bronze", "spark-worker", "great-expectations", "dbt-runner"]
+    related_requirements: ["FR-06", "FR-07"]
+    diagram_id: "DIAG-DATA-007"
+    status: "BASELINED"
+  - id: "PROC-003"
+    name: "Agentic Anomaly Investigation Workflow"
+    trigger: "On-demand POST /api/v1/agents/runs or market.anomalies.v1 breach"
+    actors: ["backend-api", "agent-worker", "ControlledToolGateway"]
+    related_requirements: ["FR-09"]
+    diagram_id: "DIAG-SEQ-013"
+    status: "BASELINED"

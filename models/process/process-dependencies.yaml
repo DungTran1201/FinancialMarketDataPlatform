@@ -1,0 +1,21 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-PROC-DEP-001"
+  name: "Process Dependency Graph"
+  description: "Defines upstream/downstream dependencies between processes."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "process-modeler"
+  source_documents:
+    - "docs/architecture/04-data-platform-architecture.md"
+
+dependencies:
+  - upstream_process: "PROC-001"
+    downstream_process: "PROC-002"
+    contract: "Kafka raw topics (market.raw.*.v1)"
+  - upstream_process: "PROC-001"
+    downstream_process: "PROC-003"
+    contract: "Redis hot state, ClickHouse OLAP tables, and market.anomalies.v1"

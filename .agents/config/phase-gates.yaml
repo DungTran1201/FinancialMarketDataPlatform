@@ -1,0 +1,107 @@
+version: "1.0"
+metadata:
+  name: "Lifecycle Phase Gates & Quality Criteria"
+
+work_item_states:
+  - "INTAKE"
+  - "DISCOVERY"
+  - "IMPACT"
+  - "DESIGN"
+  - "PLAN_REVIEW"
+  - "IMPLEMENT"
+  - "VERIFY"
+  - "SYNC"
+  - "RELEASE"
+  - "DONE"
+
+allowed_state_transitions:
+  INTAKE: ["DISCOVERY"]
+  DISCOVERY: ["IMPACT", "INTAKE"]
+  IMPACT: ["DESIGN", "PLAN_REVIEW", "DISCOVERY"]
+  DESIGN: ["PLAN_REVIEW", "IMPACT"]
+  PLAN_REVIEW: ["IMPLEMENT", "DESIGN"]
+  IMPLEMENT: ["VERIFY", "DESIGN"]
+  VERIFY: ["SYNC", "IMPLEMENT"]
+  SYNC: ["RELEASE", "VERIFY"]
+  RELEASE: ["DONE", "SYNC"]
+  DONE: ["DISCOVERY"]
+
+gates:
+  G0_DISCOVERY:
+    phase: "00-discovery"
+    responsible_role: "discovery-analyst"
+    entry_criteria:
+      - "Work item request.md initialized"
+    exit_criteria:
+      - "Authoritative sources inspected"
+      - "FACT, ASSUMPTION, DECISION, and OPEN QUESTION explicitly separated"
+      - "impact-analysis.md and artifact-plan.yaml populated"
+    validators:
+      - "tools/validators/validate_work_items.py"
+  G1_REQUIREMENT:
+    phase: "02-requirements"
+    responsible_role: "requirements-engineer"
+    entry_criteria:
+      - "G0_DISCOVERY passed"
+    exit_criteria:
+      - "Canonical requirements model updated in models/requirements/"
+      - "Requirements and acceptance criteria assigned stable IDs"
+      - "Unresolved business decisions logged as OPEN QUESTION"
+    validators:
+      - "tools/validators/validate_models.py"
+      - "tools/validators/validate_identifiers.py"
+  G2_DESIGN:
+    phase: "03..11 (Process, Use Case, Architecture, Domain, API, Behavior, Security, UX)"
+    responsible_role: "architecture-modeler"
+    entry_criteria:
+      - "G1_REQUIREMENT passed or N/A for change type"
+    exit_criteria:
+      - "Applicable canonical models in models/ updated"
+      - "Applicable specs and diagrams synchronized from templates"
+      - "Security and trust boundary impacts reviewed"
+    validators:
+      - "tools/validators/validate_models.py"
+      - "tools/validators/validate_diagrams.py"
+  G3_PLAN_REVIEW:
+    phase: "01-planning"
+    responsible_role: "documentation-architect"
+    entry_criteria:
+      - "artifact-plan.yaml and implementation-plan.md complete"
+    exit_criteria:
+      - "Artifact selection conforms to .agents/config/artifact-matrix.yaml"
+      - "Rollback and verification plan defined"
+    validators:
+      - "tools/validators/validate_artifact_matrix.py"
+  G4_IMPLEMENT:
+    phase: "Implementation"
+    responsible_role: "architecture-modeler"
+    entry_criteria:
+      - "G3_PLAN_REVIEW passed"
+    exit_criteria:
+      - "Planned artifacts and/or code changes created at canonical paths"
+      - "Clean architecture boundaries preserved"
+    validators:
+      - "tools/validators/validate_docs.py"
+  G5_VERIFY:
+    phase: "12-testing"
+    responsible_role: "qa-reviewer"
+    entry_criteria:
+      - "Implementation complete"
+    exit_criteria:
+      - "All automated validators pass (run_all.py exit code 0)"
+      - "Unit and architectural boundary tests pass"
+    validators:
+      - "tools/validators/run_all.py"
+  G6_RELEASE:
+    phase: "14-governance"
+    responsible_role: "documentation-auditor"
+    entry_criteria:
+      - "G5_VERIFY passed"
+    exit_criteria:
+      - "Traceability synchronized across models, docs, and diagrams"
+      - "Artifact status and governance registers updated"
+      - "review.md signed off and state.yaml marked DONE"
+    validators:
+      - "tools/validators/validate_traceability.py"
+      - "tools/validators/validate_readmes.py"
+

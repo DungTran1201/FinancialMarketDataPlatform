@@ -1,0 +1,57 @@
+version: "1.0"
+metadata:
+  name: "Work Item Change Types & Risk Classification"
+
+change_types:
+  FEAT:
+    code: "FEAT"
+    name: "Feature"
+    default_risk: "R2"
+    signals: ["feature", "screen", "page", "dashboard", "user story", "use case", "endpoint"]
+  BUG:
+    code: "BUG"
+    name: "Bug Fix"
+    default_risk: "R1"
+    signals: ["bug", "fix", "defect", "regression", "broken", "error"]
+  ARCH:
+    code: "ARCH"
+    name: "Architecture Change"
+    default_risk: "R3"
+    signals: ["architecture", "adr", "plane", "service boundary", "cqrs", "storage engine"]
+  DATA:
+    code: "DATA"
+    name: "Data Platform Change"
+    default_risk: "R2"
+    signals: ["kafka", "clickhouse", "iceberg", "parquet", "spark", "dbt", "airflow", "collector"]
+  SEC:
+    code: "SEC"
+    name: "Security Change"
+    default_risk: "R3"
+    signals: ["security", "auth", "jwt", "rbac", "secret", "threat", "stride", "tool gateway"]
+  INFRA:
+    code: "INFRA"
+    name: "Infrastructure Change"
+    default_risk: "R2"
+    signals: ["docker", "compose", "ci/cd", "prometheus", "grafana", "deploy"]
+  REFACTOR:
+    code: "REFACTOR"
+    name: "Refactoring"
+    default_risk: "R1"
+    signals: ["refactor", "clean up", "restructure", "modularize"]
+  DOCS:
+    code: "DOCS"
+    name: "Documentation Change"
+    default_risk: "R1"
+    signals: ["documentation", "template", "readme", "diagram", "traceability", "governance"]
+
+risk_tiers:
+  R1:
+    name: "Low Risk (Single Module / Additive Docs)"
+    required_gates: ["G0_DISCOVERY", "G5_VERIFY", "G6_RELEASE"]
+  R2:
+    name: "Medium Risk (Cross-Module / Contract or Model Update)"
+    required_gates: ["G0_DISCOVERY", "G1_REQUIREMENT", "G2_DESIGN", "G3_PLAN_REVIEW", "G5_VERIFY", "G6_RELEASE"]
+  R3:
+    name: "High Risk (Cross-Plane Architecture / Security / Breaking Contract)"
+    required_gates: ["G0_DISCOVERY", "G1_REQUIREMENT", "G2_DESIGN", "G3_PLAN_REVIEW", "G4_IMPLEMENT", "G5_VERIFY", "G6_RELEASE"]
+

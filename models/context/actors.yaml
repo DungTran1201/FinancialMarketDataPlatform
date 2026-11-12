@@ -1,0 +1,36 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-ACT-001"
+  name: "Canonical Actors Catalog"
+  description: "Human and programmatic actors interacting with the platform."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "requirements-engineer"
+  source_documents:
+    - "docs/architecture/01-system-context.md"
+    - "docs/architecture/10-security-and-governance.md"
+
+actors:
+  - id: "ACT-VIEWER"
+    name: "Market Viewer / Trader"
+    rbac_role: "viewer"
+    type: "human"
+  - id: "ACT-ANALYST"
+    name: "Quantitative Market Analyst"
+    rbac_role: "analyst"
+    type: "human"
+  - id: "ACT-OPERATOR"
+    name: "Platform Operator / Data Engineer"
+    rbac_role: "operator"
+    type: "human"
+  - id: "ACT-ADMIN"
+    name: "Platform Administrator"
+    rbac_role: "admin"
+    type: "human"
+  - id: "ACT-CLIENT-APP"
+    name: "External Downstream Application"
+    rbac_role: "service"
+    type: "system"

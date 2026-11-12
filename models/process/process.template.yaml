@@ -1,0 +1,22 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-PROC-TPL"
+  name: "Business Process Model Template"
+  description: "Reusable YAML schema for BPMN and swimlane processes."
+  status: "TEMPLATE"
+  canonical_model: false
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "process-modeler"
+  source_documents:
+    - "docs/templates/business-process/BPMN.template.md"
+
+processes:
+  - id: "WEB-PROC-001"
+    name: "[TO BE COMPLETED]"
+    trigger: "[TO BE COMPLETED]"
+    actors: []
+    steps: []
+    related_requirements: []
+    diagram_id: "DIAG-BPMN-001"

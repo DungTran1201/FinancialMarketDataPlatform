@@ -1,0 +1,104 @@
+{
+  "version": "1.0.0",
+  "project": "FinancialMarketDataPlatform",
+  "skills_root": ".agents/skills",
+  "skills": [
+    {
+      "id": "project-discovery",
+      "path": ".agents/skills/project-discovery/SKILL.md",
+      "phase": "00-discovery",
+      "owner_role": "discovery-analyst"
+    },
+    {
+      "id": "documentation-creation",
+      "path": ".agents/skills/documentation-creation/SKILL.md",
+      "phase": "all",
+      "owner_role": "documentation-architect"
+    },
+    {
+      "id": "requirements-engineering",
+      "path": ".agents/skills/requirements-engineering/SKILL.md",
+      "phase": "02-requirements",
+      "owner_role": "requirements-engineer"
+    },
+    {
+      "id": "srs-generation",
+      "path": ".agents/skills/srs-generation/SKILL.md",
+      "phase": "02-requirements",
+      "owner_role": "requirements-engineer"
+    },
+    {
+      "id": "architecture-modeling",
+      "path": ".agents/skills/architecture-modeling/SKILL.md",
+      "phase": "06-architecture",
+      "owner_role": "architecture-modeler"
+    },
+    {
+      "id": "process-modeling",
+      "path": ".agents/skills/process-modeling/SKILL.md",
+      "phase": "03-business-process",
+      "owner_role": "process-modeler"
+    },
+    {
+      "id": "use-case-modeling",
+      "path": ".agents/skills/use-case-modeling/SKILL.md",
+      "phase": "04-use-cases",
+      "owner_role": "requirements-engineer"
+    },
+    {
+      "id": "domain-modeling",
+      "path": ".agents/skills/domain-modeling/SKILL.md",
+      "phase": "07-domain",
+      "owner_role": "domain-modeler"
+    },
+    {
+      "id": "api-contract",
+      "path": ".agents/skills/api-contract/SKILL.md",
+      "phase": "08-api",
+      "owner_role": "api-architect"
+    },
+    {
+      "id": "diagram-modeling",
+      "path": ".agents/skills/diagram-modeling/SKILL.md",
+      "phase": "all",
+      "owner_role": "architecture-modeler"
+    },
+    {
+      "id": "ux-modeling",
+      "path": ".agents/skills/ux-modeling/SKILL.md",
+      "phase": "11-ux",
+      "owner_role": "ux-modeler"
+    },
+    {
+      "id": "security-threat-modeling",
+      "path": ".agents/skills/security-threat-modeling/SKILL.md",
+      "phase": "10-security",
+      "owner_role": "security-reviewer"
+    },
+    {
+      "id": "test-modeling",
+      "path": ".agents/skills/test-modeling/SKILL.md",
+      "phase": "12-testing",
+      "owner_role": "qa-reviewer"
+    },
+    {
+      "id": "documentation-review",
+      "path": ".agents/skills/documentation-review/SKILL.md",
+      "phase": "14-governance",
+      "owner_role": "documentation-auditor"
+    },
+    {
+      "id": "traceability-audit",
+      "path": ".agents/skills/traceability-audit/SKILL.md",
+      "phase": "14-governance",
+      "owner_role": "documentation-auditor"
+    },
+    {
+      "id": "documentation-validation",
+      "path": ".agents/skills/documentation-validation/SKILL.md",
+      "phase": "14-governance",
+      "owner_role": "documentation-auditor"
+    }
+  ]
+}
+

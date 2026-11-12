@@ -1,0 +1,15 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-DOM-TPL"
+  name: "Domain Model Template"
+  description: "Reusable YAML schema for bounded contexts and domain rules."
+  status: "TEMPLATE"
+  canonical_model: false
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "domain-modeler"
+  source_documents:
+    - "docs/templates/domain/domain-model.template.md"
+
+bounded_contexts: []

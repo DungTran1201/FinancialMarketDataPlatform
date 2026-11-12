@@ -1,0 +1,39 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-ENT-001"
+  name: "Canonical Data Entities Model"
+  description: "Structured representation of core financial and control entities."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "domain-modeler"
+  source_documents:
+    - "docs/specifications/data-dictionary.md"
+
+entities:
+  - id: "DOM-009"
+    name: "market_trades"
+    storage_engines: ["ClickHouse", "Iceberg_Bronze_Silver"]
+    natural_key: ["provider", "symbol", "trade_id"]
+  - id: "DOM-010"
+    name: "market_klines"
+    storage_engines: ["ClickHouse", "Iceberg_Bronze_Silver"]
+    natural_key: ["provider", "symbol", "interval", "open_time"]
+  - id: "DOM-011"
+    name: "market_tickers"
+    storage_engines: ["Redis", "ClickHouse"]
+    natural_key: ["provider", "symbol", "exchange_event_time"]
+  - id: "DOM-012"
+    name: "order_book_snapshots"
+    storage_engines: ["Redis", "ClickHouse", "Iceberg_Bronze_Silver"]
+    natural_key: ["provider", "symbol", "last_update_id"]
+  - id: "DOM-013"
+    name: "monitored_instruments"
+    storage_engines: ["PostgreSQL"]
+    natural_key: ["provider", "symbol"]
+  - id: "DOM-014"
+    name: "agent_runs"
+    storage_engines: ["PostgreSQL"]
+    natural_key: ["run_id"]

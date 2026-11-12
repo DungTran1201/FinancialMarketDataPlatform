@@ -1,0 +1,21 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-STATE-TPL"
+  name: "State Machine Model Template"
+  description: "Reusable YAML schema for entity and workflow state machines."
+  status: "TEMPLATE"
+  canonical_model: false
+  created_at: "2026-11-12"
+  updated_at: "2026-11-12"
+  owner: "architecture-modeler"
+  source_documents:
+    - "docs/templates/behavior/state-machine.template.md"
+
+state_machines:
+  - id: "STATE-001"
+    name: "[TO BE COMPLETED]"
+    initial_state: "INITIAL"
+    terminal_states: []
+    states: []
+    transitions: []

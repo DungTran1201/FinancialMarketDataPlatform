@@ -1,0 +1,119 @@
+version: "1.0"
+metadata:
+  name: "Documentation & Model Identifier Registry"
+  description: "Defines canonical ID prefixes, regex patterns, and namespace rules preserving existing IDs."
+
+preservation_policy:
+  preserve_existing_ids: true
+  prohibit_renumbering_for_continuity: true
+  product_vs_platform_disambiguation: "Use WEB-* prefix for Website-specific artifacts when collision with shared Data Platform artifacts is possible."
+
+namespaces:
+  CAP:
+    prefix: "CAP"
+    pattern: "^(WEB-)?CAP-[0-9]{3}$"
+    artifact_type: "Capability"
+    canonical_location: "models/requirements/requirements.yaml"
+  FR:
+    prefix: "FR"
+    pattern: "^(WEB-|DP-)?FR-[0-9]{2,3}$"
+    artifact_type: "Functional Requirement"
+    canonical_location: "models/requirements/requirements.yaml"
+    preserved_existing: ["FR-01", "FR-02", "FR-03", "FR-04", "FR-05", "FR-06", "FR-07", "FR-08", "FR-09", "FR-10"]
+  NFR:
+    prefix: "NFR"
+    pattern: "^(WEB-|DP-)?NFR-[0-9]{2,3}$"
+    artifact_type: "Non-Functional Requirement"
+    canonical_location: "models/requirements/requirements.yaml"
+  BR:
+    prefix: "BR"
+    pattern: "^(WEB-)?BR-[0-9]{3}$"
+    artifact_type: "Business Rule"
+    canonical_location: "models/requirements/business-rules.yaml"
+  SEC:
+    prefix: "SEC"
+    pattern: "^(WEB-)?SEC-[0-9]{3}$"
+    artifact_type: "Security Requirement"
+    canonical_location: "models/security/threat-model.yaml"
+  AC:
+    prefix: "AC"
+    pattern: "^(WEB-|DOCS-)?AC-[0-9]{2,3}$"
+    artifact_type: "Acceptance Criteria"
+    canonical_location: "models/requirements/acceptance-criteria.yaml"
+  PROC:
+    prefix: "PROC"
+    pattern: "^(WEB-)?PROC-[0-9]{3}$"
+    artifact_type: "Business Process"
+    canonical_location: "models/process/processes.yaml"
+  UC:
+    prefix: "UC"
+    pattern: "^(WEB-)?UC-[A-Z0-9-]+$"
+    artifact_type: "Use Case"
+    canonical_location: "docs/product/04-use-cases/"
+  DOM:
+    prefix: "DOM"
+    pattern: "^DOM-[0-9]{3}$"
+    artifact_type: "Domain Entity / Aggregate"
+    canonical_location: "models/domain/domain.yaml"
+  COMP:
+    prefix: "COMP"
+    pattern: "^COMP-[0-9]{3}$"
+    artifact_type: "Architecture Component"
+    canonical_location: "models/architecture/components.yaml"
+  ADR:
+    prefix: "ADR"
+    pattern: "^(WEB-)?ADR-[0-9]{3}$"
+    artifact_type: "Architecture Decision Record"
+    canonical_location: "docs/architecture/adr/"
+    preserved_existing: ["ADR-001", "ADR-002", "ADR-003", "ADR-004", "ADR-005", "ADR-006"]
+  API:
+    prefix: "API"
+    pattern: "^(WEB-)?API-[0-9]{3}$"
+    artifact_type: "API Endpoint / Contract"
+    canonical_location: "models/api/api.yaml"
+  SEQ:
+    prefix: "SEQ"
+    pattern: "^SEQ-[0-9]{3}$"
+    artifact_type: "Sequence Interaction"
+    canonical_location: "models/interaction/interactions.yaml"
+  STATE:
+    prefix: "STATE"
+    pattern: "^STATE-[0-9]{3}$"
+    artifact_type: "State Machine Model"
+    canonical_location: "models/state/state-machines.yaml"
+  UX:
+    prefix: "UX"
+    pattern: "^UX-[0-9]{3}$"
+    artifact_type: "UX Requirement / Flow"
+    canonical_location: "models/ux/ux.yaml"
+  SCR:
+    prefix: "SCR"
+    pattern: "^SCR-[0-9]{3}$"
+    artifact_type: "UX Screen Specification"
+    canonical_location: "models/ux/ux.yaml"
+  THR:
+    prefix: "THR"
+    pattern: "^THR-[0-9]{3}$"
+    artifact_type: "Security Threat (STRIDE)"
+    canonical_location: "models/security/threat-model.yaml"
+  CTRL:
+    prefix: "CTRL"
+    pattern: "^CTRL-[0-9]{3}$"
+    artifact_type: "Security Control"
+    canonical_location: "models/security/threat-model.yaml"
+  TC:
+    prefix: "TC"
+    pattern: "^TC-[0-9]{3}$"
+    artifact_type: "Test Case"
+    canonical_location: "models/testing/testing.yaml"
+  DEP:
+    prefix: "DEP"
+    pattern: "^DEP-[0-9]{3}$"
+    artifact_type: "Deployment Node / Profile"
+    canonical_location: "models/deployment/deployment.yaml"
+  DIAG:
+    prefix: "DIAG"
+    pattern: "^DIAG-(CTX|C4|DATA|BPMN|SWIM|UC|SEQ|STATE|ERD|DOM|API|DEP|SEC|UX)-[0-9]{3}$"
+    artifact_type: "Technical Diagram"
+    canonical_location: "docs/diagrams/"
+
