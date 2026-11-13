@@ -22,10 +22,10 @@ Owned by `documentation-architect` and audited by `documentation-auditor`.
 
 | Artifact | Purpose | Required / Conditional | Template |
 |---|---|---|---|
-| `agents/` | 11 specialized Agent role definitions | Required | `.agents/agents/README.md` |
-| `rules/` | 10 mandatory operating rules | Required | `.agents/rules/README.md` |
-| `skills/` | 16 discipline-specific SKILL.md packages | Required | `.agents/skills/README.md` |
-| `config/` | 6 YAML configuration registries | Required | `.agents/config/README.md` |
+| `agents/` | 19 specialized Agent role definitions | Required | `.agents/agents/README.md` |
+| `rules/` | 22 mandatory operating rules | Required | `.agents/rules/README.md` |
+| `skills/` | 25 discipline-specific SKILL.md packages | Required | `.agents/skills/README.md` |
+| `config/` | 7 YAML configuration registries | Required | `.agents/config/README.md` |
 | `catalog/` | External skill governance and sourcing policy | Required | `.agents/catalog/README.md` |
 | `hooks.json` | Pre/Post tool execution and stop-readiness hooks | Required | `.agents/hooks.json` |
 | `skill-registry.yaml` | Registry of active and candidate skills | Required | `.agents/skill-registry.yaml` |

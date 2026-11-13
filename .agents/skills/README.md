@@ -2,11 +2,11 @@
 
 ## 1. Directory Purpose
 
-Contains the 16 modular, discipline-specific Agent skill packages (`SKILL.md`) registered in `.agents/skill-registry.yaml` and `.agents/skills_manifest.json`.
+Contains the 25 modular, discipline-specific Agent skill packages (`SKILL.md`) registered in `.agents/skill-registry.yaml` and `.agents/skills_manifest.json`.
 
 ## 2. Scope and Boundaries
 
-- **Belongs in this directory**: 16 skill subdirectories, each containing an operational `README.md` and `SKILL.md`.
+- **Belongs in this directory**: 25 skill subdirectories, each containing an operational `README.md` and `SKILL.md`.
 - **Does NOT belong in this directory**: Product-specific companion/avatar skills or application source code (`src/`).
 
 ## 3. Agent Role and Responsibilities
@@ -39,10 +39,19 @@ Used by all Agent roles in `.agents/agents/`; maintained by `documentation-archi
 | `documentation-review/SKILL.md` | Documentation Quality & Gate Audit | Required | `.agents/skills/documentation-review/README.md` |
 | `traceability-audit/SKILL.md` | Bidirectional Traceability Audit | Required | `.agents/skills/traceability-audit/README.md` |
 | `documentation-validation/SKILL.md` | Automated Documentation & Model Validation | Required | `.agents/skills/documentation-validation/README.md` |
+| `data-platform-discovery/SKILL.md` | Data Platform Current/Target Discovery & Gap Analysis | Required | `.agents/skills/data-platform-discovery/README.md` |
+| `financial-market-data-ingestion/SKILL.md` | Exchange REST/WebSocket Ingestion & Normalization | Required | `.agents/skills/financial-market-data-ingestion/README.md` |
+| `kafka-event-streaming/SKILL.md` | Kafka Event Contract, Partitioning & Consumer Safety | Required | `.agents/skills/kafka-event-streaming/README.md` |
+| `lakehouse-medallion/SKILL.md` | MinIO/S3, Parquet & Iceberg Medallion Engineering | Required | `.agents/skills/lakehouse-medallion/README.md` |
+| `analytics-engineering-dbt-clickhouse/SKILL.md` | ClickHouse OLAP & dbt Gold Mart Engineering | Required | `.agents/skills/analytics-engineering-dbt-clickhouse/README.md` |
+| `financial-data-quality/SKILL.md` | Financial Data Quality Controls & Reconciliation | Required | `.agents/skills/financial-data-quality/README.md` |
+| `data-governance-lineage/SKILL.md` | Dataset Ownership, Lineage, Retention & Provenance | Required | `.agents/skills/data-governance-lineage/README.md` |
+| `dataops-observability/SKILL.md` | Streaming/Batch Telemetry, Freshness SLAs & Runbooks | Required | `.agents/skills/dataops-observability/README.md` |
+| `data-platform-testing-recovery/SKILL.md` | Pipeline Replay, Backfill & Fault Recovery Verification | Required | `.agents/skills/data-platform-testing-recovery/README.md` |
 
 ## 6. Directory and File Organization
 
-16 subdirectories (`project-discovery/` through `documentation-validation/`), each containing `README.md` and `SKILL.md`.
+25 subdirectories (`project-discovery/` through `data-platform-testing-recovery/`), each containing `README.md` and `SKILL.md`.
 
 ## 7. Document Creation Rules
 
@@ -61,7 +70,7 @@ Invoked by Agent roles in `.agents/agents/` to produce models in `models/`, docu
 
 ## 10. Quality Gate
 
-All 16 skill folders contain both `README.md` and `SKILL.md` and pass `validate_agent_config.py` and `validate_readmes.py`.
+All 25 skill folders contain both `README.md` and `SKILL.md` and pass `validate_agent_config.py` and `validate_readmes.py`.
 
 ## 11. Validation Commands
 

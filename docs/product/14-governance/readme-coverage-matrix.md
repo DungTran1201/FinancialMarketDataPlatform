@@ -16,11 +16,11 @@
 
 ## 1. Executive Summary
 
-This matrix verifies Requirement 16 (**Directory README Coverage**): **100% of the 98 managed directories** across `.agents/`, `docs/`, `models/`, `work-items/`, and `tools/` contain a dedicated operational `README.md` implementing all 12 mandatory contract sections.
+This matrix verifies Requirement 16 (**Directory README Coverage**): **100% of the 107 managed directories** across `.agents/`, `docs/`, `models/`, `work-items/`, and `tools/` contain a dedicated operational `README.md` implementing all 12 mandatory contract sections.
 
 ---
 
-## 2. Complete Directory README Coverage Table (98 / 98 Directories Verified)
+## 2. Complete Directory README Coverage Table (107 / 107 Directories Verified)
 
 | Managed Directory | README Present | Operational Responsibility | Validator Status |
 |---|---|---|---|
@@ -30,13 +30,22 @@ This matrix verifies Requirement 16 (**Directory README Coverage**): **100% of t
 | `.agents/config/` | Yes (`.agents/config/README.md`) | Agent Workflow & Governance Configuration (`.agents/config/`) | `VERIFIED` |
 | `.agents/rules/` | Yes (`.agents/rules/README.md`) | Agent Operating Rules (`.agents/rules/`) | `VERIFIED` |
 | `.agents/skills/` | Yes (`.agents/skills/README.md`) | Agent Engineering Skills Catalog (`.agents/skills/`) | `VERIFIED` |
+| `.agents/skills/analytics-engineering-dbt-clickhouse/` | Yes (`.agents/skills/analytics-engineering-dbt-clickhouse/README.md`) | Skill Package: ClickHouse OLAP & dbt Gold Mart Engineering (`.agents/skills/analytics-engineering-dbt-clickhouse/`) | `VERIFIED` |
 | `.agents/skills/api-contract/` | Yes (`.agents/skills/api-contract/README.md`) | Skill Package: API & Event Contract Specification (`.agents/skills/api-contract/`) | `VERIFIED` |
 | `.agents/skills/architecture-modeling/` | Yes (`.agents/skills/architecture-modeling/README.md`) | Skill Package: System, Data & Software Architecture Modeling (`.agents/skills/architecture-modeling/`) | `VERIFIED` |
+| `.agents/skills/data-governance-lineage/` | Yes (`.agents/skills/data-governance-lineage/README.md`) | Skill Package: Dataset Ownership, Lineage, Retention & Provenance (`.agents/skills/data-governance-lineage/`) | `VERIFIED` |
+| `.agents/skills/data-platform-discovery/` | Yes (`.agents/skills/data-platform-discovery/README.md`) | Skill Package: Data Platform Current/Target Discovery & Gap Analysis (`.agents/skills/data-platform-discovery/`) | `VERIFIED` |
+| `.agents/skills/data-platform-testing-recovery/` | Yes (`.agents/skills/data-platform-testing-recovery/README.md`) | Skill Package: Pipeline Replay, Backfill & Fault Recovery Verification (`.agents/skills/data-platform-testing-recovery/`) | `VERIFIED` |
+| `.agents/skills/dataops-observability/` | Yes (`.agents/skills/dataops-observability/README.md`) | Skill Package: Streaming/Batch Telemetry, Freshness SLAs & Runbooks (`.agents/skills/dataops-observability/`) | `VERIFIED` |
 | `.agents/skills/diagram-modeling/` | Yes (`.agents/skills/diagram-modeling/README.md`) | Skill Package: Technical Diagram Authoring & Synchronization (`.agents/skills/diagram-modeling/`) | `VERIFIED` |
 | `.agents/skills/documentation-creation/` | Yes (`.agents/skills/documentation-creation/README.md`) | Skill Package: Template-Governed Documentation Authoring (`.agents/skills/documentation-creation/`) | `VERIFIED` |
 | `.agents/skills/documentation-review/` | Yes (`.agents/skills/documentation-review/README.md`) | Skill Package: Documentation Quality & Gate Audit (`.agents/skills/documentation-review/`) | `VERIFIED` |
 | `.agents/skills/documentation-validation/` | Yes (`.agents/skills/documentation-validation/README.md`) | Skill Package: Automated Documentation & Model Validation (`.agents/skills/documentation-validation/`) | `VERIFIED` |
 | `.agents/skills/domain-modeling/` | Yes (`.agents/skills/domain-modeling/README.md`) | Skill Package: DDD Domain, Entity & Aggregate Modeling (`.agents/skills/domain-modeling/`) | `VERIFIED` |
+| `.agents/skills/financial-data-quality/` | Yes (`.agents/skills/financial-data-quality/README.md`) | Skill Package: Financial Data Quality Controls & Reconciliation (`.agents/skills/financial-data-quality/`) | `VERIFIED` |
+| `.agents/skills/financial-market-data-ingestion/` | Yes (`.agents/skills/financial-market-data-ingestion/README.md`) | Skill Package: Exchange REST/WebSocket Ingestion & Normalization (`.agents/skills/financial-market-data-ingestion/`) | `VERIFIED` |
+| `.agents/skills/kafka-event-streaming/` | Yes (`.agents/skills/kafka-event-streaming/README.md`) | Skill Package: Kafka Event Contract, Partitioning & Consumer Safety (`.agents/skills/kafka-event-streaming/`) | `VERIFIED` |
+| `.agents/skills/lakehouse-medallion/` | Yes (`.agents/skills/lakehouse-medallion/README.md`) | Skill Package: MinIO/S3, Parquet & Iceberg Medallion Engineering (`.agents/skills/lakehouse-medallion/`) | `VERIFIED` |
 | `.agents/skills/process-modeling/` | Yes (`.agents/skills/process-modeling/README.md`) | Skill Package: Business Process, BPMN & Swimlane Modeling (`.agents/skills/process-modeling/`) | `VERIFIED` |
 | `.agents/skills/project-discovery/` | Yes (`.agents/skills/project-discovery/README.md`) | Skill Package: Project & Current-State Discovery (`.agents/skills/project-discovery/`) | `VERIFIED` |
 | `.agents/skills/requirements-engineering/` | Yes (`.agents/skills/requirements-engineering/README.md`) | Skill Package: Requirements Engineering & Normalization (`.agents/skills/requirements-engineering/`) | `VERIFIED` |

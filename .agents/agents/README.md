@@ -2,7 +2,7 @@
 
 ## 1. Directory Purpose
 
-Defines the 11 specialized AI Agent roles that collaborate across the documentation and engineering lifecycle.
+Defines the 19 specialized AI Agent roles that collaborate across the documentation, product, and financial data platform engineering lifecycle.
 
 ## 2. Scope and Boundaries
 
@@ -34,10 +34,18 @@ Managed by `documentation-architect` and audited by `documentation-auditor`.
 | `security-reviewer.md` | Security & Governance Reviewer | Required | `.agents/agents/README.md` |
 | `qa-reviewer.md` | QA & Verification Architect | Required | `.agents/agents/README.md` |
 | `documentation-auditor.md` | Documentation Governance & Quality Auditor | Required | `.agents/agents/README.md` |
+| `data-platform-architect.md` | Financial Data Platform Architect | Required | `.agents/agents/README.md` |
+| `data-engineer.md` | Market Data Ingestion & Pipeline Engineer | Required | `.agents/agents/README.md` |
+| `streaming-data-engineer.md` | Kafka Event Streaming & Consumer Engineer | Required | `.agents/agents/README.md` |
+| `lakehouse-engineer.md` | Lakehouse Medallion & Iceberg Engineer | Required | `.agents/agents/README.md` |
+| `analytics-engineer.md` | ClickHouse & dbt Analytics Engineer | Required | `.agents/agents/README.md` |
+| `data-quality-governance-engineer.md` | Financial Data Quality & Governance Engineer | Required | `.agents/agents/README.md` |
+| `dataops-engineer.md` | DataOps, Observability & Recovery Engineer | Required | `.agents/agents/README.md` |
+| `financial-data-platform-reviewer.md` | Financial Data Platform Principal Reviewer | Required | `.agents/agents/README.md` |
 
 ## 6. Directory and File Organization
 
-Flat directory containing `README.md` and 11 `<role-slug>.md` files.
+Flat directory containing `README.md` and 19 `<role-slug>.md` files.
 
 ## 7. Document Creation Rules
 
@@ -56,7 +64,7 @@ Each role invokes skills in `.agents/skills/`, obeys rules in `.agents/rules/`, 
 
 ## 10. Quality Gate
 
-All 11 role files exist, contain all mandatory sections, and reference valid skills and rules.
+All 19 role files exist, contain all mandatory sections, and reference valid skills and rules.
 
 ## 11. Validation Commands
 

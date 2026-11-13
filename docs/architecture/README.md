@@ -24,8 +24,19 @@ Owned by `architecture-modeler` and reviewed by `documentation-architect` and `s
 | Artifact | Purpose | Required / Conditional | Template |
 |---|---|---|---|
 | `00-architecture-overview.md` | Executive three-plane blueprint & phased roadmap | Required | `docs/templates/architecture/architecture-overview.template.md` |
-| `01..03-system/container/component.md` | C4 Level 1, Level 2, and Level 3 architecture views | Required | `docs/templates/architecture/SAD.template.md` |
-| `04..13-*.md` | Data platform, backend, agent, storage, flow, API, security, reliability, deployment, performance | Required | `docs/templates/architecture/SAD.template.md` |
+| `01-system-context.md` | C4 Level 1 System Context & External Actor Boundaries | Required | `docs/templates/architecture/SAD.template.md` |
+| `02-system-container-architecture.md` | C4 Level 2 Runtime Containers & Polyglot Storage | Required | `docs/templates/architecture/SAD.template.md` |
+| `03-component-architecture.md` | C4 Level 3 Internal Module & Component Architecture | Required | `docs/templates/architecture/SAD.template.md` |
+| `04-data-platform-architecture.md` | Plane A Ingestion, Kafka Streaming & Lakehouse Medallion Architecture | Required | `docs/templates/architecture/SAD.template.md` |
+| `05-backend-architecture.md` | Plane B FastAPI Modular Monolith, CQRS & Hexagonal Architecture | Required | `docs/templates/architecture/SAD.template.md` |
+| `06-agentic-intelligence-architecture.md` | Plane C LangGraph Orchestrator, Tool Gateway & Guardrail Architecture | Required | `docs/templates/architecture/SAD.template.md` |
+| `07-data-storage-and-modeling.md` | Polyglot Storage & Schema Design (Iceberg, ClickHouse, PostgreSQL, Redis, Qdrant) | Required | `docs/templates/architecture/SAD.template.md` |
+| `08-data-flow-and-event-contracts.md` | End-to-End Hot, Warm, Cold, Backfill & RAG Data Pipelines | Required | `docs/templates/architecture/SAD.template.md` |
+| `09-api-and-integration-architecture.md` | REST, WebSocket, SSE & Kafka Event Integration Contracts | Required | `docs/templates/architecture/SAD.template.md` |
+| `10-security-and-governance.md` | Security Trust Boundaries, Zero-Direct-DB Isolation & Data Governance | Required | `docs/templates/architecture/SAD.template.md` |
+| `11-reliability-and-observability.md` | Fault Tolerance, Replayability, SLIs/SLOs & OpenTelemetry Observability | Required | `docs/templates/architecture/SAD.template.md` |
+| `12-deployment-architecture.md` | Docker Compose Profiles, Local Developer Topology & Runtime Dependencies | Required | `docs/templates/architecture/SAD.template.md` |
+| `13-performance-and-scalability.md` | Latency Budgets, Throughput Targets, Partitioning & Scaling Strategy | Required | `docs/templates/architecture/SAD.template.md` |
 | `adr/` | Architecture Decision Records (`ADR-001`..`ADR-006`) | Required | `docs/architecture/adr/README.md` |
 
 ## 6. Directory and File Organization

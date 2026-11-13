@@ -20,6 +20,16 @@ active_skills:
   - documentation-review
   - traceability-audit
   - documentation-validation
+  - analytics-engineering-dbt-clickhouse
+  - data-governance-lineage
+  - data-platform-discovery
+  - data-platform-testing-recovery
+  - dataops-observability
+  - financial-data-quality
+  - financial-market-data-ingestion
+  - kafka-event-streaming
+  - lakehouse-medallion
 
 inactive_candidates: []
+
 

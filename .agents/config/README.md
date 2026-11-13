@@ -6,7 +6,7 @@
 
 ## 2. Scope and Boundaries
 
-- **Belongs in this directory**: `document-map.yaml`, `artifact-matrix.yaml`, `change-types.yaml`, `phase-gates.yaml`, `identifier-registry.yaml`, and `status-lifecycle.yaml`.
+- **Belongs in this directory**: `document-map.yaml`, `artifact-matrix.yaml`, `change-types.yaml`, `phase-gates.yaml`, `identifier-registry.yaml`, `status-lifecycle.yaml`, and `data-platform-boundaries.yaml`.
 - **Does NOT belong in this directory**: Prose documentation (`docs/`), canonical domain data (`models/`), or Python scripts (`tools/`).
 
 ## 3. Agent Role and Responsibilities
@@ -28,10 +28,11 @@ Maintained by `documentation-architect` and validated by `documentation-auditor`
 | `phase-gates.yaml` | Defines G0_DISCOVERY..G6_RELEASE gates and state transitions | Required | `.agents/config/phase-gates.yaml` |
 | `identifier-registry.yaml` | Defines canonical ID prefixes, regex patterns, and preserved IDs | Required | `.agents/config/identifier-registry.yaml` |
 | `status-lifecycle.yaml` | Defines DRAFT, PROPOSED, IN_REVIEW, APPROVED, BASELINED transitions | Required | `.agents/config/status-lifecycle.yaml` |
+| `data-platform-boundaries.yaml` | Defines Three-Plane boundaries, storage responsibilities, and implemented vs target components | Required | `.agents/config/data-platform-boundaries.yaml` |
 
 ## 6. Directory and File Organization
 
-Six flat YAML configuration files inside `.agents/config/`.
+Seven flat YAML configuration files inside `.agents/config/`.
 
 ## 7. Document Creation Rules
 
@@ -49,7 +50,7 @@ Consumed directly by `tools/validators/` scripts and all Agent skills during wor
 
 ## 10. Quality Gate
 
-All 6 YAML files parse cleanly and every referenced path resolves on disk.
+All 7 YAML files parse cleanly and every referenced path resolves on disk.
 
 ## 11. Validation Commands
 

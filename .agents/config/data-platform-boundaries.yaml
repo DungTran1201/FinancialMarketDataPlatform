@@ -1,0 +1,87 @@
+version: "1.0"
+metadata:
+  name: "FinancialMarketDataPlatform Data Ownership and Boundaries"
+  updated_at: "2026-11-12"
+  evidence_policy: "Separate AS-IS implementation from documented target state"
+
+planes:
+  data_plane:
+    purpose: "Ingestion, event distribution, persistence, transformation and data quality"
+    source_roots: ["src/collectors", "src/shared/contracts", "src/consumers", "src/processing", "src/quality"]
+    forbidden_dependencies: ["src/agent"]
+  application_control_plane:
+    purpose: "API serving, IAM, control metadata and platform configuration"
+    source_roots: ["src/backend", "deploy/postgres"]
+  intelligence_plane:
+    purpose: "Bounded agent orchestration and read-only analytical tools"
+    source_roots: ["src/agent"]
+    access_policy: "Read-only market data through Controlled Tool Gateway; no arbitrary SQL"
+
+technology_ownership:
+  collectors:
+    owner_role: "streaming-data-engineer"
+    paths: ["src/collectors"]
+    responsibilities: ["provider transport", "normalization", "rate limits", "watermark-aware backfill"]
+  event_contracts:
+    owner_role: "data-engineer"
+    paths: ["src/shared/contracts", "docs/specifications/data-contracts.md"]
+    responsibilities: ["versioning", "schema compatibility", "natural keys", "partition keys"]
+  kafka_streaming:
+    owner_role: "streaming-data-engineer"
+    paths: ["src/consumers", "docker-compose.yml"]
+    responsibilities: ["topics", "consumer groups", "offset semantics", "DLQ", "backpressure"]
+  hot_state:
+    owner_role: "data-engineer"
+    paths: ["src/consumers/hot_redis"]
+    datastore: "Redis"
+  olap:
+    owner_role: "analytics-engineer"
+    paths: ["deploy/clickhouse", "src/consumers/analytics_ch"]
+    datastore: "ClickHouse"
+  lakehouse:
+    owner_role: "lakehouse-engineer"
+    paths: ["src/consumers/lakehouse_bronze", "src/processing/spark"]
+    storage: ["MinIO", "Parquet", "Apache Iceberg"]
+    layer_owners:
+      bronze: "source-preserving append-only archive"
+      silver: "Spark standardization and deduplication"
+      gold: "dbt curated business/analytical models"
+  analytical_models:
+    owner_role: "analytics-engineer"
+    paths: ["src/transformation/dbt"]
+    responsibilities: ["Gold semantic definitions", "incremental models", "data tests"]
+  data_quality:
+    owner_role: "data-quality-governance-engineer"
+    paths: ["src/quality", "models/testing"]
+  platform_operations:
+    owner_role: "dataops-engineer"
+    paths: ["deploy", "docker-compose.yml", ".github/workflows"]
+
+contracts:
+  canonical_event_envelope: "EventEnvelopeV1"
+  canonical_topic_namespace: "market.raw.*.v1"
+  dead_letter_topic: "market.dlq.v1"
+  anomaly_topic: "market.anomalies.v1"
+  timestamp_standard: "timezone-aware UTC; preserve exchange_event_time and ingested_at separately"
+  numeric_standard: "Decimal for financial persistence and exact calculations"
+  delivery_assumption: "At-least-once paths must tolerate duplicates; do not assert end-to-end exactly-once without proof"
+
+medallion:
+  bronze:
+    immutable: true
+    transformation_owner: "lakehouse-engineer"
+  silver:
+    deduplication_required: true
+    transformation_engine: "PySpark"
+  gold:
+    transformation_engine: "dbt Core"
+    transformation_owner: "analytics-engineer"
+
+quality_requirements:
+  baseline: ["schema_validity", "completeness", "uniqueness", "freshness", "financial_invariants", "lineage"]
+  critical_failure_action: "block promotion or trusted serving and preserve validation evidence"
+
+implementation_state_policy:
+  labels: ["AS-IS/FACT", "DOCUMENTED TARGET", "PROPOSED", "ASSUMPTION", "OPEN QUESTION", "DECISION"]
+  require_evidence_paths: true
+  runtime_claim_requires: ["implementation", "configuration", "test or runtime evidence"]

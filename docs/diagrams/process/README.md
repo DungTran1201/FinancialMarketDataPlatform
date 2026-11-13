@@ -25,10 +25,12 @@ Primary authoring role: `process-modeler`; audited by `documentation-auditor`.
 | Artifact | Purpose | Required / Conditional | Template |
 |---|---|---|---|
 | `process-diagram.template.md` | Reusable `DIAG-BPMN / DIAG-SWIM` Mermaid diagram template | Conditional | `docs/diagrams/process/process-diagram.template.md` |
+| `bpmn/` | BPMN Business Process Flow Diagrams (`DIAG-BPMN-*`) | Required | `docs/diagrams/process/bpmn/README.md` |
+| `swimlane/` | Cross-Functional Actor Swimlane Diagrams (`DIAG-SWIM-*`) | Required | `docs/diagrams/process/swimlane/README.md` |
 
 ## 6. Directory and File Organization
 
-Directory `docs/diagrams/process/` containing `README.md` and `DIAG-BPMN / DIAG-SWIM` markdown diagram files named `<NNN>-<kebab-slug>.md` or `<ID>-<kebab-slug>.md`.
+Directory `docs/diagrams/process/` containing `README.md`, `process-diagram.template.md`, and two specialized subdirectories (`bpmn/` and `swimlane/`) storing `DIAG-BPMN` and `DIAG-SWIM` markdown diagram files.
 
 ## 7. Document Creation Rules
 

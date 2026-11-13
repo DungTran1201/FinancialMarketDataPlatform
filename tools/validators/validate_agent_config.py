@@ -31,7 +31,11 @@ def main() -> int:
                         cmd = hk.get("command", "")
                         if cmd.startswith("python "):
                             script_rel = cmd.replace("python ", "").strip()
-                            if not (REPO_ROOT / script_rel).exists():
+                            candidate_paths = [
+                                (AGENTS_DIR / script_rel).resolve(),
+                                (REPO_ROOT / script_rel).resolve(),
+                            ]
+                            if not any(cp.exists() for cp in candidate_paths):
                                 print(f"[ERROR] hooks.json ({hname}): Missing script '{script_rel}'")
                                 errors += 1
 

@@ -98,6 +98,60 @@
       "path": ".agents/skills/documentation-validation/SKILL.md",
       "phase": "14-governance",
       "owner_role": "documentation-auditor"
+    },
+    {
+      "id": "analytics-engineering-dbt-clickhouse",
+      "path": ".agents/skills/analytics-engineering-dbt-clickhouse/SKILL.md",
+      "phase": "07-domain",
+      "owner_role": "analytics-engineer"
+    },
+    {
+      "id": "data-governance-lineage",
+      "path": ".agents/skills/data-governance-lineage/SKILL.md",
+      "phase": "14-governance",
+      "owner_role": "data-quality-governance-engineer"
+    },
+    {
+      "id": "data-platform-discovery",
+      "path": ".agents/skills/data-platform-discovery/SKILL.md",
+      "phase": "00-discovery",
+      "owner_role": "data-platform-architect"
+    },
+    {
+      "id": "data-platform-testing-recovery",
+      "path": ".agents/skills/data-platform-testing-recovery/SKILL.md",
+      "phase": "12-testing",
+      "owner_role": "financial-data-platform-reviewer"
+    },
+    {
+      "id": "dataops-observability",
+      "path": ".agents/skills/dataops-observability/SKILL.md",
+      "phase": "13-operations",
+      "owner_role": "dataops-engineer"
+    },
+    {
+      "id": "financial-data-quality",
+      "path": ".agents/skills/financial-data-quality/SKILL.md",
+      "phase": "12-testing",
+      "owner_role": "data-quality-governance-engineer"
+    },
+    {
+      "id": "financial-market-data-ingestion",
+      "path": ".agents/skills/financial-market-data-ingestion/SKILL.md",
+      "phase": "06-architecture",
+      "owner_role": "streaming-data-engineer"
+    },
+    {
+      "id": "kafka-event-streaming",
+      "path": ".agents/skills/kafka-event-streaming/SKILL.md",
+      "phase": "06-architecture",
+      "owner_role": "streaming-data-engineer"
+    },
+    {
+      "id": "lakehouse-medallion",
+      "path": ".agents/skills/lakehouse-medallion/SKILL.md",
+      "phase": "07-domain",
+      "owner_role": "lakehouse-engineer"
     }
   ]
 }

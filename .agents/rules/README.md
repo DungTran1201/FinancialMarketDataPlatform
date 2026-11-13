@@ -2,7 +2,7 @@
 
 ## 1. Directory Purpose
 
-Defines the 10 mandatory, non-contradictory behavioral rules governing all AI Agents and human contributors across the repository.
+Defines the 22 mandatory, non-contradictory behavioral rules (`RULE-001..010` and `DATA-RULE-001..012`) governing all AI Agents and human contributors across the repository.
 
 ## 2. Scope and Boundaries
 
@@ -32,10 +32,22 @@ Maintained by `documentation-architect` and enforced by `documentation-auditor` 
 | `change-lifecycle.md` | Work-Item Change Lifecycle Rule | Required | `.agents/rules/README.md` |
 | `security.md` | Security, Secret Isolation & Agent Safety Rule | Required | `.agents/rules/README.md` |
 | `quality-gates.md` | Phase Quality Gates & Status Promotion Rule | Required | `.agents/rules/README.md` |
+| `data-truth-classification.md` | Data Platform Truth & Evidence Classification Rule (`DATA-RULE-001`) | Required | `.agents/rules/README.md` |
+| `financial-data-correctness.md` | Financial Data Precision, Time & Identity Rule (`DATA-RULE-002`) | Required | `.agents/rules/README.md` |
+| `event-contract-evolution.md` | Kafka Event Contract & Schema Evolution Rule (`DATA-RULE-003`) | Required | `.agents/rules/README.md` |
+| `ingestion-reliability.md` | Exchange Ingestion Resilience & Watermark Rule (`DATA-RULE-004`) | Required | `.agents/rules/README.md` |
+| `kafka-consumer-delivery.md` | Kafka Consumer Delivery, Offset & DLQ Rule (`DATA-RULE-005`) | Required | `.agents/rules/README.md` |
+| `medallion-layer-ownership.md` | Lakehouse Medallion Layer Ownership Rule (`DATA-RULE-006`) | Required | `.agents/rules/README.md` |
+| `analytical-modeling.md` | ClickHouse & dbt Analytical Modeling Rule (`DATA-RULE-007`) | Required | `.agents/rules/README.md` |
+| `data-quality-gates.md` | Financial Data Quality Gate Enforcement Rule (`DATA-RULE-008`) | Required | `.agents/rules/README.md` |
+| `data-lineage-governance.md` | Data Lineage, Retention & Governance Rule (`DATA-RULE-009`) | Required | `.agents/rules/README.md` |
+| `data-platform-observability.md` | Data Platform Telemetry & Freshness Observability Rule (`DATA-RULE-010`) | Required | `.agents/rules/README.md` |
+| `data-platform-security-operations.md` | Data Platform Secret, Access & Plane Isolation Rule (`DATA-RULE-011`) | Required | `.agents/rules/README.md` |
+| `storage-workload-separation.md` | Polyglot Storage & OLTP/OLAP Workload Separation Rule (`DATA-RULE-012`) | Required | `.agents/rules/README.md` |
 
 ## 6. Directory and File Organization
 
-Flat directory containing `README.md` and 10 `<rule-slug>.md` files.
+Flat directory containing `README.md` and 22 `<rule-slug>.md` files.
 
 ## 7. Document Creation Rules
 
@@ -54,7 +66,7 @@ Referenced by all Agent roles in `.agents/agents/` and enforced by `tools/valida
 
 ## 10. Quality Gate
 
-All 10 rule files exist, have unique `RULE-###` IDs, and pass `validate_agent_config.py`.
+All 22 rule files exist, have unique `RULE-###` or `DATA-RULE-###` IDs, and pass `validate_agent_config.py`.
 
 ## 11. Validation Commands
 
