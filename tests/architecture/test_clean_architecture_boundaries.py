@@ -55,9 +55,7 @@ class TestArchitectureBoundaries(unittest.TestCase):
         self.assertEqual(existing, EXPECTED_BACKEND_MODULES)
 
     def test_domain_layers_have_zero_framework_or_driver_dependencies(self) -> None:
-        domain_files = list(SRC_ROOT.glob("backend/modules/*/domain/*.py")) + list(
-            SRC_ROOT.glob("shared/domain/*.py")
-        )
+        domain_files = list(SRC_ROOT.glob("backend/modules/*/domain/*.py")) + list(SRC_ROOT.glob("shared/domain/*.py"))
         self.assertGreater(len(domain_files), 0, "Expected domain layer files to be present")
 
         for py_file in domain_files:
@@ -101,4 +99,3 @@ class TestArchitectureBoundaries(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

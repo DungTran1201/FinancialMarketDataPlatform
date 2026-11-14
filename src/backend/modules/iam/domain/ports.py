@@ -17,9 +17,7 @@ class UserRole(StrEnum):
 
 ROLE_CAPABILITIES: dict[UserRole, frozenset[str]] = {
     UserRole.VIEWER: frozenset({"market:read", "historical:read", "analytics:read", "reports:read"}),
-    UserRole.ANALYST: frozenset(
-        {"market:read", "historical:read", "analytics:read", "reports:read", "agent:trigger"}
-    ),
+    UserRole.ANALYST: frozenset({"market:read", "historical:read", "analytics:read", "reports:read", "agent:trigger"}),
     UserRole.OPERATOR: frozenset(
         {
             "market:read",
@@ -44,4 +42,3 @@ ROLE_CAPABILITIES: dict[UserRole, frozenset[str]] = {
         }
     ),
 }
-

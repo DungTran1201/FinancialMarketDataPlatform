@@ -1,2 +1,1 @@
 """Market presentation layer package."""
-

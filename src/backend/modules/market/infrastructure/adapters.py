@@ -26,8 +26,5 @@ class InMemoryClickHouseFallbackAdapter(MarketFallbackRepositoryPort):
     def __init__(self, fallback_quotes: dict[str, LatestPriceQuote] | None = None) -> None:
         self._quotes: dict[str, LatestPriceQuote] = dict(fallback_quotes or {})
 
-    async def get_latest_price_fallback(
-        self, instrument: InstrumentKey
-    ) -> LatestPriceQuote | None:
+    async def get_latest_price_fallback(self, instrument: InstrumentKey) -> LatestPriceQuote | None:
         return self._quotes.get(instrument.canonical_id)
-

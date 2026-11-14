@@ -137,4 +137,3 @@ class DeadLetterEnvelopeV1:
     error_message: str
     raw_payload: str
     failed_at: datetime = datetime.now(UTC)
-

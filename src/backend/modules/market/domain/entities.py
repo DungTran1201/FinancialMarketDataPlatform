@@ -26,4 +26,3 @@ class LatestPriceQuote:
     def is_stale(self, reference_now: datetime, threshold_ms: int = 15000) -> bool:
         """Return True if data age exceeds the freshness threshold."""
         return self.compute_age_ms(reference_now) > threshold_ms
-

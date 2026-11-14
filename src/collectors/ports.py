@@ -40,4 +40,3 @@ class HistoricalCollectorPort(Protocol):
         end_time: datetime,
         limit: int = 1000,
     ) -> list[EventEnvelopeV1]: ...
-

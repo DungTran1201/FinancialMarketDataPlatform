@@ -20,4 +20,3 @@ class PlatformConfigRepositoryPort(Protocol):
     """Port for managing monitored symbols and stream subscriptions in PostgreSQL."""
 
     async def list_active_instruments(self) -> list[MonitoredInstrumentConfig]: ...
-

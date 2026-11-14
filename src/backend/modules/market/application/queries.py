@@ -72,4 +72,3 @@ class GetLatestPriceQueryHandler:
             age_ms=quote.compute_age_ms(reference_now),
             is_stale=quote.is_stale(reference_now, self._staleness_threshold_ms),
         )
-

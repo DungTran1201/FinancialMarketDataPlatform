@@ -17,7 +17,4 @@ class MarketHotStorePort(Protocol):
 class MarketFallbackRepositoryPort(Protocol):
     """Port for bounded ClickHouse fallback when Redis misses or is unavailable."""
 
-    async def get_latest_price_fallback(
-        self, instrument: InstrumentKey
-    ) -> LatestPriceQuote | None: ...
-
+    async def get_latest_price_fallback(self, instrument: InstrumentKey) -> LatestPriceQuote | None: ...

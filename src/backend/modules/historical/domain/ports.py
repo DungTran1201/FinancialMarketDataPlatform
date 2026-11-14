@@ -37,4 +37,3 @@ class HistoricalKlineRepositoryPort(Protocol):
         time_range: BoundedTimeRange,
         limit: int = 500,
     ) -> list[HistoricalCandleEntity]: ...
-

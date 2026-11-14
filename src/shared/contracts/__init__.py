@@ -1,2 +1,1 @@
 """Shared contract package."""
-

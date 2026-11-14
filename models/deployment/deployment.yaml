@@ -16,7 +16,7 @@ metadata:
 profiles:
   - id: "DEP-001"
     name: "core"
-    services: ["postgres", "redis", "kafka", "clickhouse", "collector-ws", "consumer-hot-redis", "consumer-analytics-ch", "backend-api"]
+    services: ["postgres", "redis", "kafka", "clickhouse", "collector-ws", "consumer-hot-redis", "consumer-analytics-ch", "backend-api", "edge-gateway"]
   - id: "DEP-002"
     name: "intelligence"
     services: ["agent-worker"]

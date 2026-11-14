@@ -38,4 +38,3 @@ class ReportRepositoryPort(Protocol):
     """Port for reading completed structured reports from PostgreSQL."""
 
     async def get_report_by_run_id(self, run_id: str) -> StructuredAnalysisReport | None: ...
-

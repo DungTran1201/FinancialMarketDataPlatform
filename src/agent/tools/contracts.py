@@ -130,4 +130,3 @@ class ToolExecutionEnvelope:
     status: str  # SUCCESS | TIMEOUT | VALIDATION_ERROR | PERMISSION_DENIED
     data: dict[str, Any]
     provenance: ToolProvenanceMetadata
-

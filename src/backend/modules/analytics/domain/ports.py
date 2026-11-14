@@ -30,4 +30,3 @@ class AnalyticsQueryRepositoryPort(Protocol):
         instrument: InstrumentKey,
         window: str,
     ) -> MarketStatisticsSummary | None: ...
-

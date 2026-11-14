@@ -44,6 +44,18 @@ threats:
     description: "Leakage of database, exchange, or LLM API credentials in logs or git repository."
     severity: "CRITICAL"
     mitigated_by: ["CTRL-004"]
+  - id: "THR-004"
+    stride: "Spoofing / Information Disclosure"
+    target: "ZONE-2 (Edge Gateway) & Internal Service Bindings"
+    description: "Cleartext HTTP interception, Host header spoofing, or exposure of raw client IPs and internal container ports (5432, 6379, 8123, 9092)."
+    severity: "HIGH"
+    mitigated_by: ["CTRL-005"]
+  - id: "THR-005"
+    stride: "Spoofing / Elevation of Privilege"
+    target: "COMP-006 (IAM & Auth Endpoints)"
+    description: "Stolen JWT replay from a foreign IP address, brute-force token requests, or SQLi/XSS payload injection."
+    severity: "CRITICAL"
+    mitigated_by: ["CTRL-006", "CTRL-003"]
 
 controls:
   - id: "CTRL-001"
@@ -56,9 +68,17 @@ controls:
     verification_test: "TC-004"
   - id: "CTRL-003"
     name: "BoundedTimeRange Guard & Sliding-Window Rate Limiter"
-    mitigates: ["THR-002"]
+    mitigates: ["THR-002", "THR-005"]
     verification_test: "TC-005"
   - id: "CTRL-004"
     name: "Environment Secret Isolation & Structured Log Redaction"
     mitigates: ["THR-003"]
     verification_test: "TC-006"
+  - id: "CTRL-005"
+    name: "HTTPS TLS 1.3 Edge Gateway (*.fmdp.local), HSTS, and Encrypt-then-MAC IP/Port Masking"
+    mitigates: ["THR-004"]
+    verification_test: "TC-007"
+  - id: "CTRL-006"
+    name: "HS256 JWT IP-HMAC Binding, SHA-256 Token Revocation, PBKDF2-SHA256 & WAF Request Firewall"
+    mitigates: ["THR-005"]
+    verification_test: "TC-008"

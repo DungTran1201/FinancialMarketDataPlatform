@@ -1,0 +1,14 @@
+fmdp_clickhouse:
+  target: local
+  outputs:
+    local:
+      type: clickhouse
+      schema: "{{ env_var('CLICKHOUSE_DB', 'market_data') }}"
+      host: "{{ env_var('CLICKHOUSE_HOST', 'localhost') }}"
+      port: "{{ env_var('CLICKHOUSE_HTTP_PORT', '8123') | int }}"
+      user: "{{ env_var('CLICKHOUSE_INGEST_USER', 'fmdp_ingest_writer') }}"
+      password: "{{ env_var('CLICKHOUSE_INGEST_PASSWORD', 'change_me_local_ch_ingest_password') }}"
+      secure: false
+      verify: false
+      threads: 4
+

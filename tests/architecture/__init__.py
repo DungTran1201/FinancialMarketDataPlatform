@@ -1,2 +1,1 @@
 """Architecture boundary tests package."""
-

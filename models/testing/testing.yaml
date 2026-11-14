@@ -12,6 +12,9 @@ metadata:
   source_documents:
     - "tests/architecture/test_clean_architecture_boundaries.py"
     - "tests/unit/test_contracts_and_guardrails.py"
+    - "tests/unit/test_security_and_defense.py"
+    - "tests/unit/test_three_planes_framework.py"
+    - "tests/unit/test_100_bots_data_plane_swarm.py"
 
 test_cases:
   - id: "TC-001"
@@ -61,4 +64,36 @@ test_cases:
     requirement_refs: ["FR-09", "NFR-003", "CTRL-004"]
     acceptance_criteria_refs: []
     test_path: "tests/architecture/test_clean_architecture_boundaries.py"
+    status: "BASELINED"
+  - id: "TC-007"
+    title: "HTTPS Domain Routing, HSTS Headers & Encrypt-then-MAC IP/Port Masking"
+    test_type: "security"
+    priority: "P0"
+    requirement_refs: ["FR-10", "CTRL-005"]
+    acceptance_criteria_refs: []
+    test_path: "tests/unit/test_security_and_defense.py"
+    status: "BASELINED"
+  - id: "TC-008"
+    title: "JWT HS256 IP-HMAC Binding, SHA-256 Token Revocation, WAF & Sliding-Window Rate Limiting"
+    test_type: "security"
+    priority: "P0"
+    requirement_refs: ["FR-10", "CTRL-003", "CTRL-006"]
+    acceptance_criteria_refs: []
+    test_path: "tests/unit/test_security_and_defense.py"
+    status: "BASELINED"
+  - id: "TC-009"
+    title: "Independent & Inter-Plane Framework Verification Across Data Plane, Application Plane, and Intelligence Plane"
+    test_type: "integration"
+    priority: "P0"
+    requirement_refs: ["FR-01", "FR-02", "FR-03", "FR-04", "FR-05", "FR-06", "FR-07", "FR-08", "FR-09", "FR-10", "BR-003", "BR-004"]
+    acceptance_criteria_refs: ["AC-001", "AC-002", "AC-003"]
+    test_path: "tests/unit/test_three_planes_framework.py"
+    status: "BASELINED"
+  - id: "TC-010"
+    title: "100-Bot Data Plane Load, Cache-Eviction Chaos, Lakehouse Medallion & Contract Fuzzing Campaign"
+    test_type: "integration"
+    priority: "P0"
+    requirement_refs: ["FR-01", "FR-02", "FR-03", "FR-04", "FR-05", "FR-06", "FR-07", "FR-08", "NFR-001", "NFR-002", "NFR-003", "BR-001", "BR-002", "BR-003"]
+    acceptance_criteria_refs: ["AC-001", "AC-002"]
+    test_path: "tests/unit/test_100_bots_data_plane_swarm.py"
     status: "BASELINED"

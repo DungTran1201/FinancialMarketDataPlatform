@@ -1,4 +1,4 @@
-"""Controlled Tool Gateway enforcing whitelist, permissions, query limits, and provenance."""
+"""Controlled Tool Gateway & Deterministic Quantitative Engine (Plane C: Intelligence Plane)."""
 
 from __future__ import annotations
 
@@ -52,15 +52,44 @@ def compute_deterministic_realized_volatility(
     return math.sqrt(variance * periods_per_year)
 
 
+def compute_deterministic_pearson_correlation(
+    prices_a: list[float],
+    prices_b: list[float],
+) -> float:
+    """Deterministic Pearson correlation coefficient between two return series."""
+    ret_a = compute_deterministic_log_returns(prices_a)
+    ret_b = compute_deterministic_log_returns(prices_b)
+    n = min(len(ret_a), len(ret_b))
+    if n < 2:
+        return 0.0
+    ra = ret_a[-n:]
+    rb = ret_b[-n:]
+    mean_a = sum(ra) / n
+    mean_b = sum(rb) / n
+    cov = sum((ra[i] - mean_a) * (rb[i] - mean_b) for i in range(n))
+    std_a = math.sqrt(sum((x - mean_a) ** 2 for x in ra))
+    std_b = math.sqrt(sum((y - mean_b) ** 2 for y in rb))
+    if std_a <= 1e-12 or std_b <= 1e-12:
+        return 0.0
+    return round(cov / (std_a * std_b), 6)
+
+
 class ControlledToolGateway:
     """Security and determinism firewall mediating all Agent tool invocations (ADR-006)."""
 
     def __init__(
         self,
-        handlers: dict[ApprovedAgentTool, Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]]
-        | None = None,
+        handlers: dict[ApprovedAgentTool, Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]] | None = None,
     ) -> None:
         self._handlers = dict(handlers or {})
+        self._audit_log: list[ToolExecutionEnvelope] = []
+
+    def register_handler(
+        self,
+        tool: ApprovedAgentTool,
+        handler: Callable[[dict[str, Any]], Awaitable[dict[str, Any]]],
+    ) -> None:
+        self._handlers[tool] = handler
 
     async def execute_tool(
         self,
@@ -109,9 +138,14 @@ class ControlledToolGateway:
             row_count=int(result_data.get("row_count", 1)),
             executed_at=now_utc,
         )
-        return ToolExecutionEnvelope(
+        envelope = ToolExecutionEnvelope(
             status="SUCCESS",
             data=result_data,
             provenance=provenance,
         )
+        self._audit_log.append(envelope)
+        return envelope
 
+    @property
+    def audit_log(self) -> tuple[ToolExecutionEnvelope, ...]:
+        return tuple(self._audit_log)

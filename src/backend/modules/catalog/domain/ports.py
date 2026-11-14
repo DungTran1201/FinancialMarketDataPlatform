@@ -22,4 +22,3 @@ class DataCatalogRepositoryPort(Protocol):
     """Port for querying monitored instruments and data freshness."""
 
     async def get_freshness(self, instrument: InstrumentKey) -> DataFreshnessReport: ...
-

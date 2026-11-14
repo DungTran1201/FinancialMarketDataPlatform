@@ -24,7 +24,7 @@ services:
       POSTGRES_USER: ${POSTGRES_ADMIN_USER:-fmdp_pg_admin}
       POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-change_me_local_pg_admin_password}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./deploy/postgres/init:/docker-entrypoint-initdb.d:ro
@@ -51,7 +51,7 @@ services:
       --save ""
       --appendonly no
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-change_me_local_redis_password}", "ping"]
       interval: 10s
@@ -82,7 +82,7 @@ services:
       KAFKA_NUM_PARTITIONS: 6
       KAFKA_LOG_RETENTION_HOURS: 72
     ports:
-      - "9092:9092"
+      - "127.0.0.1:9092:9092"
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
@@ -105,8 +105,8 @@ services:
       CLICKHOUSE_USER: ${CLICKHOUSE_INGEST_USER:-fmdp_ingest_writer}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_INGEST_PASSWORD:-change_me_local_ch_ingest_password}
     ports:
-      - "${CLICKHOUSE_HTTP_PORT:-8123}:8123"
-      - "${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
+      - "127.0.0.1:${CLICKHOUSE_HTTP_PORT:-8123}:8123"
+      - "127.0.0.1:${CLICKHOUSE_NATIVE_PORT:-9000}:9000"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./deploy/clickhouse/init:/docker-entrypoint-initdb.d:ro
@@ -131,8 +131,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-fmdp_minio_admin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change_me_local_minio_password}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     volumes:
       - minio_data:/data
     healthcheck:
@@ -161,7 +161,7 @@ services:
       CLICKHOUSE_HOST: clickhouse
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports:
-      - "${API_PORT:-8000}:8000"
+      - "127.0.0.1:${API_PORT:-8000}:8000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -173,6 +173,24 @@ services:
       - frontend_net
       - app_control_net
       - data_plane_net
+
+  # ---------------------------------------------------------------------------
+  # TRUST ZONE 2: HTTPS Edge Reverse Proxy & WAF Gateway (Nginx TLS 1.3)
+  # ---------------------------------------------------------------------------
+  edge-gateway:
+    image: nginx:1.27-alpine
+    container_name: fmdp-edge-gateway
+    profiles: ["core"]
+    ports:
+      - "${HTTP_REDIRECT_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/tls/certs:/etc/nginx/certs:ro
+    depends_on:
+      - backend-api
+    networks:
+      - frontend_net
 
   # ---------------------------------------------------------------------------
   # PLANE A: Real-Time WebSocket Collector Worker

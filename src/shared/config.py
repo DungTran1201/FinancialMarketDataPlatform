@@ -15,32 +15,29 @@ class PlatformConfig:
     default_provider: str = field(default_factory=lambda: os.getenv("DEFAULT_PROVIDER", "binance"))
     monitored_symbols: tuple[str, ...] = field(
         default_factory=lambda: tuple(
-            s.strip().upper()
-            for s in os.getenv("MONITORED_SYMBOLS", "BTCUSDT,ETHUSDT,SOLUSDT").split(",")
-            if s.strip()
+            s.strip().upper() for s in os.getenv("MONITORED_SYMBOLS", "BTCUSDT,ETHUSDT,SOLUSDT").split(",") if s.strip()
         )
     )
     market_staleness_threshold_ms: int = field(
         default_factory=lambda: int(os.getenv("MARKET_STALENESS_THRESHOLD_MS", "15000"))
     )
-    kafka_bootstrap_servers: str = field(
-        default_factory=lambda: os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092")
-    )
+    kafka_bootstrap_servers: str = field(default_factory=lambda: os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:9092"))
     redis_host: str = field(default_factory=lambda: os.getenv("REDIS_HOST", "localhost"))
     redis_port: int = field(default_factory=lambda: int(os.getenv("REDIS_PORT", "6379")))
     clickhouse_host: str = field(default_factory=lambda: os.getenv("CLICKHOUSE_HOST", "localhost"))
-    clickhouse_http_port: int = field(
-        default_factory=lambda: int(os.getenv("CLICKHOUSE_HTTP_PORT", "8123"))
-    )
+    clickhouse_http_port: int = field(default_factory=lambda: int(os.getenv("CLICKHOUSE_HTTP_PORT", "8123")))
     postgres_host: str = field(default_factory=lambda: os.getenv("POSTGRES_HOST", "localhost"))
     postgres_port: int = field(default_factory=lambda: int(os.getenv("POSTGRES_PORT", "5432")))
-    agent_max_iterations: int = field(
-        default_factory=lambda: int(os.getenv("AGENT_MAX_ITERATIONS", "6"))
+    minio_endpoint_url: str = field(default_factory=lambda: os.getenv("MINIO_ENDPOINT_URL", "http://localhost:9000"))
+    platform_domain: str = field(default_factory=lambda: os.getenv("PLATFORM_DOMAIN", "fmdp.local"))
+    jwt_secret_key: str = field(
+        default_factory=lambda: os.getenv("JWT_SECRET_KEY", "change_me_generate_32_byte_random_hex_secret")
     )
+    jwt_access_token_expire_minutes: int = field(
+        default_factory=lambda: int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
+    )
+    agent_max_iterations: int = field(default_factory=lambda: int(os.getenv("AGENT_MAX_ITERATIONS", "6")))
     agent_tool_timeout_seconds: float = field(
         default_factory=lambda: float(os.getenv("AGENT_TOOL_TIMEOUT_SECONDS", "5.0"))
     )
-    agent_max_tokens_per_run: int = field(
-        default_factory=lambda: int(os.getenv("AGENT_MAX_TOKENS_PER_RUN", "8000"))
-    )
-
+    agent_max_tokens_per_run: int = field(default_factory=lambda: int(os.getenv("AGENT_MAX_TOKENS_PER_RUN", "8000")))

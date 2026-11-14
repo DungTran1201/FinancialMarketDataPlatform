@@ -28,4 +28,3 @@ class AgentRunQueuePort(Protocol):
         requested_by: str | None,
         trigger_mode: str = "ON_DEMAND",
     ) -> AgentRunTicket: ...
-
