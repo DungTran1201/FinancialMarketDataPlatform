@@ -28,7 +28,7 @@ flowchart TD
     end
 
     subgraph S7_S9["Stages 7-9: Quality Gates, Gold Marts & Iceberg Compaction"]
-        DQ["Stage 8: DataQualityGateEngine<br/>(DQ-KLINE-001..004 Pre-Promotion Gate)"]
+        DQ["Stage 8: DataQualityGateEngine<br/>(DQ-KLINE-001..005 Pre-Promotion Gate)"]
         GOLD1["Stage 7a: gold.fct_daily_market_summary<br/>(Daily OHLCV, VWAP, Return %)"]
         GOLD2["Stage 7b: gold.fct_realized_volatility<br/>(Log-Return Volatility & Max Drawdown)"]
         GOLD3["Stage 7c: gold.fct_orderbook_liquidity<br/>(Spread bps, Top-20 Depth & Imbalance)"]

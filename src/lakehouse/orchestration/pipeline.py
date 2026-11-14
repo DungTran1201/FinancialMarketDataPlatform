@@ -619,7 +619,7 @@ class DataPlatformV01Pipeline:
                 "stage_id": "S08",
                 "stage_number": 8,
                 "name": "8. Great Expectations DQ Gate",
-                "technology": "DQ-KLINE-001..004 Invariant Engine",
+                "technology": "DQ-KLINE-001..005 Invariant Engine",
                 "status": "PASSED" if rep.stage_08_dq_passed else "FAILED",
                 "progress_pct": 100,
                 "processing_ms": max(0.25, t_map.get("stage_08_quality_gates", 0.90)),
