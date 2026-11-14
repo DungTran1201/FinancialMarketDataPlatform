@@ -332,6 +332,100 @@ services:
       - frontend_net
       - app_control_net
 
+  # ---------------------------------------------------------------------------
+  # DOMAIN MICROSERVICES PROFILE (ADR-007 / DEP-006: `microservices`)
+  # ---------------------------------------------------------------------------
+  svc-market-hot:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-svc-market-hot
+    profiles: ["microservices"]
+    command: ["uvicorn", "src.microservices.market_service:create_market_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8001"]
+    ports:
+      - "8001:8001"
+    networks:
+      - app_control_net
+      - data_plane_net
+
+  svc-historical-backfill:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-svc-historical-backfill
+    profiles: ["microservices"]
+    command: ["uvicorn", "src.microservices.historical_service:create_historical_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8002"]
+    ports:
+      - "8002:8002"
+    networks:
+      - app_control_net
+      - data_plane_net
+
+  svc-analytics-quant:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-svc-analytics-quant
+    profiles: ["microservices"]
+    command: ["uvicorn", "src.microservices.analytics_service:create_analytics_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8003"]
+    ports:
+      - "8003:8003"
+    networks:
+      - app_control_net
+      - data_plane_net
+
+  svc-catalog-governance:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-svc-catalog-governance
+    profiles: ["microservices"]
+    command: ["uvicorn", "src.microservices.catalog_service:create_catalog_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8004"]
+    ports:
+      - "8004:8004"
+    networks:
+      - app_control_net
+      - data_plane_net
+
+  svc-iam-security:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-svc-iam-security
+    profiles: ["microservices"]
+    command: ["uvicorn", "src.microservices.iam_service:create_iam_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8005"]
+    ports:
+      - "8005:8005"
+    networks:
+      - app_control_net
+      - data_plane_net
+
+  svc-intelligence-agent:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-svc-intelligence-agent
+    profiles: ["microservices"]
+    command: ["uvicorn", "src.microservices.intelligence_service:create_intelligence_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8006"]
+    ports:
+      - "8006:8006"
+    networks:
+      - app_control_net
+      - data_plane_net
+
+  svc-data-plane-v01:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-svc-data-plane-v01
+    profiles: ["microservices"]
+    command: ["uvicorn", "src.microservices.data_plane_service:create_data_plane_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8007"]
+    ports:
+      - "8007:8007"
+    networks:
+      - app_control_net
+      - data_plane_net
+
 networks:
   frontend_net:
     driver: bridge

@@ -105,3 +105,20 @@ FastAPI runs on an `asyncio` single-threaded event loop per worker process. To p
   - Client calls `POST /api/v1/agents/runs` or `POST /api/v1/historical/backfill-jobs`.
   - FastAPI validates input, writes a `QUEUED` row to PostgreSQL, pushes the task ID to the worker queue, and immediately returns `HTTP 202 Accepted` with `{"run_id": "...", "status": "QUEUED", "status_url": "/api/v1/agents/runs/..."}`.
 
+---
+
+## 5. Evolution to Domain Microservices (`arch/microservices` / `ADR-007`)
+
+On branch `arch/microservices`, while the 8 Clean Architecture module packages in `src/backend/modules/*` remain strictly isolated (`TC-006`), runtime execution decomposes into **8 independently deployable ASGI microservices** in `src/microservices/` governed by `MicroserviceRegistry` (`src/microservices/registry.py`):
+1. `svc-api-gateway` (`:8000`) — Unified HTTPS Edge Gateway, WAF, Rate Limiter & Service Topology Dispatcher.
+2. `svc-market-hot` (`:8001`) — Real-time prices, snapshots, orderbook & WebSocket streaming (`market`).
+3. `svc-historical-backfill` (`:8002`) — Historical OHLCV/trades OLAP queries & backfill orchestration (`historical`).
+4. `svc-analytics-quant` (`:8003`) — Quantitative statistics, Pearson correlations & Z-score anomalies (`analytics`).
+5. `svc-catalog-governance` (`:8004`) — Instrument catalog, freshness SLIs & platform configuration (`catalog`, `platform_config`).
+6. `svc-iam-security` (`:8005`) — JWT HS256 IP-bound authentication, revocation & endpoint cipher (`iam`).
+7. `svc-intelligence-agent` (`:8006`) — LangGraph 6-node workflow & verified provenance reporting (`agent_api`, `reporting`).
+8. `svc-data-plane-v01` (`:8007`) — End-to-End Data Platform v0.1 orchestrator, Gold marts, Iceberg compaction, lineage & Prometheus metrics.
+
+See [ADR-007](adr/ADR-007-microservices-and-data-platform-v01.md) and [Diagram 17: Microservices Decomposition Topology](../diagrams/architecture/17-microservices-decomposition-topology.md).
+
+

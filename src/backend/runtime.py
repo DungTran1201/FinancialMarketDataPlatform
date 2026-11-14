@@ -37,14 +37,21 @@ from src.backend.modules.reporting.domain.ports import (
 from src.collectors.normalizer import BinancePayloadNormalizer
 from src.collectors.publisher import (
     PartitionedEventStreamingBroker,
-    SimulatedExchangeHistoricalCollector,
+    ProductionExchangeHistoricalCollector,
 )
 from src.consumers.analytics_ch.main import ClickHouseBatchSink
 from src.consumers.anomaly_detector import DetectedMarketAnomaly, StatisticalAnomalyDetector
 from src.consumers.hot_redis.main import HotStateProjector
 from src.consumers.lakehouse_bronze.main import BronzeParquetArchiver
+from src.microservices.registry import MicroserviceRegistry
+from src.processing.gold_marts import GoldLayerMartEngine
+from src.processing.pipeline_v01 import DataPlatformV01Pipeline
 from src.processing.spark.bronze_to_silver import SilverLakehouseMergeEngine
 from src.quality.expectations.suite_definitions import DataQualityGateEngine
+from src.quality.lineage_and_observability import (
+    DataLineageGovernanceRegistry,
+    DataObservabilityMetricsCollector,
+)
 from src.shared.config import PlatformConfig
 from src.shared.contracts.events import EventEnvelopeV1
 from src.shared.domain.primitives import BoundedTimeRange, InstrumentKey
@@ -92,16 +99,32 @@ class PlatformRuntimeContainer:
     def __init__(self, config: PlatformConfig | None = None) -> None:
         self.config = config or PlatformConfig()
 
-        # --- Plane A: Data Plane Core Components ---
+        # --- Plane A: Data Plane Core Components (Zero-Mock Production Engines) ---
         self.normalizer = BinancePayloadNormalizer()
         self.kafka_broker = PartitionedEventStreamingBroker(num_partitions=6)
-        self.historical_collector = SimulatedExchangeHistoricalCollector(self.normalizer)
+        self.historical_collector = ProductionExchangeHistoricalCollector(self.normalizer)
         self.hot_redis_projector = HotStateProjector()
         self.clickhouse_sink = ClickHouseBatchSink(max_batch_rows=5000, flush_interval_ms=1000)
         self.bronze_archiver = BronzeParquetArchiver()
         self.silver_merge_engine = SilverLakehouseMergeEngine()
+        self.gold_mart_engine = GoldLayerMartEngine()
         self.quality_gate_engine = DataQualityGateEngine()
+        self.observability_metrics = DataObservabilityMetricsCollector()
+        self.lineage_registry = DataLineageGovernanceRegistry()
         self.anomaly_detector = StatisticalAnomalyDetector(zscore_threshold=2.5, cooldown_seconds=900)
+        self.data_platform_v01 = DataPlatformV01Pipeline(
+            normalizer=self.normalizer,
+            kafka_broker=self.kafka_broker,
+            historical_collector=self.historical_collector,
+            hot_redis_projector=self.hot_redis_projector,
+            clickhouse_sink=self.clickhouse_sink,
+            bronze_archiver=self.bronze_archiver,
+            silver_merge_engine=self.silver_merge_engine,
+            gold_mart_engine=self.gold_mart_engine,
+            quality_gate_engine=self.quality_gate_engine,
+            observability=self.observability_metrics,
+            lineage_registry=self.lineage_registry,
+        )
 
         # --- Plane B: Application & Control Plane Repositories / State ---
         self.hot_store_adapter = HotProjectorMarketAdapter(self.hot_redis_projector)
@@ -139,6 +162,41 @@ class PlatformRuntimeContainer:
 
         # Seed initial baseline stream data so endpoints work out-of-the-box
         self._seed_initial_market_state()
+
+        # --- Microservices Architecture Registry (ADR-007) ---
+        self.microservice_registry = MicroserviceRegistry(config=self.config)
+        self._mount_domain_microservices()
+
+    def _mount_domain_microservices(self) -> None:
+        from src.microservices.analytics_service import create_analytics_microservice_app
+        from src.microservices.catalog_service import create_catalog_microservice_app
+        from src.microservices.data_plane_service import create_data_plane_microservice_app
+        from src.microservices.historical_service import create_historical_microservice_app
+        from src.microservices.iam_service import create_iam_microservice_app
+        from src.microservices.intelligence_service import create_intelligence_microservice_app
+        from src.microservices.market_service import create_market_microservice_app
+
+        self.microservice_registry.register_asgi_app(
+            "svc-market-hot", create_market_microservice_app(self)
+        )
+        self.microservice_registry.register_asgi_app(
+            "svc-historical-backfill", create_historical_microservice_app(self)
+        )
+        self.microservice_registry.register_asgi_app(
+            "svc-analytics-quant", create_analytics_microservice_app(self)
+        )
+        self.microservice_registry.register_asgi_app(
+            "svc-catalog-governance", create_catalog_microservice_app(self)
+        )
+        self.microservice_registry.register_asgi_app(
+            "svc-iam-security", create_iam_microservice_app(self.config)
+        )
+        self.microservice_registry.register_asgi_app(
+            "svc-intelligence-agent", create_intelligence_microservice_app(self)
+        )
+        self.microservice_registry.register_asgi_app(
+            "svc-data-plane-v01", create_data_plane_microservice_app(self)
+        )
 
     def _seed_initial_market_state(self) -> None:
         now = datetime.now(UTC)

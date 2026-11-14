@@ -68,6 +68,8 @@ def create_app(
     )
     from src.backend.modules.reporting.presentation.router import build_reporting_router
     from src.backend.runtime import PlatformRuntimeContainer
+    from src.microservices.data_plane_service import build_data_platform_v01_router
+    from src.microservices.gateway_service import build_microservices_gateway_router
 
     cfg = config or PlatformConfig()
     rt = runtime or PlatformRuntimeContainer(config=cfg)
@@ -78,6 +80,7 @@ def create_app(
         openapi_url="/api/openapi.json",
     )
     app.state.runtime = rt
+    rt.microservice_registry.register_asgi_app("svc-api-gateway", app)
 
     jwt_service, ip_cipher, _ = install_security_defense_middleware(app, config=cfg, tier_overrides=tier_overrides)
 
@@ -128,6 +131,16 @@ def create_app(
         build_reporting_router(runtime=rt),
         prefix="/api/v1/reports",
         tags=["Intelligence Plane (Verified Reports)"],
+    )
+    app.include_router(
+        build_data_platform_v01_router(runtime=rt),
+        prefix="/api/v1/data-platform/v01",
+        tags=["Data Platform v0.1 (End-to-End 12 Stages)"],
+    )
+    app.include_router(
+        build_microservices_gateway_router(runtime=rt),
+        prefix="/api/v1/microservices",
+        tags=["Microservices Gateway & Service Topology (ADR-007)"],
     )
     return app
 

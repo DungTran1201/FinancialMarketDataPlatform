@@ -29,6 +29,9 @@ profiles:
   - id: "DEP-005"
     name: "bi"
     services: ["superset"]
+  - id: "DEP-006"
+    name: "microservices"
+    services: ["svc-market-hot", "svc-historical-backfill", "svc-analytics-quant", "svc-catalog-governance", "svc-iam-security", "svc-intelligence-agent", "svc-data-plane-v01"]
 
 networks:
   - name: "frontend_net"

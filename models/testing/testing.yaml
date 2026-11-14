@@ -15,6 +15,7 @@ metadata:
     - "tests/unit/test_security_and_defense.py"
     - "tests/unit/test_three_planes_framework.py"
     - "tests/unit/test_100_bots_data_plane_swarm.py"
+    - "tests/unit/test_data_platform_v01_and_microservices.py"
 
 test_cases:
   - id: "TC-001"
@@ -96,4 +97,12 @@ test_cases:
     requirement_refs: ["FR-01", "FR-02", "FR-03", "FR-04", "FR-05", "FR-06", "FR-07", "FR-08", "NFR-001", "NFR-002", "NFR-003", "BR-001", "BR-002", "BR-003"]
     acceptance_criteria_refs: ["AC-001", "AC-002"]
     test_path: "tests/unit/test_100_bots_data_plane_swarm.py"
+    status: "BASELINED"
+  - id: "TC-011"
+    title: "End-to-End Zero-Mock Data Platform v0.1 (12 Stages) & Domain Microservices Decomposition Verification"
+    test_type: "integration"
+    priority: "P0"
+    requirement_refs: ["FR-01", "FR-02", "FR-03", "FR-04", "FR-05", "FR-06", "FR-07", "FR-08", "FR-09", "FR-10", "NFR-001", "NFR-002", "NFR-003", "BR-001", "BR-002", "BR-003", "BR-004"]
+    acceptance_criteria_refs: ["AC-001", "AC-002", "AC-003"]
+    test_path: "tests/unit/test_data_platform_v01_and_microservices.py"
     status: "BASELINED"

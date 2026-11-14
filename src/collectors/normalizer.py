@@ -170,6 +170,31 @@ class BinancePayloadNormalizer(PayloadNormalizerPort):
                 },
             )
 
+        if event_kind in ("depthupdate", "orderbook", "depth20"):
+            raw_bids = raw_message.get("b") or raw_message.get("bids") or []
+            raw_asks = raw_message.get("a") or raw_message.get("asks") or []
+            if not raw_bids or not raw_asks:
+                raise NormalizationError("OrderBook message requires non-empty bids ('b') and asks ('a').")
+            bids = [[str(Decimal(str(level[0]))), str(Decimal(str(level[1])))] for level in raw_bids[:20]]
+            asks = [[str(Decimal(str(level[0]))), str(Decimal(str(level[1])))] for level in raw_asks[:20]]
+            event_id = compute_deterministic_event_id(
+                self.provider_name, EventType.ORDER_BOOK, symbol, str(event_ts_ms)
+            )
+            return EventEnvelopeV1(
+                event_id=event_id,
+                schema_version=SCHEMA_VERSION_V1,
+                provider=self.provider_name,
+                symbol=symbol,
+                event_type=EventType.ORDER_BOOK,
+                exchange_event_time=exchange_event_time,
+                ingested_at=now_utc,
+                payload={
+                    "bids": bids,
+                    "asks": asks,
+                    "depth_levels": min(20, max(len(bids), len(asks))),
+                },
+            )
+
         raise NormalizationError(f"Unsupported Binance event kind: '{event_kind}'")
 
     def normalize_or_route_dlq(
