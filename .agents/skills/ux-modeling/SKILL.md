@@ -1,64 +1,50 @@
 ---
 name: ux-modeling
-description: Models user flows, navigation hierarchies, and screen specifications in `models/ux/` and `docs/product/11-ux/`.
+description: Information architecture, user flows, and screens in models/ux/ and docs/product/11-ux/.
 ---
 
 # Skill: UX Information Architecture & Screen Modeling (`SKILL-011`)
 
 ## 1. Description
 
-Models user flows, navigation hierarchies, and screen specifications in `models/ux/` and `docs/product/11-ux/`.
+Models navigation hierarchy, user flows, and screen specifications (`UX-###`, `SCR-###`) in `models/ux/` and `docs/product/11-ux/`.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `ux-modeling` activities during phase `11-ux`.
-- Invoked by Agent role `ux-modeler` (`.agents/agents/ux-modeler.md`).
+- Phase `11-ux` or frontend/dashboard/screen flow changes (`ux-modeler`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/ux/`
+- `models/ux/ux.yaml`, `navigation.yaml`, `screens.yaml`, `models/requirements/`, `models/api/`, `docs/product/11-ux/README.md`, `docs/templates/ux/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `README.md` read; backing use cases (`UC-###`) and API endpoints (`API-###`) verified.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/ux/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Update `models/ux/ux.yaml`, `navigation.yaml`, and `screens.yaml` first with `UX-###` and `SCR-###` IDs, states (`loading`, `empty`, `error`, `stale-data`), and API bindings.
+2. Author UX/screen specs in `docs/product/11-ux/` from `docs/templates/ux/`.
+3. Synchronize derived sitemap/flow diagrams in `docs/diagrams/ux/` and run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `models/ux/*.yaml`, `docs/product/11-ux/*.md`, `docs/diagrams/ux/*.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Tag unconfirmed UI layout or interaction choices as `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never invent screens or UI widgets that call unapproved backend endpoints or bypass `Plane B` API boundaries.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `use-case-modeling`, `api-contract`, `diagram-modeling`

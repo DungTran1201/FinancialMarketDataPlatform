@@ -1,64 +1,51 @@
 ---
 name: process-modeling
-description: Models operational and business workflows in `models/process/`, `docs/product/03-business-process/`, and `docs/diagrams/process/`.
+description: BPMN and swimlane workflows in models/process/ and docs/product/03-business-process/.
 ---
 
 # Skill: Business Process, BPMN & Swimlane Modeling (`SKILL-006`)
 
 ## 1. Description
 
-Models operational and business workflows in `models/process/`, `docs/product/03-business-process/`, and `docs/diagrams/process/`.
+Models operational and business workflows (`PROC-###`), BPMN flows (`DIAG-BPMN-*`), and actor swimlanes (`DIAG-SWIM-*`).
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `process-modeling` activities during phase `03-business-process`.
-- Invoked by Agent role `process-modeler` (`.agents/agents/process-modeler.md`).
+- Phase `03-business-process` or operational workflow changes (`process-modeler`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/business-process/`
+- `models/process/processes.yaml`, `models/requirements/`, `docs/product/03-business-process/README.md`, `docs/templates/business-process/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `README.md` read; triggering events, actors, and upstream `FR-###`/`BR-###` identified.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/business-process/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Update `models/process/processes.yaml` first with `PROC-###` IDs, actors, steps, happy/exception paths, and requirement links.
+2. Author process specifications in `docs/product/03-business-process/` from `docs/templates/business-process/`.
+3. Synchronize derived Mermaid diagrams in `docs/diagrams/process/bpmn/` and `docs/diagrams/process/swimlane/`.
+4. Run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `models/process/processes.yaml`, `docs/product/03-business-process/*.md`, `docs/diagrams/process/**/*.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Tag unverified workflow handoffs as `[OPEN QUESTION]`; fix all validator errors before finishing.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never use a process diagram as a standalone source of truth without updating `models/process/processes.yaml`.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `use-case-modeling`, `diagram-modeling`, `traceability-audit`

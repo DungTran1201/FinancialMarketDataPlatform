@@ -53,17 +53,13 @@ Authors and synchronizes system context, C4 container/component models, SADs, AD
 
 ## 7. Required Skills
 
-- [architecture-modeling](../skills/architecture-modeling/SKILL.md)
-- [diagram-modeling](../skills/diagram-modeling/SKILL.md)
-- [documentation-creation](../skills/documentation-creation/SKILL.md)
+- **Primary (Always Load)**: [architecture-modeling](../skills/architecture-modeling/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [diagram-modeling](../skills/diagram-modeling/SKILL.md), [documentation-creation](../skills/documentation-creation/SKILL.md)
 
 ## 8. Required Rules
 
-- [core](../rules/core.md)
-- [models](../rules/models.md)
-- [diagrams](../rules/diagrams.md)
-- [source-of-truth](../rules/source-of-truth.md)
-- [identifiers](../rules/identifiers.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [models](../rules/models.md), [source-of-truth](../rules/source-of-truth.md)
+- **Task-Scoped (Load When Touching Scope)**: [diagrams](../rules/diagrams.md), [identifiers](../rules/identifiers.md)
 
 ## 9. Handoff Conditions
 

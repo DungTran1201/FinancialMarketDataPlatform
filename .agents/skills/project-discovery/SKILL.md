@@ -1,64 +1,52 @@
 ---
 name: project-discovery
-description: Audits repository state, reference architectures, and requirements inputs to produce evidence registers separating FACT, ASSUMPTION, DECISION, and OPEN QUESTION.
+description: Audits codebase and specs into FACT, ASSUMPTION, DECISION, OPEN QUESTION registers.
 ---
 
 # Skill: Project & Current-State Discovery (`SKILL-001`)
 
 ## 1. Description
 
-Audits repository state, reference architectures, and requirements inputs to produce evidence registers separating FACT, ASSUMPTION, DECISION, and OPEN QUESTION.
+Audits repository state, reference architectures, and requirements inputs into evidence registers (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `project-discovery` activities during phase `00-discovery`.
-- Invoked by Agent role `discovery-analyst` (`.agents/agents/discovery-analyst.md`).
+- Phase `00-discovery` or Work Item `discovery.md` / `impact-analysis.md` authoring (`discovery-analyst`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/discovery/`
+- `AGENTS.md`, target `README.md`, `work-items/<ID>/`, `models/context/context.yaml`, `docs/templates/discovery/`, `src/`, `docker-compose.yml`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target directory `README.md` read; upstream evidence classified (`FACT` vs `ASSUMPTION` vs `DECISION` vs `OPEN QUESTION`).
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/discovery/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Inspect `models/context/context.yaml`, baseline specs (`docs/architecture/`, `docs/specifications/`), and `src/` implementation state.
+2. Update `models/context/context.yaml` first with stable IDs from `.agents/config/identifier-registry.yaml`.
+3. Author discovery/impact docs in `docs/product/00-discovery/` or `work-items/<ID>/` using `docs/templates/discovery/`.
+4. Tag unverified hypotheses with `[ASSUMPTION — REQUIRES VALIDATION]` and unresolved ambiguities with `[OPEN QUESTION]`.
+5. Run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `models/context/context.yaml`, `docs/product/00-discovery/*.md`, `work-items/<ID>/discovery.md`, `impact-analysis.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Record missing upstream facts as `[OPEN QUESTION]`, keep status `DRAFT`/`REVIEW_REQUIRED`, and fix all validator errors before finishing.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never invent product requirements, endpoints, or business rules; never overwrite baselined Data Platform files without an approved work item.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `data-platform-discovery`, `documentation-creation`, `traceability-audit`

@@ -1,30 +1,25 @@
 ---
 name: financial-market-data-ingestion
-description: "Build resilient financial exchange REST and WebSocket ingestion with canonical normalization, exact precision, rate-limit handling and replayable watermarks."
+description: Exchange REST/WebSocket collectors, Decimal normalization, rate limits, and watermarks.
 ---
 
 # Skill: Resilient Financial Exchange Ingestion (`SKILL-023`)
 
 ## 1. Description
 
-Build resilient financial exchange REST and WebSocket ingestion with canonical normalization, exact `Decimal` precision, rate-limit handling, and replayable watermarks.
+Build resilient financial exchange REST (`collector-rest`) and WebSocket (`collector-ws`) ingestion with canonical `EventEnvelopeV1` normalization, exact `Decimal` precision, rate-limit handling, and replayable watermarks.
 
 ## 2. Trigger Conditions
 
-- Use when adding or updating exchange providers, REST pagination (`collector-rest`), WebSocket streams (`collector-ws`), gap recovery, provider metadata discovery, or collector behavior.
-- Invoked by Agent roles `streaming-data-engineer` and `data-engineer`.
+- Adding or updating exchange providers, REST pagination, WebSocket streams, gap recovery, provider metadata discovery, or collector behavior (`streaming-data-engineer`, `data-engineer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- `src/collectors/ports.py`, `src/collectors/main_ws.py`, `src/collectors/main_rest.py`, and `src/shared/contracts/events.py`
-- `docs/specifications/data-contracts.md` and `docs/architecture/04-data-platform-architecture.md`
-- `.env.example` and `deploy/postgres/init/01_schema.sql` (`ingestion_watermarks`)
+- `AGENTS.md`, target `README.md`, `src/ingestion/`, `src/shared/contracts/events.py`, `docs/specifications/data-contracts.md`, `docs/architecture/04-data-platform-architecture.md`, `deploy/postgres/init/01_schema.sql` (`ingestion_watermarks`).
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Provider, event type, natural key, UTC timestamp source, deterministic UUIDv5 identity (`compute_deterministic_event_id`), target Kafka topic, and partition ordering key (`compute_partition_key`) have been defined.
+1. Target `README.md` read; provider, event type, natural key, UTC timestamp source, deterministic ID (`idempotency_key`), target Kafka topic, and partition key (`{provider}:{symbol}`) defined.
 
 ## 5. Execution Procedure
 

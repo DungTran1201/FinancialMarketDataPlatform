@@ -1,64 +1,52 @@
 ---
 name: requirements-engineering
-description: Extracts, normalizes, and models functional requirements, non-functional requirements, business rules, and acceptance criteria.
+description: Models FR, NFR, BR, and AC in models/requirements/ and docs/product/02-requirements/.
 ---
 
 # Skill: Requirements Engineering & Normalization (`SKILL-003`)
 
 ## 1. Description
 
-Extracts, normalizes, and models functional requirements, non-functional requirements, business rules, and acceptance criteria.
+Extracts, normalizes, and models capabilities (`CAP-###`), functional (`FR-###`), non-functional (`NFR-###`), business rules (`BR-###`), and acceptance criteria (`AC-###`).
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `requirements-engineering` activities during phase `02-requirements`.
-- Invoked by Agent role `requirements-engineer` (`.agents/agents/requirements-engineer.md`).
+- Phase `02-requirements` or requirement/business-rule changes (`requirements-engineer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/requirements/`
+- `AGENTS.md`, `docs/product/02-requirements/README.md`, `docs/specifications/data-requirements.md`, `non-functional-requirements.md`, `models/requirements/`, `docs/templates/requirements/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `README.md` read; preserved IDs (`FR-01..10`) verified in `.agents/config/identifier-registry.yaml`.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/requirements/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Inspect `models/requirements/*.yaml` (`requirements.yaml`, `business-rules.yaml`, `acceptance-criteria.yaml`, `glossary.yaml`) and baseline `docs/specifications/`.
+2. Update `models/requirements/*.yaml` first with atomic, testable statements and `CAP -> FR/NFR/BR -> AC` links.
+3. Synchronize `docs/product/02-requirements/` using `docs/templates/requirements/`.
+4. Tag unconfirmed requirements with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
+5. Run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `models/requirements/*.yaml` and `docs/product/02-requirements/*.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Record missing acceptance thresholds as `[OPEN QUESTION]`, keep status `DRAFT`, and resolve all validator errors.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never renumber or delete preserved IDs (`FR-01..10`); never invent unverified business rules.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `srs-generation`, `use-case-modeling`, `traceability-audit`

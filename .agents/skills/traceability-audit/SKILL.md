@@ -1,64 +1,51 @@
 ---
 name: traceability-audit
-description: Verifies end-to-end linkage across `CAP -> FR/NFR/BR -> UC/PROC -> DOM/COMP/API -> TC`.
+description: Audits bidirectional traceability across CAP, FR/NFR, UC, DOM/API, and TC.
 ---
 
 # Skill: Bidirectional Traceability Audit (`SKILL-015`)
 
 ## 1. Description
 
-Verifies end-to-end linkage across `CAP -> FR/NFR/BR -> UC/PROC -> DOM/COMP/API -> TC`.
+Verifies end-to-end linkage across `CAP -> FR/NFR/BR -> UC/PROC -> DOM/COMP/API -> TC` and `THR -> CTRL -> TC`.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `traceability-audit` activities during phase `14-governance`.
-- Invoked by Agent role `documentation-auditor` (`.agents/agents/documentation-auditor.md`).
+- Phase `02-requirements`, `12-testing`, `14-governance`, or after modifying canonical IDs in `models/` (`documentation-auditor`, `requirements-engineer`, `qa-reviewer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/requirements/traceability-matrix.template.md`
+- `models/requirements/`, `models/architecture/`, `models/domain/`, `models/api/`, `models/security/`, `models/testing/`, `docs/product/02-requirements/traceability-matrix.md`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `README.md` read; all canonical YAML files in `models/` parse cleanly.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/requirements/traceability-matrix.template.md`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Execute `python tools/validators/validate_traceability.py` and `validate_identifiers.py`.
+2. Verify every `FR-###` links to an `AC-###` and `TC-###`, and every `THR-###` links to a `CTRL-###` and `TC-###`.
+3. Synchronize `docs/product/02-requirements/traceability-matrix.md` from `docs/templates/requirements/traceability-matrix.template.md`.
+4. Run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `docs/product/02-requirements/traceability-matrix.md` and synchronized `models/**/*.yaml` cross-references.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Fix orphan IDs or broken cross-references in `models/` before completing the turn.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never fabricate dummy `TC-###` or `CTRL-###` entries without real test/control definitions; never delete preserved IDs (`FR-01..10`, `ADR-001..006`).
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `requirements-engineering`, `test-modeling`, `documentation-validation`

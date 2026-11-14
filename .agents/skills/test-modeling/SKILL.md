@@ -1,64 +1,50 @@
 ---
 name: test-modeling
-description: Designs test strategies, plans, and deterministic test cases (`TC-###`) traced to requirements and acceptance criteria.
+description: Test plans and deterministic test cases (TC-###) in models/testing/.
 ---
 
 # Skill: Test Strategy, Test Plan & Test Case Modeling (`SKILL-013`)
 
 ## 1. Description
 
-Designs test strategies, plans, and deterministic test cases (`TC-###`) traced to requirements and acceptance criteria.
+Designs test strategies, test plans, and deterministic test cases (`TC-###`) in `models/testing/testing.yaml` and `docs/product/12-testing/`.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `test-modeling` activities during phase `12-testing`.
-- Invoked by Agent role `qa-reviewer` (`.agents/agents/qa-reviewer.md`).
+- Phase `12-testing` or verification test case design (`qa-reviewer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/testing/`
+- `models/testing/testing.yaml`, `models/requirements/acceptance-criteria.yaml`, `models/security/threats.yaml`, `tests/`, `docs/templates/testing/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `README.md` read; upstream `FR-###`, `AC-###`, and `CTRL-###` targets identified.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/testing/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Update `models/testing/testing.yaml` first with `TC-###` IDs, test levels (`unit`, `contract`, `architecture`, `integration`), expected outcomes, and traced `FR-###`/`AC-###`/`CTRL-###` IDs.
+2. Synchronize `docs/product/12-testing/` (`test-strategy.md`, `test-plan.md`, `test-cases.md`) using `docs/templates/testing/`.
+3. Verify executable tests in `tests/` and run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `models/testing/testing.yaml`, `docs/product/12-testing/*.md`, `tests/**/*.py`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Block status promotion if any approved `AC-###` or `CTRL-###` lacks a linked `TC-###` in `validate_traceability.py`.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never mark unexecuted test cases as `PASSED` runtime evidence; never use live credentials in test suites.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `data-platform-testing-recovery`, `traceability-audit`, `documentation-validation`

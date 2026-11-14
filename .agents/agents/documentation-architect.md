@@ -48,18 +48,13 @@ Owns the overall documentation architecture, directory structure, README contrac
 
 ## 7. Required Skills
 
-- [project-discovery](../skills/project-discovery/SKILL.md)
-- [documentation-creation](../skills/documentation-creation/SKILL.md)
-- [documentation-review](../skills/documentation-review/SKILL.md)
-- [documentation-validation](../skills/documentation-validation/SKILL.md)
+- **Primary (Always Load)**: [documentation-creation](../skills/documentation-creation/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [project-discovery](../skills/project-discovery/SKILL.md), [documentation-review](../skills/documentation-review/SKILL.md), [documentation-validation](../skills/documentation-validation/SKILL.md)
 
 ## 8. Required Rules
 
-- [core](../rules/core.md)
-- [documentation](../rules/documentation.md)
-- [source-of-truth](../rules/source-of-truth.md)
-- [change-lifecycle](../rules/change-lifecycle.md)
-- [quality-gates](../rules/quality-gates.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [documentation](../rules/documentation.md), [source-of-truth](../rules/source-of-truth.md)
+- **Task-Scoped (Load When Touching Scope)**: [change-lifecycle](../rules/change-lifecycle.md), [quality-gates](../rules/quality-gates.md)
 
 ## 9. Handoff Conditions
 

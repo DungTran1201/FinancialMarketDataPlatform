@@ -1,64 +1,51 @@
 ---
 name: domain-modeling
-description: Models bounded contexts, entities, aggregates, value objects, and domain invariants in `models/domain/` and `docs/product/07-domain/`.
+description: DDD bounded contexts, aggregates, entities, and invariants in models/domain/.
 ---
 
 # Skill: DDD Domain, Entity & Aggregate Modeling (`SKILL-008`)
 
 ## 1. Description
 
-Models bounded contexts, entities, aggregates, value objects, and domain invariants in `models/domain/` and `docs/product/07-domain/`.
+Models DDD bounded contexts (`DOM-###`), aggregates, entities (`ENT-###`), value objects, and financial domain invariants in `models/domain/` and `docs/product/07-domain/`.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `domain-modeling` activities during phase `07-domain`.
-- Invoked by Agent role `domain-modeler` (`.agents/agents/domain-modeler.md`).
+- Phase `07-domain` or domain entity/schema/dictionary changes (`domain-modeler`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/domain/`
+- `models/domain/domain.yaml`, `entities.yaml`, `data-dictionary.yaml`, `docs/specifications/data-dictionary.md`, `src/backend/modules/*/domain/`, `docs/templates/domain/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `README.md` read; `Decimal` precision and UTC timestamp invariants (`DATA-RULE-002`) verified.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/domain/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Update `models/domain/domain.yaml`, `entities.yaml`, and `data-dictionary.yaml` first with `DOM-###` and `ENT-###` IDs.
+2. Enforce exact `Decimal` monetary/quantity types, UTC timestamps, and zero framework dependencies in `src/backend/modules/*/domain/`.
+3. Synchronize `docs/product/07-domain/` and `docs/specifications/data-dictionary.md` using `docs/templates/domain/`.
+4. Update derived class/ER diagrams in `docs/diagrams/domain/` and run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `models/domain/*.yaml`, `docs/product/07-domain/*.md`, `docs/diagrams/domain/*.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Tag unresolved entity ownership or grain ambiguities as `[OPEN QUESTION]`; fix all validator errors.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never use `float` for financial values; never introduce ORM/HTTP/driver imports into `domain/` packages.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `api-contract`, `analytics-engineering-dbt-clickhouse`, `data-governance-lineage`

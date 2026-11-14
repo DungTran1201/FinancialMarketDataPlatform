@@ -1,30 +1,25 @@
 ---
 name: financial-data-quality
-description: "Define executable data quality controls for financial market data across contracts, stream sinks, Iceberg tables, dbt marts and serving."
+description: Great Expectations, dbt, and stream-sink financial data quality gates.
 ---
 
 # Skill: Executable Financial Data Quality Controls (`SKILL-022`)
 
 ## 1. Description
 
-Define executable data quality controls for financial market data across contracts, stream sinks, Iceberg tables, dbt marts, and serving.
+Define executable data quality controls (`QualityExpectationRule`, Great Expectations, dbt tests) for financial market data across contracts, stream sinks, Iceberg tables, dbt marts, and serving.
 
 ## 2. Trigger Conditions
 
-- Use for data-quality rules, Great Expectations suites, dbt tests, contract validation, dataset promotion, or investigations into anomalous/missing market data.
-- Invoked by Agent role `data-quality-governance-engineer` (`.agents/agents/data-quality-governance-engineer.md`).
+- Data-quality rules, Great Expectations suites, dbt tests, contract validation, dataset promotion, or anomalous/missing market data investigations (`data-quality-governance-engineer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- `docs/specifications/data-contracts.md`, `data-dictionary.md`, and `data-requirements.md`
-- `src/quality/expectations/suite_definitions.py` (`QualityExpectationRule`) and `src/shared/contracts/events.py`
-- `models/testing/testing.yaml` and `models/domain/`
+- `AGENTS.md`, target `README.md`, `docs/specifications/data-contracts.md`, `data-dictionary.md`, `data-requirements.md`, `src/quality/expectations/suite_definitions.py`, `src/shared/contracts/events.py`, `models/testing/testing.yaml`, `models/domain/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Each quality rule has been classified as `CRITICAL` or `WARNING` with a declared execution point, owner role, and failure action.
+1. Target `README.md` read; each quality rule classified as `CRITICAL` or `WARNING` with a declared execution point, owner role, and failure action.
 
 ## 5. Execution Procedure
 

@@ -1,64 +1,50 @@
 ---
 name: documentation-validation
-description: Runs the deterministic validator suite (`tools/validators/run_all.py`) and triages structural or semantic errors.
+description: Executes tools/validators/run_all.py and resolves structural or traceability errors.
 ---
 
 # Skill: Automated Documentation & Model Validation (`SKILL-016`)
 
 ## 1. Description
 
-Runs the deterministic validator suite (`tools/validators/run_all.py`) and triages structural or semantic errors.
+Executes the 10-validator suite (`tools/validators/run_all.py`) and triages structural, README, model, diagram, identifier, or traceability errors.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `documentation-validation` activities during phase `14-governance`.
-- Invoked by Agent role `documentation-auditor` (`.agents/agents/documentation-auditor.md`).
+- Mandatory step 10 of `AGENTS.md` after any documentation, model, diagram, or `.agents/` change (`documentation-auditor` and all roles).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `tools/validators/`
+- `tools/validators/run_all.py` (`validate_agent_config.py`, `validate_artifact_matrix.py`, `validate_readmes.py`, `validate_templates.py`, `validate_models.py`, `validate_identifiers.py`, `validate_diagrams.py`, `validate_docs.py`, `validate_traceability.py`, `validate_work_items.py`).
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target canonical models (`models/`), docs (`docs/`), and directory `README.md` files saved on disk.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `tools/validators/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Run `python tools/validators/run_all.py`.
+2. Triage any reported `[ERROR]` by inspecting the failing validator rule and fixing the upstream YAML model, markdown header, README section, or Mermaid block.
+3. Re-run `python tools/validators/run_all.py` until all 10 validators exit with `0 error(s)`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- Zero-error validation output and updated verification evidence in `work-items/<ID>/review.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Never ignore or suppress validator errors; fix the root artifact discrepancy before ending the turn.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never weaken validator checks in `tools/validators/` to hide broken links, missing README sections, or missing traceability.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `documentation-review`, `traceability-audit`, `documentation-creation`

@@ -47,17 +47,13 @@ Models end-to-end business processes, actor handoffs, BPMN flows, and swimlane d
 
 ## 7. Required Skills
 
-- [process-modeling](../skills/process-modeling/SKILL.md)
-- [diagram-modeling](../skills/diagram-modeling/SKILL.md)
-- [traceability-audit](../skills/traceability-audit/SKILL.md)
+- **Primary (Always Load)**: [process-modeling](../skills/process-modeling/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [diagram-modeling](../skills/diagram-modeling/SKILL.md), [traceability-audit](../skills/traceability-audit/SKILL.md)
 
 ## 8. Required Rules
 
-- [core](../rules/core.md)
-- [models](../rules/models.md)
-- [diagrams](../rules/diagrams.md)
-- [identifiers](../rules/identifiers.md)
-- [traceability](../rules/traceability.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [models](../rules/models.md)
+- **Task-Scoped (Load When Touching Scope)**: [diagrams](../rules/diagrams.md), [identifiers](../rules/identifiers.md), [traceability](../rules/traceability.md)
 
 ## 9. Handoff Conditions
 

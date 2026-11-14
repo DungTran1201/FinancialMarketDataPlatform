@@ -48,18 +48,13 @@ Authors normalized functional/non-functional requirements, business rules, accep
 
 ## 7. Required Skills
 
-- [requirements-engineering](../skills/requirements-engineering/SKILL.md)
-- [srs-generation](../skills/srs-generation/SKILL.md)
-- [use-case-modeling](../skills/use-case-modeling/SKILL.md)
-- [traceability-audit](../skills/traceability-audit/SKILL.md)
+- **Primary (Always Load)**: [requirements-engineering](../skills/requirements-engineering/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [srs-generation](../skills/srs-generation/SKILL.md), [use-case-modeling](../skills/use-case-modeling/SKILL.md), [traceability-audit](../skills/traceability-audit/SKILL.md)
 
 ## 8. Required Rules
 
-- [core](../rules/core.md)
-- [documentation](../rules/documentation.md)
-- [models](../rules/models.md)
-- [identifiers](../rules/identifiers.md)
-- [traceability](../rules/traceability.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [models](../rules/models.md), [identifiers](../rules/identifiers.md)
+- **Task-Scoped (Load When Touching Scope)**: [documentation](../rules/documentation.md), [traceability](../rules/traceability.md)
 
 ## 9. Handoff Conditions
 

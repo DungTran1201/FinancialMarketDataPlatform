@@ -50,17 +50,13 @@ Designs versioned REST, WebSocket, SSE, and Kafka event contracts, ensuring alig
 
 ## 7. Required Skills
 
-- [api-contract](../skills/api-contract/SKILL.md)
-- [diagram-modeling](../skills/diagram-modeling/SKILL.md)
-- [traceability-audit](../skills/traceability-audit/SKILL.md)
+- **Primary (Always Load)**: [api-contract](../skills/api-contract/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [diagram-modeling](../skills/diagram-modeling/SKILL.md), [traceability-audit](../skills/traceability-audit/SKILL.md)
 
 ## 8. Required Rules
 
-- [core](../rules/core.md)
-- [models](../rules/models.md)
-- [diagrams](../rules/diagrams.md)
-- [identifiers](../rules/identifiers.md)
-- [security](../rules/security.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [models](../rules/models.md), [security](../rules/security.md)
+- **Task-Scoped (Load When Touching Scope)**: [diagrams](../rules/diagrams.md), [identifiers](../rules/identifiers.md)
 
 ## 9. Handoff Conditions
 

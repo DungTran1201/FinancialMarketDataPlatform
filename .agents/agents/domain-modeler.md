@@ -48,17 +48,13 @@ Defines bounded contexts, domain entities, aggregates, value objects, invariants
 
 ## 7. Required Skills
 
-- [domain-modeling](../skills/domain-modeling/SKILL.md)
-- [diagram-modeling](../skills/diagram-modeling/SKILL.md)
-- [traceability-audit](../skills/traceability-audit/SKILL.md)
+- **Primary (Always Load)**: [domain-modeling](../skills/domain-modeling/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [diagram-modeling](../skills/diagram-modeling/SKILL.md), [traceability-audit](../skills/traceability-audit/SKILL.md)
 
 ## 8. Required Rules
 
-- [core](../rules/core.md)
-- [models](../rules/models.md)
-- [diagrams](../rules/diagrams.md)
-- [identifiers](../rules/identifiers.md)
-- [source-of-truth](../rules/source-of-truth.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [models](../rules/models.md), [source-of-truth](../rules/source-of-truth.md)
+- **Task-Scoped (Load When Touching Scope)**: [diagrams](../rules/diagrams.md), [identifiers](../rules/identifiers.md)
 
 ## 9. Handoff Conditions
 

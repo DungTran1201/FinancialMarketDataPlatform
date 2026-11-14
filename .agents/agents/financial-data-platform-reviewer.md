@@ -49,31 +49,16 @@ Independently reviews changes to the financial market data platform for event co
 
 ## 7. Required Skills
 
-- [data-platform-discovery](../skills/data-platform-discovery/SKILL.md)
-- [financial-data-quality](../skills/financial-data-quality/SKILL.md)
-- [data-governance-lineage](../skills/data-governance-lineage/SKILL.md)
-- [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
-- [analytics-engineering-dbt-clickhouse](../skills/analytics-engineering-dbt-clickhouse/SKILL.md)
+- **Primary (Always Load)**: [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md), [financial-data-quality](../skills/financial-data-quality/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [data-platform-discovery](../skills/data-platform-discovery/SKILL.md), [data-governance-lineage](../skills/data-governance-lineage/SKILL.md), [analytics-engineering-dbt-clickhouse](../skills/analytics-engineering-dbt-clickhouse/SKILL.md)
 
 ## 8. Required Rules
 
-- [data-truth-classification](../rules/data-truth-classification.md)
-- [financial-data-correctness](../rules/financial-data-correctness.md)
-- [event-contract-evolution](../rules/event-contract-evolution.md)
-- [ingestion-reliability](../rules/ingestion-reliability.md)
-- [kafka-consumer-delivery](../rules/kafka-consumer-delivery.md)
-- [medallion-layer-ownership](../rules/medallion-layer-ownership.md)
-- [analytical-modeling](../rules/analytical-modeling.md)
-- [data-quality-gates](../rules/data-quality-gates.md)
-- [data-lineage-governance](../rules/data-lineage-governance.md)
-- [data-platform-observability](../rules/data-platform-observability.md)
-- [data-platform-security-operations](../rules/data-platform-security-operations.md)
-- [storage-workload-separation](../rules/storage-workload-separation.md)
-- [core](../rules/core.md)
-- [source-of-truth](../rules/source-of-truth.md)
-- [security](../rules/security.md)
-- [quality-gates](../rules/quality-gates.md)
-- [traceability](../rules/traceability.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [data-truth-classification](../rules/data-truth-classification.md), [financial-data-correctness](../rules/financial-data-correctness.md), [quality-gates](../rules/quality-gates.md)
+- **Task-Scoped (Load When Touching Scope)**:
+  - Ingestion & Kafka: [event-contract-evolution](../rules/event-contract-evolution.md), [ingestion-reliability](../rules/ingestion-reliability.md), [kafka-consumer-delivery](../rules/kafka-consumer-delivery.md)
+  - Storage, Lakehouse & OLAP: [storage-workload-separation](../rules/storage-workload-separation.md), [medallion-layer-ownership](../rules/medallion-layer-ownership.md), [analytical-modeling](../rules/analytical-modeling.md)
+  - Quality, Lineage & Ops: [data-quality-gates](../rules/data-quality-gates.md), [data-lineage-governance](../rules/data-lineage-governance.md), [data-platform-observability](../rules/data-platform-observability.md), [data-platform-security-operations](../rules/data-platform-security-operations.md), [source-of-truth](../rules/source-of-truth.md), [security](../rules/security.md), [traceability](../rules/traceability.md)
 
 ## 9. Handoff Conditions
 

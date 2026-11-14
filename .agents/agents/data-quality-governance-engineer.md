@@ -54,18 +54,13 @@ Makes data quality, data contracts, metadata, ownership, lineage, and lifecycle 
 
 ## 7. Required Skills
 
-- [data-platform-discovery](../skills/data-platform-discovery/SKILL.md)
-- [financial-data-quality](../skills/financial-data-quality/SKILL.md)
-- [data-governance-lineage](../skills/data-governance-lineage/SKILL.md)
-- [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
+- **Primary (Always Load)**: [financial-data-quality](../skills/financial-data-quality/SKILL.md), [data-governance-lineage](../skills/data-governance-lineage/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [data-platform-discovery](../skills/data-platform-discovery/SKILL.md), [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
 
 ## 8. Required Rules
 
-- [data-truth-classification](../rules/data-truth-classification.md)
-- [financial-data-correctness](../rules/financial-data-correctness.md)
-- [data-quality-gates](../rules/data-quality-gates.md)
-- [data-lineage-governance](../rules/data-lineage-governance.md)
-- [data-platform-security-operations](../rules/data-platform-security-operations.md)
+- **Primary (Always Load)**: [data-quality-gates](../rules/data-quality-gates.md), [data-lineage-governance](../rules/data-lineage-governance.md), [financial-data-correctness](../rules/financial-data-correctness.md)
+- **Task-Scoped (Load When Touching Scope)**: [data-truth-classification](../rules/data-truth-classification.md), [data-platform-security-operations](../rules/data-platform-security-operations.md)
 
 ## 9. Handoff Conditions
 

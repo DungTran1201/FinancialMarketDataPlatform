@@ -1,64 +1,51 @@
 ---
 name: api-contract
-description: Specifies REST, WebSocket, SSE, and Kafka event contracts in `models/api/`, `docs/product/08-api/`, and `docs/specifications/`.
+description: REST, WebSocket, SSE, and Kafka contracts in models/api/ and docs/product/08-api/.
 ---
 
 # Skill: API & Event Contract Specification (`SKILL-009`)
 
 ## 1. Description
 
-Specifies REST, WebSocket, SSE, and Kafka event contracts in `models/api/`, `docs/product/08-api/`, and `docs/specifications/`.
+Specifies versioned REST, WebSocket, SSE, and Kafka event contracts (`API-###`, `EVT-###`) in `models/api/`, `docs/product/08-api/`, and `docs/specifications/`.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `api-contract` activities during phase `08-api`.
-- Invoked by Agent role `api-architect` (`.agents/agents/api-architect.md`).
+- Phase `08-api` or API/WebSocket/SSE/event contract changes (`api-architect`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/api/`
+- `models/api/api-contracts.yaml`, `events.yaml`, `docs/specifications/api-specification.md`, `data-contracts.md`, `src/shared/contracts/events.py`, `docs/templates/api/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `README.md` read; versioned endpoint/topic semantics and `EventEnvelopeV1` compatibility rules (`DATA-RULE-003`) verified.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/api/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Update `models/api/api-contracts.yaml` and `events.yaml` first with `API-###` and `EVT-###` IDs, schemas, status codes, and RBAC scopes.
+2. Enforce `Decimal` string/number serialization, UTC ISO-8601 timestamps, `BoundedTimeRange`, and backward-compatible schema evolution.
+3. Synchronize `docs/product/08-api/` and `docs/specifications/` using `docs/templates/api/`.
+4. Update derived topology/sequence diagrams in `docs/diagrams/api/` and `docs/diagrams/sequence/`, then run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `models/api/*.yaml`, `docs/product/08-api/*.md`, `docs/diagrams/api/*.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Tag unconfirmed payload fields or rate-limit quotas as `[OPEN QUESTION]`; fix all validator errors.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never introduce breaking changes on an existing `/api/v1` route or `.v1` Kafka topic without a version bump; never expose internal storage schemas directly.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `domain-modeling`, `kafka-event-streaming`, `security-threat-modeling`

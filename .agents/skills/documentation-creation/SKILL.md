@@ -1,64 +1,52 @@
 ---
 name: documentation-creation
-description: Creates and updates markdown specifications and operational directory READMEs strictly from approved templates.
+description: Authors template-governed docs and 12-section directory READMEs from docs/templates/.
 ---
 
 # Skill: Template-Governed Documentation Authoring (`SKILL-002`)
 
 ## 1. Description
 
-Creates and updates markdown specifications and operational directory READMEs strictly from approved templates.
+Authors and updates markdown specifications and 12-section operational directory `README.md` files strictly from `docs/templates/`.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `documentation-creation` activities during phase `all`.
-- Invoked by Agent role `documentation-architect` (`.agents/agents/documentation-architect.md`).
+- Any phase requiring template-governed markdown authoring or directory `README.md` synchronization (`documentation-architect`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/`
+- `AGENTS.md`, target `README.md`, `work-items/<ID>/artifact-plan.yaml`, `.agents/config/document-map.yaml`, `models/`, `docs/templates/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target directory `README.md` read; canonical YAML model in `models/` updated first.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Lookup required template and upstream model in `.agents/config/document-map.yaml`.
+2. Copy structure from `docs/templates/` (or 12-section README contract in `tools/validators/validate_readmes.py`).
+3. Populate prose strictly from canonical `models/` and verified evidence (`FACT`), tagging `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
+4. Ensure all directory files are listed in Section 5 (`Required Artifacts`) of the directory's `README.md`.
+5. Run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- Template-compliant markdown specifications in `docs/` and 12-section `README.md` files.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Keep status `DRAFT`/`REVIEW_REQUIRED` if `[OPEN QUESTION]` remains; resolve all validator errors before finishing.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never author freeform documents bypassing `docs/templates/`; never overwrite baselined `docs/architecture/` or `docs/specifications/` without an active work item.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `documentation-review`, `traceability-audit`, `documentation-validation`

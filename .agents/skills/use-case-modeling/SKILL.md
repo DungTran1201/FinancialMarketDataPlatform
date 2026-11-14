@@ -1,64 +1,51 @@
 ---
 name: use-case-modeling
-description: Models actor goals, preconditions, main/alternative/exception flows, and postconditions in `docs/product/04-use-cases/`.
+description: Actor goals, flows, and UC-### specs in docs/product/04-use-cases/.
 ---
 
 # Skill: Use Case Catalog & Specification Modeling (`SKILL-007`)
 
 ## 1. Description
 
-Models actor goals, preconditions, main/alternative/exception flows, and postconditions in `docs/product/04-use-cases/`.
+Models actor goals, preconditions, main/alternative/exception flows, and postconditions (`UC-###`) in `docs/product/04-use-cases/`.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `use-case-modeling` activities during phase `04-use-cases`.
-- Invoked by Agent role `requirements-engineer` (`.agents/agents/requirements-engineer.md`).
+- Phase `04-use-cases` or user/system interaction scope changes (`requirements-engineer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/use-cases/`
+- `models/requirements/requirements.yaml`, `models/context/context.yaml`, `docs/product/04-use-cases/README.md`, `docs/templates/use-cases/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `README.md` read; actors (`ACT-###`) and upstream requirements (`FR-###`) defined in `models/`.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/use-cases/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Register or update `UC-###` entries in `models/requirements/requirements.yaml` and `docs/product/04-use-cases/use-case-catalog.md`.
+2. Author detailed specifications in `docs/product/04-use-cases/specifications/` using `docs/templates/use-cases/`.
+3. Synchronize derived use-case diagrams in `docs/diagrams/use-case/`.
+4. Run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `docs/product/04-use-cases/use-case-catalog.md`, `specifications/UC-###-*.md`, `docs/diagrams/use-case/*.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Tag unconfirmed actor permissions or exception flows as `[OPEN QUESTION]`; fix all validator errors.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never invent actors or use cases not traced to an approved or proposed `FR-###` / `CAP-###`.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `requirements-engineering`, `process-modeling`, `test-modeling`

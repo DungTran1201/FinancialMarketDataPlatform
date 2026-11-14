@@ -1,30 +1,25 @@
 ---
 name: lakehouse-medallion
-description: "Engineer MinIO/S3, Parquet and Iceberg lakehouse layers with immutable Bronze, standardized Silver, Spark backfills and safe table maintenance."
+description: MinIO/Iceberg Bronze-Silver-Gold tables, PySpark standardization, and compaction.
 ---
 
 # Skill: Lakehouse Medallion Engineering (`SKILL-025`)
 
 ## 1. Description
 
-Engineer MinIO/S3, Parquet, and Apache Iceberg lakehouse layers with immutable Bronze, standardized Silver, PySpark backfills, and safe table maintenance.
+Engineer MinIO/S3, Parquet, and Apache Iceberg lakehouse layers with immutable Bronze (`consumer-lakehouse-bronze`), standardized Silver (`src/processing/spark/bronze_to_silver.py`), PySpark backfills, and safe table maintenance.
 
 ## 2. Trigger Conditions
 
-- Use for MinIO/object storage, Parquet file layout, Apache Iceberg catalog/table changes, Bronze archiving (`consumer-lakehouse-bronze`), Silver merge (`SilverMergeJobSpec`), PySpark batch jobs, compaction, snapshot retention, and historical backfills.
-- Invoked by Agent role `lakehouse-engineer` (`.agents/agents/lakehouse-engineer.md`).
+- MinIO/object storage, Parquet file layout, Apache Iceberg catalog/table changes, Bronze archiving, Silver merge, PySpark batch jobs, compaction, snapshot retention, or historical backfills (`lakehouse-engineer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- `docs/architecture/04-data-platform-architecture.md`, `07-data-storage-and-modeling.md`, and `ADR-002` / `ADR-003`
-- `src/consumers/lakehouse_bronze/main.py` and `src/processing/spark/bronze_to_silver.py` (`SilverMergeJobSpec`)
-- `docs/specifications/data-contracts.md` and `models/domain/`
+- `AGENTS.md`, target `README.md`, `docs/architecture/04-data-platform-architecture.md`, `07-data-storage-and-modeling.md`, `ADR-002`, `ADR-003`, `src/processing/spark/bronze_to_silver.py`, `docs/specifications/data-contracts.md`, `models/domain/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Target Medallion layer (`Bronze` or `Silver`), table owner, natural key, version column, event-time semantics, and recovery plan have been confirmed.
+1. Target `README.md` read; Medallion layer (`Bronze` or `Silver`), table owner, natural key (`idempotency_key`), version column, event-time semantics, and recovery plan confirmed.
 
 ## 5. Execution Procedure
 

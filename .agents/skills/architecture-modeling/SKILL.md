@@ -1,64 +1,51 @@
 ---
 name: architecture-modeling
-description: Models system context, C4 containers/components, SADs, and ADRs in `models/architecture/` and `docs/`.
+description: C4 views, SADs, and ADRs in models/architecture/ and docs/.
 ---
 
 # Skill: System, Data & Software Architecture Modeling (`SKILL-005`)
 
 ## 1. Description
 
-Models system context, C4 containers/components, SADs, and ADRs in `models/architecture/` and `docs/`.
+Models system context, C4 containers/components (`COMP-###`), SADs, and ADRs (`ADR-###`) in `models/architecture/` and `docs/`.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `architecture-modeling` activities during phase `06-architecture`.
-- Invoked by Agent role `architecture-modeler` (`.agents/agents/architecture-modeler.md`).
+- Phase `05-system-analysis`, `06-architecture`, or `ARCH` work items (`architecture-modeler`, `data-platform-architect`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/architecture/`
+- `models/architecture/architecture.yaml`, `components.yaml`, `docs/architecture/00..13-*.md`, `docs/architecture/adr/ADR-001..006`, `docs/templates/architecture/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `README.md` read; preserved baseline `ADR-001..006` and Three-Plane boundaries (`.agents/config/data-platform-boundaries.yaml`) verified.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/architecture/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Update `models/architecture/architecture.yaml` and `components.yaml` first with `COMP-###` IDs and plane assignments (`Plane A`, `Plane B`, `Plane C`).
+2. Author or update SAD/C4/ADR documents in `docs/product/06-architecture/` or `docs/architecture/` using `docs/templates/architecture/`.
+3. Clearly separate `AS-IS/FACT` (`src/`, `docker-compose.yml`) from `DOCUMENTED TARGET`.
+4. Synchronize derived C4/architecture diagrams in `docs/diagrams/` and run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `models/architecture/*.yaml`, `docs/product/06-architecture/*.md`, `docs/architecture/adr/ADR-###.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Record unapproved topology choices as `[PROPOSED — NOT APPROVED]` or `[OPEN QUESTION]`; fix all validator errors.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never overwrite preserved `docs/architecture/00..13` or `ADR-001..006` without an approved `ARCH` work item; never violate Three-Plane isolation.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `diagram-modeling`, `data-platform-discovery`, `security-threat-modeling`

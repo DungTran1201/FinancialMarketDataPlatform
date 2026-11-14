@@ -1,30 +1,25 @@
 ---
 name: kafka-event-streaming
-description: "Design and implement versioned Kafka event contracts, topic partitioning, producer durability, consumer offset safety, backpressure, DLQ and replay."
+description: Versioned Kafka envelopes, partitioning, consumer offsets, backpressure, and DLQ routing.
 ---
 
 # Skill: Kafka Event Streaming & Consumer Delivery (`SKILL-024`)
 
 ## 1. Description
 
-Design and implement versioned Kafka event contracts, topic partitioning, producer durability, consumer offset safety, backpressure, DLQ routing, and replay.
+Design and implement versioned Kafka event contracts (`EventEnvelopeV1`), topic partitioning, producer durability, commit-after-write consumer offset safety, backpressure, DLQ routing (`market.dlq.v1`), and replay.
 
 ## 2. Trigger Conditions
 
-- Use for Kafka topics (`KafkaTopic`), producers, consumer groups (`consumer-hot-redis`, `consumer-analytics-ch`, `consumer-lakehouse-bronze`), partitioning, serialization, retries, offset handling, dead-letter routing (`market.dlq.v1`), or streaming sink changes.
-- Invoked by Agent roles `streaming-data-engineer` and `data-engineer`.
+- Kafka topics, producers, consumer groups (`consumer-hot-redis`, `consumer-analytics-ch`, `consumer-lakehouse-bronze`), partitioning, serialization, retries, offset handling, DLQ routing, or streaming sink changes (`streaming-data-engineer`, `data-engineer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- `src/shared/contracts/events.py` (`EventEnvelopeV1`, `DeadLetterEnvelopeV1`, `KafkaTopic`)
-- `docs/architecture/08-data-flow-and-event-contracts.md` and `docs/architecture/adr/ADR-002-event-driven-data-platform.md`
-- `src/consumers/` and `docker-compose.yml`
+- `AGENTS.md`, target `README.md`, `src/shared/contracts/events.py` (`EventEnvelopeV1`), `docs/architecture/08-data-flow-and-event-contracts.md`, `ADR-002`, `src/streaming/consumers/`, `docker-compose.yml`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Delivery semantics per sink path, partition key (`compute_partition_key`), consumer group, and sink commit boundary have been documented.
+1. Target `README.md` read; delivery semantics per sink path, partition key (`{provider}:{symbol}`), consumer group, and sink commit boundary documented.
 
 ## 5. Execution Procedure
 

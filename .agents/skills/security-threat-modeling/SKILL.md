@@ -1,6 +1,6 @@
 ---
 name: security-threat-modeling
-description: Models trust boundaries, STRIDE threats (`THR-###`), and mitigating controls (`CTRL-###`) in `models/security/` and `docs/product/10-security/`.
+description: STRIDE threats (THR-###), controls (CTRL-###), and trust boundaries.
 ---
 
 # Skill: STRIDE Threat Modeling & Security Control Design (`SKILL-012`)
@@ -11,54 +11,41 @@ Models trust boundaries, STRIDE threats (`THR-###`), and mitigating controls (`C
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `security-threat-modeling` activities during phase `10-security`.
-- Invoked by Agent role `security-reviewer` (`.agents/agents/security-reviewer.md`).
+- Phase `10-security` or `SEC` work items touching authentication, RBAC, secrets, network zones, or Agent Tool Gateway (`security-reviewer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/security/`
+- `models/security/security.yaml`, `threats.yaml`, `docs/architecture/10-security-and-governance.md`, `src/agent/tools/gateway.py`, `docs/templates/security/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `README.md` read; network zones (`frontend_net`, `app_control_net`, `data_plane_net`) and plane boundaries verified.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/security/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Update `models/security/security.yaml` and `threats.yaml` first with `THR-###` and `CTRL-###` IDs mapped to components (`COMP-###`) and test cases (`TC-###`).
+2. Verify Zero-Direct-DB access for `Plane C` (`ControlledToolGateway` whitelist) and secret isolation (`RULE-009`, `DATA-RULE-011`).
+3. Synchronize `docs/product/10-security/` from `docs/templates/security/` and `docs/diagrams/security/`.
+4. Run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `models/security/*.yaml`, `docs/product/10-security/*.md`, `docs/diagrams/security/*.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Block gate `G3_DESIGN` / `G5_VERIFY` if any `HIGH`/`CRITICAL` threat lacks a linked `CTRL-###` and `TC-###`.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never commit secrets/tokens; never permit `Plane C` LLM direct SQL, shell, or write access to `Plane A`/`Plane B` stores.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `architecture-modeling`, `api-contract`, `test-modeling`

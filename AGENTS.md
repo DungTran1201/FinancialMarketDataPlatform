@@ -14,9 +14,9 @@ AI Agents own evidence discovery, structured decomposition, canonical model upda
 Before creating or modifying any documentation, canonical model, diagram, or source file, every Agent **MUST** execute the following sequence:
 
 1. **Read Root Instructions**: Read this `AGENTS.md` and `.agents/rules/core.md`.
-2. **Read Target Directory `README.md` (README-First Rule)**: Read the `README.md` in the target directory (and parent directory) to understand its scope, authoritative inputs, required templates, and restrictions.
+2. **Read Target Directory `README.md` (README-First Rule)**: Read the `README.md` in the target directory (and parent directory) where artifacts will be created or modified to understand its scope, authoritative inputs, required templates, and restrictions. *(Context Optimization: When executing a skill, read `.agents/skills/<skill>/SKILL.md` directly; do NOT read `.agents/skills/<skill>/README.md` unless modifying the skill package itself).*
 3. **Load Agent Role**: Adopt the designated role definition in `.agents/agents/<role>.md`.
-4. **Load Required Skills**: Read the corresponding `SKILL.md` files in `.agents/skills/<skill>/SKILL.md` registered in `.agents/skill-registry.yaml`.
+4. **Load Required Skills & Rules (Task-Scoped Selective Loading)**: Read the Role's **Primary** `SKILL.md` and `Rule` files plus **all Task-Scoped Skills and Rules that match the specific layers, stores, or artifacts touched by the current task** — never skip a rule/skill relevant to the touched scope, and never eagerly load unrelated skills/rules outside the current task scope.
 5. **Inspect Authoritative Sources**: Read upstream canonical models (`models/`), shared platform specifications (`docs/architecture/`, `docs/specifications/`), and product lifecycle documents (`docs/product/`).
 6. **Initialize or Update a Work Item**: For any non-trivial change, create or update `work-items/<TYPE>-<NNN>-<slug>/` following `work-items/README.md`.
 7. **Select Required Artifacts from the Artifact Matrix**: Populate `artifact-plan.yaml` using `.agents/config/artifact-matrix.yaml` and `.agents/config/change-types.yaml` — never blindly generate every possible document.

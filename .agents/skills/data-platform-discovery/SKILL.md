@@ -1,29 +1,25 @@
 ---
 name: data-platform-discovery
-description: "Evidence-led discovery of the current and target data platform, runtime services, data paths, gaps and ownership."
+description: Audits AS-IS vs TARGET data platform services, flows, and gaps.
 ---
 
 # Skill: Data Platform Evidence-Led Discovery (`SKILL-019`)
 
 ## 1. Description
 
-Evidence-led discovery of the current (`AS-IS/FACT`) and target (`DOCUMENTED TARGET`) data platform, runtime services, data paths, gaps, and ownership.
+Evidence-led discovery of current (`AS-IS/FACT`) vs. target (`DOCUMENTED TARGET`) data platform services, data paths, gaps, and ownership.
 
 ## 2. Trigger Conditions
 
-- Use for repository onboarding, data-platform audits, major pipeline changes, implementation-readiness reviews, or when documentation and code may diverge.
-- Invoked by Agent roles `data-platform-architect`, `data-engineer`, and `financial-data-platform-reviewer`.
+- Repository onboarding, data-platform audits, major pipeline changes, or implementation-readiness reviews (`data-platform-architect`, `data-engineer`, `financial-data-platform-reviewer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md`, `.agents/`, and target directory `README.md`
-- `docs/architecture/` (`00`..`13` and `ADR-001..006`) and `docs/specifications/`
-- `src/`, `deploy/`, `docker-compose.yml`, `.github/workflows/ci.yml`, `models/`, `tests/`, and `work-items/`
+- `AGENTS.md`, target `README.md`, `docs/architecture/` (`00..13`, `ADR-001..006`), `docs/specifications/`, `.agents/config/data-platform-boundaries.yaml`, `src/`, `deploy/`, `docker-compose.yml`, `models/`, `tests/`, `work-items/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Active role (`data-platform-architect` or `data-engineer`) has been loaded; runtime state is never inferred from filenames alone.
+1. Target `README.md` read; active role loaded; runtime state verified from code/config rather than filenames alone.
 
 ## 5. Execution Procedure
 

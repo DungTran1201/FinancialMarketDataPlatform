@@ -55,20 +55,13 @@ Owns real-time exchange ingestion (`collector-ws`, `collector-rest`) and Kafka e
 
 ## 7. Required Skills
 
-- [financial-market-data-ingestion](../skills/financial-market-data-ingestion/SKILL.md)
-- [kafka-event-streaming](../skills/kafka-event-streaming/SKILL.md)
-- [financial-data-quality](../skills/financial-data-quality/SKILL.md)
-- [dataops-observability](../skills/dataops-observability/SKILL.md)
-- [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
+- **Primary (Always Load)**: [kafka-event-streaming](../skills/kafka-event-streaming/SKILL.md), [financial-market-data-ingestion](../skills/financial-market-data-ingestion/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [financial-data-quality](../skills/financial-data-quality/SKILL.md), [dataops-observability](../skills/dataops-observability/SKILL.md), [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
 
 ## 8. Required Rules
 
-- [financial-data-correctness](../rules/financial-data-correctness.md)
-- [event-contract-evolution](../rules/event-contract-evolution.md)
-- [ingestion-reliability](../rules/ingestion-reliability.md)
-- [kafka-consumer-delivery](../rules/kafka-consumer-delivery.md)
-- [data-platform-observability](../rules/data-platform-observability.md)
-- [data-platform-security-operations](../rules/data-platform-security-operations.md)
+- **Primary (Always Load)**: [financial-data-correctness](../rules/financial-data-correctness.md), [event-contract-evolution](../rules/event-contract-evolution.md), [kafka-consumer-delivery](../rules/kafka-consumer-delivery.md)
+- **Task-Scoped (Load When Touching Scope)**: [ingestion-reliability](../rules/ingestion-reliability.md), [data-platform-observability](../rules/data-platform-observability.md), [data-platform-security-operations](../rules/data-platform-security-operations.md)
 
 ## 9. Handoff Conditions
 

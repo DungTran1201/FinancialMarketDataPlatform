@@ -56,27 +56,19 @@ Owns the end-to-end architecture of the financial data platform across ingestion
 
 ## 7. Required Skills
 
-- [data-platform-discovery](../skills/data-platform-discovery/SKILL.md)
-- [financial-market-data-ingestion](../skills/financial-market-data-ingestion/SKILL.md)
-- [kafka-event-streaming](../skills/kafka-event-streaming/SKILL.md)
-- [lakehouse-medallion](../skills/lakehouse-medallion/SKILL.md)
-- [analytics-engineering-dbt-clickhouse](../skills/analytics-engineering-dbt-clickhouse/SKILL.md)
-- [data-governance-lineage](../skills/data-governance-lineage/SKILL.md)
-- [dataops-observability](../skills/dataops-observability/SKILL.md)
-- [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
-- [architecture-modeling](../skills/architecture-modeling/SKILL.md)
+- **Primary (Always Load)**: [data-platform-discovery](../skills/data-platform-discovery/SKILL.md), [architecture-modeling](../skills/architecture-modeling/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**:
+  - Ingestion: [financial-market-data-ingestion](../skills/financial-market-data-ingestion/SKILL.md)
+  - Streaming/Kafka: [kafka-event-streaming](../skills/kafka-event-streaming/SKILL.md)
+  - Lakehouse/Iceberg: [lakehouse-medallion](../skills/lakehouse-medallion/SKILL.md)
+  - ClickHouse/dbt: [analytics-engineering-dbt-clickhouse](../skills/analytics-engineering-dbt-clickhouse/SKILL.md)
+  - Governance/Lineage: [data-governance-lineage](../skills/data-governance-lineage/SKILL.md)
+  - Operations/Recovery: [dataops-observability](../skills/dataops-observability/SKILL.md), [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
 
 ## 8. Required Rules
 
-- [data-truth-classification](../rules/data-truth-classification.md)
-- [storage-workload-separation](../rules/storage-workload-separation.md)
-- [event-contract-evolution](../rules/event-contract-evolution.md)
-- [medallion-layer-ownership](../rules/medallion-layer-ownership.md)
-- [data-lineage-governance](../rules/data-lineage-governance.md)
-- [data-platform-observability](../rules/data-platform-observability.md)
-- [core](../rules/core.md)
-- [source-of-truth](../rules/source-of-truth.md)
-- [security](../rules/security.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [data-truth-classification](../rules/data-truth-classification.md), [storage-workload-separation](../rules/storage-workload-separation.md), [source-of-truth](../rules/source-of-truth.md)
+- **Task-Scoped (Load When Touching Scope)**: [event-contract-evolution](../rules/event-contract-evolution.md), [medallion-layer-ownership](../rules/medallion-layer-ownership.md), [data-lineage-governance](../rules/data-lineage-governance.md), [data-platform-observability](../rules/data-platform-observability.md), [security](../rules/security.md)
 
 ## 9. Handoff Conditions
 

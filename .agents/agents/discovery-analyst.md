@@ -48,16 +48,13 @@ Conducts current-state (`AS-IS`) repository discovery, classifies FACT/ASSUMPTIO
 
 ## 7. Required Skills
 
-- [project-discovery](../skills/project-discovery/SKILL.md)
-- [documentation-creation](../skills/documentation-creation/SKILL.md)
-- [traceability-audit](../skills/traceability-audit/SKILL.md)
+- **Primary (Always Load)**: [project-discovery](../skills/project-discovery/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [documentation-creation](../skills/documentation-creation/SKILL.md), [traceability-audit](../skills/traceability-audit/SKILL.md)
 
 ## 8. Required Rules
 
-- [core](../rules/core.md)
-- [source-of-truth](../rules/source-of-truth.md)
-- [change-lifecycle](../rules/change-lifecycle.md)
-- [traceability](../rules/traceability.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [source-of-truth](../rules/source-of-truth.md)
+- **Task-Scoped (Load When Touching Scope)**: [change-lifecycle](../rules/change-lifecycle.md), [traceability](../rules/traceability.md)
 
 ## 9. Handoff Conditions
 

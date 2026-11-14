@@ -54,20 +54,13 @@ Builds and operates the historical lakehouse using MinIO/S3-compatible object st
 
 ## 7. Required Skills
 
-- [lakehouse-medallion](../skills/lakehouse-medallion/SKILL.md)
-- [financial-data-quality](../skills/financial-data-quality/SKILL.md)
-- [data-governance-lineage](../skills/data-governance-lineage/SKILL.md)
-- [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
-- [dataops-observability](../skills/dataops-observability/SKILL.md)
+- **Primary (Always Load)**: [lakehouse-medallion](../skills/lakehouse-medallion/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [financial-data-quality](../skills/financial-data-quality/SKILL.md), [data-governance-lineage](../skills/data-governance-lineage/SKILL.md), [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md), [dataops-observability](../skills/dataops-observability/SKILL.md)
 
 ## 8. Required Rules
 
-- [medallion-layer-ownership](../rules/medallion-layer-ownership.md)
-- [financial-data-correctness](../rules/financial-data-correctness.md)
-- [ingestion-reliability](../rules/ingestion-reliability.md)
-- [data-quality-gates](../rules/data-quality-gates.md)
-- [data-lineage-governance](../rules/data-lineage-governance.md)
-- [data-platform-security-operations](../rules/data-platform-security-operations.md)
+- **Primary (Always Load)**: [medallion-layer-ownership](../rules/medallion-layer-ownership.md), [financial-data-correctness](../rules/financial-data-correctness.md)
+- **Task-Scoped (Load When Touching Scope)**: [ingestion-reliability](../rules/ingestion-reliability.md), [data-quality-gates](../rules/data-quality-gates.md), [data-lineage-governance](../rules/data-lineage-governance.md), [data-platform-security-operations](../rules/data-platform-security-operations.md)
 
 ## 9. Handoff Conditions
 

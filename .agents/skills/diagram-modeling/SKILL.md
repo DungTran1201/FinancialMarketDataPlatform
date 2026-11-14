@@ -1,64 +1,51 @@
 ---
 name: diagram-modeling
-description: Generates and synchronizes Mermaid diagrams (`DIAG-*`) derived from canonical models and authoritative specifications.
+description: Generates and syncs derived Mermaid diagrams (DIAG-*) in docs/diagrams/.
 ---
 
 # Skill: Technical Diagram Authoring & Synchronization (`SKILL-010`)
 
 ## 1. Description
 
-Generates and synchronizes Mermaid diagrams (`DIAG-*`) derived from canonical models and authoritative specifications.
+Generates and synchronizes Mermaid diagrams (`DIAG-*`) in `docs/diagrams/` derived from canonical `models/` and authoritative `docs/`.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `diagram-modeling` activities during phase `all`.
-- Invoked by Agent role `architecture-modeler` (`.agents/agents/architecture-modeler.md`).
+- Any phase requiring creation or synchronization of `DIAG-*` Mermaid views (`architecture-modeler`, `process-modeler`, `domain-modeler`, `api-architect`, `ux-modeler`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/diagrams/`
+- Target category `docs/diagrams/<category>/README.md`, upstream `models/**/*.yaml`, authoritative `docs/`, `.agents/rules/diagrams.md`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `docs/diagrams/<category>/README.md` read; upstream canonical model in `models/` updated first.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/diagrams/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Allocate a valid `DIAG-<TYPE>-<NNN>` ID per `.agents/config/identifier-registry.yaml`.
+2. Author the diagram markdown in `docs/diagrams/<category>/` with a fenced ```mermaid block, upstream model/doc references, and architectural explanation.
+3. Quote all Mermaid node labels containing parentheses `()` or brackets `[]` (e.g., `id["Label (Detail)"]`).
+4. Link the diagram from its governing specification in `docs/` and run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `docs/diagrams/<category>/*.md` synchronized with upstream models and specifications.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Fix any Mermaid syntax or missing-explanation error flagged by `validate_diagrams.py` before finishing.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Diagrams are derived views only (`RULE-004`); never invent components, actors, or flows absent from `models/` and `docs/`.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `architecture-modeling`, `process-modeling`, `domain-modeling`

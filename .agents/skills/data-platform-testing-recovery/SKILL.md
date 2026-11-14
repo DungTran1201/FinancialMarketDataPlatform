@@ -1,6 +1,6 @@
 ---
 name: data-platform-testing-recovery
-description: "Test data pipeline correctness and operational recovery, including replay, duplicates, late events, sink failure windows, backfills and cross-plane isolation."
+description: Pipeline replay, deduplication, late-event, backfill, and fault-recovery tests.
 ---
 
 # Skill: Data Platform Testing & Recovery Verification (`SKILL-020`)
@@ -11,19 +11,15 @@ Test data pipeline correctness and operational recovery, including replay, dupli
 
 ## 2. Trigger Conditions
 
-- Use for new or changed data pipelines, storage sinks, contracts, backfills, deployment profiles, recovery procedures, critical data-quality gates, or production-readiness reviews.
-- Invoked by Agent roles `financial-data-platform-reviewer`, `qa-reviewer`, and `data-engineer`.
+- New or changed data pipelines, storage sinks, contracts, backfills, deployment profiles, recovery procedures, or production-readiness reviews (`financial-data-platform-reviewer`, `qa-reviewer`, `data-engineer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/`), `models/testing/testing.yaml`, and `models/requirements/acceptance-criteria.yaml`
-- `src/shared/contracts/events.py`, `src/agent/tools/gateway.py`, `tests/`, and `docker-compose.yml`
+- `AGENTS.md`, target `README.md`, `work-items/<ID>/`, `models/testing/testing.yaml`, `models/requirements/acceptance-criteria.yaml`, `src/shared/contracts/events.py`, `src/agent/tools/gateway.py`, `tests/`, `docker-compose.yml`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Expected delivery semantics, natural keys, freshness objectives, time windows, critical failure cases, and test safety constraints have been defined.
+1. Target `README.md` read; expected delivery semantics, natural keys, freshness objectives, time windows, and failure cases defined.
 
 ## 5. Execution Procedure
 

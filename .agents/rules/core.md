@@ -16,10 +16,11 @@ Mandates the README-first navigation protocol, fact classification (`FACT`, `ASS
 
 ## 2. Mandatory Directives
 
-1. **README-First Compliance**: Always inspect the `README.md` of any target directory in `docs/`, `models/`, `work-items/`, `.agents/`, or `tools/` before creating or modifying files inside it.
-2. **Registry Alignment**: Conform strictly to `.agents/config/document-map.yaml`, `.agents/config/artifact-matrix.yaml`, `.agents/config/identifier-registry.yaml`, and `.agents/config/status-lifecycle.yaml`.
-3. **Evidence Preservation**: Distinguish `FACT`, `ASSUMPTION`, `DECISION`, and `OPEN QUESTION`. Never fabricate product requirements or operational metrics.
-4. **Deterministic Verification**: Run `tools/validators/run_all.py` after modifying any governed artifact.
+1. **README-First Compliance**: Always inspect the `README.md` of any target directory in `docs/`, `models/`, `work-items/`, `.agents/`, or `tools/` before creating or modifying files inside it. When invoking a skill, read `.agents/skills/<skill>/SKILL.md` directly and skip `.agents/skills/<skill>/README.md` unless editing that skill directory.
+2. **Task-Scoped Selective Loading**: Load the active Role's **Primary** skill/rule plus all **Task-Scoped** skills and rules in `.agents/skills/` and `.agents/rules/` that govern the subsystems touched by the request; avoid loading unrelated skills/rules outside the active task scope.
+3. **Registry Alignment**: Conform strictly to `.agents/config/document-map.yaml`, `.agents/config/artifact-matrix.yaml`, `.agents/config/identifier-registry.yaml`, and `.agents/config/status-lifecycle.yaml`.
+4. **Evidence Preservation**: Distinguish `FACT`, `ASSUMPTION`, `DECISION`, and `OPEN QUESTION`. Never fabricate product requirements or operational metrics.
+5. **Deterministic Verification**: Run `tools/validators/run_all.py` after modifying any governed artifact.
 
 ## 3. Prohibited Actions
 

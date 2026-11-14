@@ -1,64 +1,51 @@
 ---
 name: srs-generation
-description: Synthesizes normalized requirements models (`models/requirements/`) into a cohesive Software Requirements Specification (`SRS.md`).
+description: Synthesizes models/requirements/ into docs/product/02-requirements/SRS.md.
 ---
 
 # Skill: IEEE-Compatible SRS Generation (`SKILL-004`)
 
 ## 1. Description
 
-Synthesizes normalized requirements models (`models/requirements/`) into a cohesive Software Requirements Specification (`SRS.md`).
+Synthesizes normalized requirements models (`models/requirements/`) into `docs/product/02-requirements/SRS.md`.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `srs-generation` activities during phase `02-requirements`.
-- Invoked by Agent role `requirements-engineer` (`.agents/agents/requirements-engineer.md`).
+- Phase `02-requirements` when generating or updating `SRS.md` (`requirements-engineer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/requirements/SRS.template.md`
+- `models/requirements/requirements.yaml`, `business-rules.yaml`, `acceptance-criteria.yaml`, `docs/specifications/`, `docs/templates/requirements/SRS.template.md`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. `docs/product/02-requirements/README.md` read; `models/requirements/*.yaml` validated.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/requirements/SRS.template.md`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Read all canonical models in `models/requirements/` and shared specs in `docs/specifications/`.
+2. Populate `docs/product/02-requirements/SRS.md` strictly from `docs/templates/requirements/SRS.template.md`.
+3. Cross-reference every `FR-###`, `NFR-###`, `BR-###`, and `AC-###` to upstream capabilities and downstream use cases/tests.
+4. Run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `docs/product/02-requirements/SRS.md` and `traceability-matrix.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Do not promote `SRS.md` to `APPROVED` if any requirement lacks acceptance criteria or has unresolved `[OPEN QUESTION]` tags.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never introduce requirements in `SRS.md` that do not exist in `models/requirements/`.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `requirements-engineering`, `use-case-modeling`, `traceability-audit`

@@ -53,19 +53,13 @@ Owns analytical data modeling and curated market metrics across ClickHouse OLAP 
 
 ## 7. Required Skills
 
-- [analytics-engineering-dbt-clickhouse](../skills/analytics-engineering-dbt-clickhouse/SKILL.md)
-- [financial-data-quality](../skills/financial-data-quality/SKILL.md)
-- [data-governance-lineage](../skills/data-governance-lineage/SKILL.md)
-- [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
+- **Primary (Always Load)**: [analytics-engineering-dbt-clickhouse](../skills/analytics-engineering-dbt-clickhouse/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [financial-data-quality](../skills/financial-data-quality/SKILL.md), [data-governance-lineage](../skills/data-governance-lineage/SKILL.md), [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
 
 ## 8. Required Rules
 
-- [storage-workload-separation](../rules/storage-workload-separation.md)
-- [financial-data-correctness](../rules/financial-data-correctness.md)
-- [analytical-modeling](../rules/analytical-modeling.md)
-- [data-quality-gates](../rules/data-quality-gates.md)
-- [data-lineage-governance](../rules/data-lineage-governance.md)
-- [data-platform-observability](../rules/data-platform-observability.md)
+- **Primary (Always Load)**: [analytical-modeling](../rules/analytical-modeling.md), [financial-data-correctness](../rules/financial-data-correctness.md), [storage-workload-separation](../rules/storage-workload-separation.md)
+- **Task-Scoped (Load When Touching Scope)**: [data-quality-gates](../rules/data-quality-gates.md), [data-lineage-governance](../rules/data-lineage-governance.md), [data-platform-observability](../rules/data-platform-observability.md)
 
 ## 9. Handoff Conditions
 

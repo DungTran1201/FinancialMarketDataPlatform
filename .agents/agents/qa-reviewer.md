@@ -47,17 +47,13 @@ Defines test strategies, test plans, deterministic test cases (`TC-###`), and re
 
 ## 7. Required Skills
 
-- [test-modeling](../skills/test-modeling/SKILL.md)
-- [traceability-audit](../skills/traceability-audit/SKILL.md)
-- [documentation-validation](../skills/documentation-validation/SKILL.md)
+- **Primary (Always Load)**: [test-modeling](../skills/test-modeling/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [traceability-audit](../skills/traceability-audit/SKILL.md), [documentation-validation](../skills/documentation-validation/SKILL.md)
 
 ## 8. Required Rules
 
-- [core](../rules/core.md)
-- [models](../rules/models.md)
-- [identifiers](../rules/identifiers.md)
-- [traceability](../rules/traceability.md)
-- [quality-gates](../rules/quality-gates.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [models](../rules/models.md), [quality-gates](../rules/quality-gates.md)
+- **Task-Scoped (Load When Touching Scope)**: [identifiers](../rules/identifiers.md), [traceability](../rules/traceability.md)
 
 ## 9. Handoff Conditions
 

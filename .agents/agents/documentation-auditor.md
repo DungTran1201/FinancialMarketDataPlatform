@@ -47,17 +47,13 @@ Executes automated validators, audits bidirectional traceability, verifies READM
 
 ## 7. Required Skills
 
-- [documentation-review](../skills/documentation-review/SKILL.md)
-- [traceability-audit](../skills/traceability-audit/SKILL.md)
-- [documentation-validation](../skills/documentation-validation/SKILL.md)
+- **Primary (Always Load)**: [documentation-validation](../skills/documentation-validation/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [documentation-review](../skills/documentation-review/SKILL.md), [traceability-audit](../skills/traceability-audit/SKILL.md)
 
 ## 8. Required Rules
 
-- [core](../rules/core.md)
-- [documentation](../rules/documentation.md)
-- [traceability](../rules/traceability.md)
-- [source-of-truth](../rules/source-of-truth.md)
-- [quality-gates](../rules/quality-gates.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [documentation](../rules/documentation.md), [quality-gates](../rules/quality-gates.md)
+- **Task-Scoped (Load When Touching Scope)**: [traceability](../rules/traceability.md), [source-of-truth](../rules/source-of-truth.md)
 
 ## 9. Handoff Conditions
 

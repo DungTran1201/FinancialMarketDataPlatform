@@ -54,19 +54,13 @@ Operates the data platform reliably through observable services, secure configur
 
 ## 7. Required Skills
 
-- [dataops-observability](../skills/dataops-observability/SKILL.md)
-- [kafka-event-streaming](../skills/kafka-event-streaming/SKILL.md)
-- [lakehouse-medallion](../skills/lakehouse-medallion/SKILL.md)
-- [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
-- [data-governance-lineage](../skills/data-governance-lineage/SKILL.md)
+- **Primary (Always Load)**: [dataops-observability](../skills/dataops-observability/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [kafka-event-streaming](../skills/kafka-event-streaming/SKILL.md), [lakehouse-medallion](../skills/lakehouse-medallion/SKILL.md), [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md), [data-governance-lineage](../skills/data-governance-lineage/SKILL.md)
 
 ## 8. Required Rules
 
-- [data-platform-observability](../rules/data-platform-observability.md)
-- [ingestion-reliability](../rules/ingestion-reliability.md)
-- [kafka-consumer-delivery](../rules/kafka-consumer-delivery.md)
-- [data-platform-security-operations](../rules/data-platform-security-operations.md)
-- [data-lineage-governance](../rules/data-lineage-governance.md)
+- **Primary (Always Load)**: [data-platform-observability](../rules/data-platform-observability.md), [data-platform-security-operations](../rules/data-platform-security-operations.md)
+- **Task-Scoped (Load When Touching Scope)**: [ingestion-reliability](../rules/ingestion-reliability.md), [kafka-consumer-delivery](../rules/kafka-consumer-delivery.md), [data-lineage-governance](../rules/data-lineage-governance.md)
 
 ## 9. Handoff Conditions
 

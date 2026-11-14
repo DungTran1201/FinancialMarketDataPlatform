@@ -1,64 +1,51 @@
 ---
 name: documentation-review
-description: Audits documentation completeness, placeholder hygiene, and phase gate compliance before status promotion.
+description: Audits placeholder hygiene, phase gates (G0..G6), and status promotion readiness.
 ---
 
 # Skill: Documentation Quality & Gate Audit (`SKILL-014`)
 
 ## 1. Description
 
-Audits documentation completeness, placeholder hygiene, and phase gate compliance before status promotion.
+Audits documentation completeness, placeholder hygiene, and phase gate (`G0_DISCOVERY`..`G6_RELEASE`) compliance before status promotion.
 
 ## 2. Trigger Conditions
 
-- Invoked when a Work Item in `work-items/<ID>/` requires `documentation-review` activities during phase `14-governance`.
-- Invoked by Agent role `documentation-auditor` (`.agents/agents/documentation-auditor.md`).
+- Phase `14-governance` or Work Item `review.md` gate sign-off (`documentation-auditor`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- Active Work Item (`work-items/<ID>/request.md`, `discovery.md`, `artifact-plan.yaml`)
-- Relevant canonical models in `models/`
-- Template reference: `docs/templates/governance/`
+- `work-items/<ID>/artifact-plan.yaml`, `review.md`, `.agents/config/phase-gates.yaml`, `status-lifecycle.yaml`, `docs/product/14-governance/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Required upstream inputs have been inspected and classified (`FACT`, `ASSUMPTION`, `DECISION`, `OPEN QUESTION`).
+1. Target `README.md` read; all planned artifacts in `work-items/<ID>/artifact-plan.yaml` authored.
 
 ## 5. Execution Procedure
 
-1. Read the target directory `README.md` and verify scope boundaries.
-2. Inspect upstream canonical models in `models/` and baseline specifications in `docs/`.
-3. Select the designated template from `docs/templates/governance/`.
-4. Populate or update the canonical YAML model in `models/` first (where applicable) using stable IDs from `.agents/config/identifier-registry.yaml`.
-5. Generate or synchronize the target markdown document and/or Mermaid diagram.
-6. Explicitly tag any unconfirmed items with `[ASSUMPTION — REQUIRES VALIDATION]` or `[OPEN QUESTION]`.
-7. Execute the automated validation suite (`tools/validators/run_all.py`).
+1. Verify every required artifact in `artifact-plan.yaml` exists and conforms to its `docs/templates/` structure.
+2. Scan for forbidden `[TO BE COMPLETED]` placeholders or untagged assumptions in `APPROVED`/`BASELINED` documents.
+3. Verify phase gate exit criteria in `.agents/config/phase-gates.yaml` and record findings in `work-items/<ID>/review.md`.
+4. Run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Updated canonical YAML model in `models/` (when applicable).
-- Template-compliant markdown artifact in `docs/` or review output in `work-items/`.
+- `work-items/<ID>/review.md` and `docs/product/14-governance/*.md`.
 
 ## 7. Validation
 
 ```powershell
-.\.venv\Scripts\python.exe tools/validators/run_all.py
+python tools/validators/run_all.py
 ```
 
 ## 8. Failure Handling
 
-- If required upstream facts are missing, record an `[OPEN QUESTION]` entry and keep artifact status as `DRAFT` or `REVIEW_REQUIRED`.
-- If any validator fails, fix structural, metadata, or link errors before completing the turn.
+- Reject promotion to `APPROVED` or `BASELINED` if any validator fails or any `[OPEN QUESTION]` remains unresolved.
 
 ## 9. Restrictions
 
-- Never invent product requirements, endpoints, or business rules.
-- Never overwrite baselined Data Platform files without an explicit work item action.
+- Never self-approve speculative requirements; never bypass `.agents/config/status-lifecycle.yaml`.
 
 ## 10. Related Skills
 
-- `documentation-creation`
-- `traceability-audit`
-- `documentation-validation`
+- `traceability-audit`, `documentation-validation`, `documentation-creation`

@@ -1,30 +1,25 @@
 ---
 name: dataops-observability
-description: "Operate streaming and batch data services with actionable metrics, bounded-cardinality telemetry, freshness/lag alerts, runbooks and recovery tests."
+description: Streaming/batch SLIs, lag/freshness alerts, Prometheus telemetry, and operational runbooks.
 ---
 
 # Skill: DataOps, Observability & Recovery Operations (`SKILL-021`)
 
 ## 1. Description
 
-Operate streaming and batch data services with actionable metrics, bounded-cardinality telemetry, freshness/lag alerts, runbooks, and recovery tests.
+Operate streaming and batch data services with actionable SLIs, bounded-cardinality Prometheus telemetry, freshness/lag alerts, Docker Compose health checks, and recovery runbooks.
 
 ## 2. Trigger Conditions
 
-- Use for metrics/logs/traces, Kafka consumer lag, data freshness, alert rules, Docker Compose profiles, service health checks, backup/restore, recovery procedures, and incidents.
-- Invoked by Agent role `dataops-engineer` (`.agents/agents/dataops-engineer.md`).
+- Metrics/logs/traces, Kafka consumer lag, data freshness, alert rules, Docker Compose profiles, health checks, backup/restore, or recovery runbooks (`dataops-engineer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- `docs/architecture/11-reliability-and-observability.md` and `12-deployment-architecture.md`
-- `docker-compose.yml`, `.env.example`, `deploy/prometheus/prometheus.yml`, and `src/shared/config.py`
-- `models/deployment/deployment.yaml`
+- `AGENTS.md`, target `README.md`, `docs/architecture/11-reliability-and-observability.md`, `12-deployment-architecture.md`, `docker-compose.yml`, `.env.example`, `deploy/prometheus/prometheus.yml`, `src/shared/config.py`, `models/deployment/deployment.yaml`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Component workload class (`online-serving`, `streaming`, or `batch`), owning role, critical signals, and alert response actions have been identified.
+1. Target `README.md` read; workload class (`online-serving`, `streaming`, `batch`), owning role, critical signals, and alert response actions identified.
 
 ## 5. Execution Procedure
 

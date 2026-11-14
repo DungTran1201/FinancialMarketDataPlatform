@@ -1,31 +1,25 @@
 ---
 name: analytics-engineering-dbt-clickhouse
-description: "Design ClickHouse analytical schemas and dbt Gold models with explicit grain, metric semantics, incremental correctness, tests and query performance."
+description: ClickHouse OLAP schemas, ReplacingMergeTree views, and dbt Gold marts.
 ---
 
 # Skill: ClickHouse & dbt Analytics Engineering (`SKILL-017`)
 
 ## 1. Description
 
-Design ClickHouse analytical schemas and dbt Gold models with explicit grain, metric semantics, incremental correctness, tests, and query performance.
+Design ClickHouse analytical schemas (`ReplacingMergeTree`, `AggregatingMergeTree`) and dbt Gold models (`src/transformation/dbt/`) with explicit grain, metric semantics, incremental correctness, tests, and bounded query performance.
 
 ## 2. Trigger Conditions
 
-- Use when creating or changing ClickHouse tables/views, materialized views, dbt sources/models/tests, Gold marts, analytical metrics, or BI/API/Agent query patterns.
-- Invoked by Agent role `analytics-engineer` (`.agents/agents/analytics-engineer.md`).
+- Creating or updating ClickHouse tables/views, materialized views, dbt sources/models/tests, Gold marts, analytical metrics, or BI/API/Agent query patterns (`analytics-engineer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- `docs/specifications/data-dictionary.md` and `data-requirements.md`
-- `docs/architecture/adr/ADR-003-storage-strategy.md` and `ADR-005-query-and-caching-strategy.md`
-- `deploy/clickhouse/init/01_schema.sql` and `src/transformation/dbt/dbt_project.yml`
-- Relevant canonical models in `models/domain/` and `models/testing/`
+- `AGENTS.md`, target `README.md`, `docs/specifications/data-dictionary.md`, `data-requirements.md`, `ADR-003`, `ADR-005`, `deploy/clickhouse/init/01_schema.sql`, `src/transformation/dbt/dbt_project.yml`, `models/domain/`.
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Dataset grain, natural business key, time dimension, measure units, metric formula, freshness target, and owning layer have been declared.
+1. Target `README.md` read; dataset grain, natural business key, time dimension, measure units, metric formula, freshness target, and owning layer declared.
 
 ## 5. Execution Procedure
 

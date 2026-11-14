@@ -48,17 +48,13 @@ Conducts STRIDE threat modeling, defines trust boundaries, verifies RBAC/secret 
 
 ## 7. Required Skills
 
-- [security-threat-modeling](../skills/security-threat-modeling/SKILL.md)
-- [diagram-modeling](../skills/diagram-modeling/SKILL.md)
-- [documentation-review](../skills/documentation-review/SKILL.md)
+- **Primary (Always Load)**: [security-threat-modeling](../skills/security-threat-modeling/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [diagram-modeling](../skills/diagram-modeling/SKILL.md), [documentation-review](../skills/documentation-review/SKILL.md)
 
 ## 8. Required Rules
 
-- [core](../rules/core.md)
-- [security](../rules/security.md)
-- [models](../rules/models.md)
-- [traceability](../rules/traceability.md)
-- [quality-gates](../rules/quality-gates.md)
+- **Primary (Always Load)**: [core](../rules/core.md), [security](../rules/security.md), [data-platform-security-operations](../rules/data-platform-security-operations.md)
+- **Task-Scoped (Load When Touching Scope)**: [models](../rules/models.md), [traceability](../rules/traceability.md), [quality-gates](../rules/quality-gates.md)
 
 ## 9. Handoff Conditions
 

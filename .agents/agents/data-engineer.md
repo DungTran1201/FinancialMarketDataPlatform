@@ -57,21 +57,13 @@ Designs, implements, and maintains reliable end-to-end data pipelines from sourc
 
 ## 7. Required Skills
 
-- [data-platform-discovery](../skills/data-platform-discovery/SKILL.md)
-- [financial-market-data-ingestion](../skills/financial-market-data-ingestion/SKILL.md)
-- [kafka-event-streaming](../skills/kafka-event-streaming/SKILL.md)
-- [financial-data-quality](../skills/financial-data-quality/SKILL.md)
-- [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
+- **Primary (Always Load)**: [financial-market-data-ingestion](../skills/financial-market-data-ingestion/SKILL.md)
+- **Task-Scoped (Load When Touching Scope)**: [data-platform-discovery](../skills/data-platform-discovery/SKILL.md), [kafka-event-streaming](../skills/kafka-event-streaming/SKILL.md), [financial-data-quality](../skills/financial-data-quality/SKILL.md), [data-platform-testing-recovery](../skills/data-platform-testing-recovery/SKILL.md)
 
 ## 8. Required Rules
 
-- [data-truth-classification](../rules/data-truth-classification.md)
-- [financial-data-correctness](../rules/financial-data-correctness.md)
-- [event-contract-evolution](../rules/event-contract-evolution.md)
-- [ingestion-reliability](../rules/ingestion-reliability.md)
-- [kafka-consumer-delivery](../rules/kafka-consumer-delivery.md)
-- [data-quality-gates](../rules/data-quality-gates.md)
-- [security](../rules/security.md)
+- **Primary (Always Load)**: [financial-data-correctness](../rules/financial-data-correctness.md), [event-contract-evolution](../rules/event-contract-evolution.md)
+- **Task-Scoped (Load When Touching Scope)**: [data-truth-classification](../rules/data-truth-classification.md), [ingestion-reliability](../rules/ingestion-reliability.md), [kafka-consumer-delivery](../rules/kafka-consumer-delivery.md), [data-quality-gates](../rules/data-quality-gates.md), [security](../rules/security.md)
 
 ## 9. Handoff Conditions
 

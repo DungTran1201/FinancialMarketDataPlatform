@@ -1,30 +1,25 @@
 ---
 name: data-governance-lineage
-description: "Define dataset ownership, metadata, lineage, access classes, retention, schema lifecycle and provenance across financial data products."
+description: Dataset ownership, end-to-end lineage, retention policies, and schema lifecycle.
 ---
 
 # Skill: Data Governance, Ownership & Lineage (`SKILL-018`)
 
 ## 1. Description
 
-Define dataset ownership, metadata, lineage, access classes, retention, schema lifecycle, and provenance across financial data products.
+Define dataset ownership, metadata, end-to-end lineage, access classes, retention TTL, schema lifecycle, and `ToolProvenanceMetadata` across financial data products.
 
 ## 2. Trigger Conditions
 
-- Use for new datasets, event/schema changes, data catalog/dictionary updates, retention policies, data access controls, audits, or Agent/BI data provenance.
-- Invoked by Agent role `data-quality-governance-engineer` (`.agents/agents/data-quality-governance-engineer.md`).
+- New datasets, event/schema changes, data catalog/dictionary updates, retention policies, data access controls, audits, or Agent/BI data provenance (`data-quality-governance-engineer`).
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md` and target directory `README.md`
-- `docs/specifications/data-contracts.md`, `data-dictionary.md`, and `data-requirements.md`
-- `.agents/config/data-platform-boundaries.yaml`
-- `models/domain/`, `models/security/`, and `src/agent/tools/contracts.py` (`ToolProvenanceMetadata`)
+- `AGENTS.md`, target `README.md`, `docs/specifications/data-contracts.md`, `data-dictionary.md`, `data-requirements.md`, `.agents/config/data-platform-boundaries.yaml`, `models/domain/`, `models/security/`, `src/agent/tools/contracts.py` (`ToolProvenanceMetadata`).
 
 ## 4. Preconditions
 
-1. Target directory `README.md` has been read in full.
-2. Data owner/steward, business purpose, classification, dataset grain, natural key, and lifecycle stage have been identified.
+1. Target `README.md` read; data owner/steward, business purpose, classification, dataset grain, natural key, and lifecycle stage identified.
 
 ## 5. Execution Procedure
 
