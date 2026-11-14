@@ -1,0 +1,1 @@
+"""Canonical Kafka event contracts."""

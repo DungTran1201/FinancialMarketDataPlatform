@@ -25,6 +25,7 @@ Primary authoring role: `ux-modeler`; audited by `documentation-auditor`.
 | Artifact | Purpose | Required / Conditional | Template |
 |---|---|---|---|
 | `ux-diagram.template.md` | Reusable `DIAG-UX` Mermaid diagram template | Conditional | `docs/diagrams/ux/ux-diagram.template.md` |
+| `01-realtime-data-flow-ui-architecture.md` | Real-Time 12-Stage Data Flow Observatory UI & Telemetry Architecture (`DIAG-UX-001`) | Required (Baselined) | `docs/diagrams/ux/01-realtime-data-flow-ui-architecture.md` |
 
 ## 6. Directory and File Organization
 

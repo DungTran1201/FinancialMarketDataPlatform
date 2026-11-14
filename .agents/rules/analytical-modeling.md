@@ -19,7 +19,7 @@ Enforces explicit dataset grain, natural keys, ClickHouse sorting/partitioning/d
 
 1. **Explicit Grain & Keys**: Declare every analytical model's grain, natural business key, dimensions, measures, units, time semantics, and owner.
 2. **ClickHouse Engine & Read Semantics**: Design ClickHouse `PARTITION BY`, `ORDER BY`, TTL, and `ReplacingMergeTree` / `AggregatingMergeTree` query strategies around measured access predicates and asynchronous merge semantics (`FINAL` or `argMax`).
-3. **dbt Semantic Ownership**: Define dbt sources, staging/intermediate/mart dependencies, incremental unique keys, schema documentation, and data tests in `src/transformation/dbt/`.
+3. **dbt Semantic Ownership**: Define dbt sources, staging/intermediate/mart dependencies, incremental unique keys, schema documentation, and data tests in `src/lakehouse/gold/dbt/`.
 4. **Bounded Serving Queries**: Enforce bounded time ranges (`BoundedTimeRange`) and row caps on all API and Agent Tool Gateway queries.
 
 ## 3. Prohibited Actions

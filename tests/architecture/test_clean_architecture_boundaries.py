@@ -1,4 +1,8 @@
-"""Automated Clean Architecture & Three-Plane Isolation Boundary Tests."""
+"""Architectural Boundary & Clean Architecture Enforcement Tests (`TC-006`).
+
+Verifies layer purity and strict inter-module isolation across the Event-Driven Modular Data Platform:
+`shared`, `ingestion`, `streaming`, `lakehouse`, `serving`, and `intelligence`.
+"""
 
 from __future__ import annotations
 
@@ -6,10 +10,20 @@ import ast
 import unittest
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-SRC_ROOT = REPO_ROOT / "src"
+SRC_ROOT = Path(__file__).resolve().parents[2] / "src"
 
-FORBIDDEN_DOMAIN_FRAMEWORKS = {
+EXPECTED_SERVING_MODULES = {
+    "market",
+    "historical",
+    "analytics",
+    "catalog",
+    "iam",
+    "platform_config",
+    "agent_api",
+    "reporting",
+}
+
+FORBIDDEN_DOMAIN_IMPORTS = {
     "fastapi",
     "sqlalchemy",
     "asyncpg",
@@ -22,80 +36,101 @@ FORBIDDEN_DOMAIN_FRAMEWORKS = {
     "pyspark",
 }
 
-EXPECTED_BACKEND_MODULES = {
-    "market",
-    "historical",
-    "analytics",
-    "catalog",
-    "iam",
-    "platform_config",
-    "agent_api",
-    "reporting",
-}
 
-
-def _extract_top_level_imports(py_file: Path) -> set[str]:
+def _extract_imports(py_file: Path) -> set[str]:
     tree = ast.parse(py_file.read_text(encoding="utf-8"), filename=str(py_file))
-    imports: set[str] = set()
+    modules: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                imports.add(alias.name)
+                modules.add(alias.name)
         elif isinstance(node, ast.ImportFrom) and node.module:
-            imports.add(node.module)
-    return imports
+            modules.add(node.module)
+    return modules
 
 
 class TestArchitectureBoundaries(unittest.TestCase):
-    """Verifies Clean/Hexagonal boundaries and Plane A / Plane B / Plane C isolation."""
+    """Validates Clean Architecture & Modular Data Platform boundaries."""
 
-    def test_all_eight_backend_domain_modules_exist(self) -> None:
-        modules_dir = SRC_ROOT / "backend" / "modules"
-        existing = {p.name for p in modules_dir.iterdir() if p.is_dir() and not p.name.startswith("_")}
-        self.assertEqual(existing, EXPECTED_BACKEND_MODULES)
+    def test_top_level_modular_packages_and_eight_serving_contexts_exist(self) -> None:
+        for pkg in ("shared", "ingestion", "streaming", "lakehouse", "serving", "intelligence"):
+            self.assertTrue((SRC_ROOT / pkg).is_dir(), f"Missing top-level package src/{pkg}/")
+
+        modules_root = SRC_ROOT / "serving" / "api" / "modules"
+        actual = {p.name for p in modules_root.iterdir() if p.is_dir() and p.name != "__pycache__"}
+        self.assertEqual(actual, EXPECTED_SERVING_MODULES)
 
     def test_domain_layers_have_zero_framework_or_driver_dependencies(self) -> None:
-        domain_files = list(SRC_ROOT.glob("backend/modules/*/domain/*.py")) + list(SRC_ROOT.glob("shared/domain/*.py"))
-        self.assertGreater(len(domain_files), 0, "Expected domain layer files to be present")
+        domain_files = list((SRC_ROOT / "serving" / "api" / "modules").glob("*/domain/*.py"))
+        domain_files += list((SRC_ROOT / "shared" / "domain").glob("*.py"))
+        domain_files += list((SRC_ROOT / "ingestion" / "domain").glob("*.py"))
+        self.assertGreater(len(domain_files), 0)
 
         for py_file in domain_files:
-            imports = _extract_top_level_imports(py_file)
-            for imp in imports:
-                root_pkg = imp.split(".")[0]
+            imported = _extract_imports(py_file)
+            for mod in imported:
+                root_pkg = mod.split(".")[0]
                 self.assertNotIn(
                     root_pkg,
-                    FORBIDDEN_DOMAIN_FRAMEWORKS,
-                    f"Clean Architecture violation in {py_file.relative_to(REPO_ROOT)}: "
-                    f"Domain layer must not import '{imp}'",
+                    FORBIDDEN_DOMAIN_IMPORTS,
+                    f"Domain layer {py_file} must not import framework/driver '{mod}'",
                 )
-                self.assertFalse(
-                    imp.startswith("src.backend.modules") and ".infrastructure" in imp,
-                    f"Domain file {py_file.relative_to(REPO_ROOT)} must not import infrastructure '{imp}'",
+                self.assertNotIn(
+                    ".infrastructure",
+                    mod,
+                    f"Domain layer {py_file} must not import infrastructure '{mod}'",
                 )
-                self.assertFalse(
-                    imp.startswith("src.backend.modules") and ".presentation" in imp,
-                    f"Domain file {py_file.relative_to(REPO_ROOT)} must not import presentation '{imp}'",
+                self.assertNotIn(
+                    ".presentation",
+                    mod,
+                    f"Domain layer {py_file} must not import presentation '{mod}'",
                 )
 
-    def test_data_plane_never_depends_on_intelligence_plane(self) -> None:
-        data_plane_dirs = [
-            SRC_ROOT / "collectors",
-            SRC_ROOT / "consumers",
-            SRC_ROOT / "processing",
-            SRC_ROOT / "quality",
+    def test_shared_and_subsystem_isolation_no_cross_coupling(self) -> None:
+        """Enforce directed acyclic module boundaries:
+        - shared -> {}
+        - ingestion -> {shared}
+        - streaming -> {shared}
+        - lakehouse/{bronze,silver,gold,quality,catalog} -> {shared}
+        - intelligence -> {shared}
+        - serving/api/{modules,gateway,services} -> {shared}
+        Only composition roots (`lakehouse/orchestration`, `serving/infrastructure`) wire engines.
+        """
+        boundary_rules: list[tuple[Path, tuple[str, ...]]] = [
+            (
+                SRC_ROOT / "shared",
+                ("src.ingestion", "src.streaming", "src.lakehouse", "src.serving", "src.intelligence"),
+            ),
+            (
+                SRC_ROOT / "ingestion",
+                ("src.streaming", "src.lakehouse", "src.serving", "src.intelligence"),
+            ),
+            (
+                SRC_ROOT / "streaming",
+                ("src.ingestion", "src.lakehouse", "src.serving", "src.intelligence"),
+            ),
+            (
+                SRC_ROOT / "intelligence",
+                ("src.ingestion", "src.streaming", "src.lakehouse", "src.serving"),
+            ),
+            (
+                SRC_ROOT / "serving" / "api",
+                ("src.ingestion", "src.streaming", "src.lakehouse", "src.intelligence"),
+            ),
         ]
-        py_files = [f for d in data_plane_dirs for f in d.rglob("*.py")]
-        self.assertGreater(len(py_files), 0)
-
-        for py_file in py_files:
-            imports = _extract_top_level_imports(py_file)
-            for imp in imports:
-                self.assertFalse(
-                    imp == "src.agent" or imp.startswith("src.agent."),
-                    f"Plane Isolation violation in {py_file.relative_to(REPO_ROOT)}: "
-                    f"Data Plane must never depend on Intelligence Plane ('{imp}')",
+        for subpkg in ("bronze", "silver", "gold", "quality", "catalog"):
+            boundary_rules.append(
+                (
+                    SRC_ROOT / "lakehouse" / subpkg,
+                    ("src.ingestion", "src.streaming", "src.serving", "src.intelligence"),
                 )
+            )
 
-
-if __name__ == "__main__":
-    unittest.main()
+        for target_dir, forbidden_prefixes in boundary_rules:
+            for py_file in target_dir.rglob("*.py"):
+                for mod in _extract_imports(py_file):
+                    for prefix in forbidden_prefixes:
+                        self.assertFalse(
+                            mod.startswith(prefix),
+                            f"Boundary violation: {py_file} must not import '{mod}' (forbidden '{prefix}')",
+                        )

@@ -18,8 +18,8 @@ Enforces strict responsibility boundaries across the Lakehouse Medallion layers 
 ## 2. Mandatory Directives
 
 1. **Immutable Bronze**: Keep Bronze append-only in MinIO (`Parquet`), preserving raw source payloads, `event_id`, `schema_version`, and ingestion lineage.
-2. **PySpark-Owned Silver**: Use PySpark (`src/processing/spark/bronze_to_silver.py`) exclusively for Bronze-to-Silver type standardization, UTC normalization, and deterministic deduplication via Iceberg `MERGE INTO`.
-3. **dbt-Owned Gold**: Keep curated business/analytical aggregations and marts in `dbt Core` (`src/transformation/dbt/`), avoiding duplicate business logic across Spark and dbt.
+2. **PySpark-Owned Silver**: Use PySpark (`src/lakehouse/silver/merge_engine.py`) exclusively for Bronze-to-Silver type standardization, UTC normalization, and deterministic deduplication via Iceberg `MERGE INTO`.
+3. **dbt-Owned Gold**: Keep curated business/analytical aggregations and marts in `dbt Core` (`src/lakehouse/gold/dbt/`), avoiding duplicate business logic across Spark and dbt.
 4. **Table Maintenance**: Govern Parquet file sizing, partition evolution, compaction, and Iceberg snapshot retention explicitly.
 
 ## 3. Prohibited Actions

@@ -152,7 +152,7 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-backend-api
     profiles: ["core"]
-    command: ["uvicorn", "src.backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["uvicorn", "src.serving.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
     env_file:
       - .env.example
     environment:
@@ -201,7 +201,7 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-collector-ws
     profiles: ["core"]
-    command: ["python", "-m", "src.collectors.main_ws"]
+    command: ["python", "-m", "src.ingestion.entrypoints.ws_collector"]
     env_file:
       - .env.example
     environment:
@@ -223,7 +223,7 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-consumer-hot-redis
     profiles: ["core"]
-    command: ["python", "-m", "src.consumers.hot_redis.main"]
+    command: ["python", "-m", "src.streaming.consumers.hot_redis"]
     env_file:
       - .env.example
     environment:
@@ -246,7 +246,7 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-consumer-analytics-ch
     profiles: ["core"]
-    command: ["python", "-m", "src.consumers.analytics_ch.main"]
+    command: ["python", "-m", "src.streaming.consumers.analytics_ch"]
     env_file:
       - .env.example
     environment:
@@ -261,6 +261,53 @@ services:
       - data_plane_net
 
   # ---------------------------------------------------------------------------
+  # PLANE A: Historical REST Backfill & Watermark Worker
+  # ---------------------------------------------------------------------------
+  collector-rest:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-collector-rest
+    profiles: ["core"]
+    command: ["python", "-m", "src.ingestion.entrypoints.rest_backfill"]
+    env_file:
+      - .env.example
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      POSTGRES_HOST: postgres
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - data_plane_net
+      - app_control_net
+
+  # ---------------------------------------------------------------------------
+  # PLANE A: Bronze Lakehouse Archiver Worker (Kafka -> MinIO Parquet)
+  # ---------------------------------------------------------------------------
+  consumer-lakehouse-bronze:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.python
+    container_name: fmdp-consumer-lakehouse-bronze
+    profiles: ["lakehouse"]
+    command: ["python", "-m", "src.lakehouse.bronze.consumer"]
+    env_file:
+      - .env.example
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MINIO_ENDPOINT: http://minio:9000
+    depends_on:
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - data_plane_net
+
+  # ---------------------------------------------------------------------------
   # PLANE C: Isolated LangGraph Agent Worker (Intelligence Plane)
   # ---------------------------------------------------------------------------
   agent-worker:
@@ -269,7 +316,7 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-agent-worker
     profiles: ["intelligence"]
-    command: ["python", "-m", "src.agent.main"]
+    command: ["python", "-m", "src.intelligence.main"]
     env_file:
       - .env.example
     environment:
@@ -294,7 +341,8 @@ services:
     container_name: fmdp-prometheus
     profiles: ["observability"]
     volumes:
-      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus_data:/prometheus
     ports:
       - "9090:9090"
@@ -341,9 +389,19 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-svc-market-hot
     profiles: ["microservices"]
-    command: ["uvicorn", "src.microservices.market_service:create_market_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8001"]
+    command: ["uvicorn", "src.serving.api.services.market:create_market_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8001"]
+    env_file:
+      - .env.example
+    environment:
+      REDIS_HOST: redis
+      CLICKHOUSE_HOST: clickhouse
     ports:
-      - "8001:8001"
+      - "127.0.0.1:8001:8001"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
     networks:
       - app_control_net
       - data_plane_net
@@ -354,9 +412,20 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-svc-historical-backfill
     profiles: ["microservices"]
-    command: ["uvicorn", "src.microservices.historical_service:create_historical_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8002"]
+    command: ["uvicorn", "src.serving.api.services.historical:create_historical_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8002"]
+    env_file:
+      - .env.example
+    environment:
+      POSTGRES_HOST: postgres
+      CLICKHOUSE_HOST: clickhouse
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
     ports:
-      - "8002:8002"
+      - "127.0.0.1:8002:8002"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8002/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
     networks:
       - app_control_net
       - data_plane_net
@@ -367,9 +436,19 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-svc-analytics-quant
     profiles: ["microservices"]
-    command: ["uvicorn", "src.microservices.analytics_service:create_analytics_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8003"]
+    command: ["uvicorn", "src.serving.api.services.analytics:create_analytics_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8003"]
+    env_file:
+      - .env.example
+    environment:
+      REDIS_HOST: redis
+      CLICKHOUSE_HOST: clickhouse
     ports:
-      - "8003:8003"
+      - "127.0.0.1:8003:8003"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8003/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
     networks:
       - app_control_net
       - data_plane_net
@@ -380,9 +459,19 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-svc-catalog-governance
     profiles: ["microservices"]
-    command: ["uvicorn", "src.microservices.catalog_service:create_catalog_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8004"]
+    command: ["uvicorn", "src.serving.api.services.catalog:create_catalog_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8004"]
+    env_file:
+      - .env.example
+    environment:
+      POSTGRES_HOST: postgres
+      MINIO_ENDPOINT: http://minio:9000
     ports:
-      - "8004:8004"
+      - "127.0.0.1:8004:8004"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8004/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
     networks:
       - app_control_net
       - data_plane_net
@@ -393,9 +482,19 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-svc-iam-security
     profiles: ["microservices"]
-    command: ["uvicorn", "src.microservices.iam_service:create_iam_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8005"]
+    command: ["uvicorn", "src.serving.api.services.iam:create_iam_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8005"]
+    env_file:
+      - .env.example
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
     ports:
-      - "8005:8005"
+      - "127.0.0.1:8005:8005"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8005/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
     networks:
       - app_control_net
       - data_plane_net
@@ -406,9 +505,19 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-svc-intelligence-agent
     profiles: ["microservices"]
-    command: ["uvicorn", "src.microservices.intelligence_service:create_intelligence_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8006"]
+    command: ["uvicorn", "src.serving.api.services.intelligence:create_intelligence_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8006"]
+    env_file:
+      - .env.example
+    environment:
+      POSTGRES_HOST: postgres
+      CLICKHOUSE_HOST: clickhouse
     ports:
-      - "8006:8006"
+      - "127.0.0.1:8006:8006"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8006/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
     networks:
       - app_control_net
       - data_plane_net
@@ -419,9 +528,22 @@ services:
       dockerfile: deploy/docker/Dockerfile.python
     container_name: fmdp-svc-data-plane-v01
     profiles: ["microservices"]
-    command: ["uvicorn", "src.microservices.data_plane_service:create_data_plane_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8007"]
+    command: ["uvicorn", "src.serving.api.services.data_plane:create_data_plane_microservice_app", "--factory", "--host", "0.0.0.0", "--port", "8007"]
+    env_file:
+      - .env.example
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      CLICKHOUSE_HOST: clickhouse
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MINIO_ENDPOINT: http://minio:9000
     ports:
-      - "8007:8007"
+      - "127.0.0.1:8007:8007"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8007/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
     networks:
       - app_control_net
       - data_plane_net

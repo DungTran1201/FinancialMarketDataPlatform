@@ -28,6 +28,8 @@ Authored by `architecture-modeler` and audited by `documentation-auditor`.
 | `ADR-004-backend-architecture.md` | FastAPI Modular Monolith, Hexagonal & Selective CQRS | Required | `docs/templates/architecture/ADR.template.md` |
 | `ADR-005-query-and-caching-strategy.md` | Workload Query Routing, Lua Monotonic State & Fallback | Required | `docs/templates/architecture/ADR.template.md` |
 | `ADR-006-agent-integration.md` | Isolated Intelligence Plane & Deterministic Tool Gateway | Required | `docs/templates/architecture/ADR.template.md` |
+| `ADR-007-microservices-and-data-platform-v01.md` | Zero-Mock End-to-End Data Platform v0.1 & Domain Microservices | Required (Baselined) | `docs/templates/architecture/ADR.template.md` |
+| `ADR-008-event-driven-modular-data-platform.md` | Event-Driven Modular Data Platform Architecture & Sub-Plane Isolation | Required (Baselined) | `docs/templates/architecture/ADR.template.md` |
 
 ## 6. Directory and File Organization
 

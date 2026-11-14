@@ -106,7 +106,7 @@ Every domain module enforces strict inward dependency rules (`Presentation -> Ap
 
 ## 11. Consequences
 
-- All domain modules under `src/backend/modules/<domain>/` follow a standardized four-subpackage structure: `domain/`, `application/`, `infrastructure/`, and `presentation/`.
+- All domain modules under `src/serving/api/modules/<domain>/` follow a standardized four-subpackage structure: `domain/`, `application/`, `infrastructure/`, and `presentation/`.
 - Cross-module communication goes exclusively through public `application/` interfaces or shared `src/shared/` contracts.
 
 ---

@@ -1,0 +1,30 @@
+# Apache Iceberg v2 Catalog & Table Defaults aligned with src/lakehouse/silver/merge_engine.py
+catalog:
+  name: fmdp_iceberg
+  type: rest
+  uri: ${ICEBERG_CATALOG_URI:-http://iceberg-rest:8181}
+  warehouse: ${ICEBERG_WAREHOUSE_URI:-s3a://lakehouse-silver/iceberg}
+  s3:
+    endpoint: ${MINIO_ENDPOINT:-http://minio:9000}
+    path_style_access: true
+
+table_defaults:
+  format-version: 2
+  write.parquet.compression-codec: zstd
+  write.target-file-size-bytes: 134217728
+  history.expire.min-snapshots-to-keep: 10
+
+tables:
+  silver.market_klines:
+    natural_key: [provider, symbol, interval, open_time]
+    partition_by: [provider, symbol, interval]
+    write_mode: merge-on-read
+  silver.market_trades:
+    natural_key: [provider, symbol, trade_id]
+    partition_by: [provider, symbol]
+    write_mode: merge-on-read
+  silver.order_book_snapshots:
+    natural_key: [provider, symbol, last_update_id]
+    partition_by: [provider, symbol]
+    write_mode: merge-on-read
+

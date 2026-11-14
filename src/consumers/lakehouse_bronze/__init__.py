@@ -1,1 +1,0 @@
-"""Bronze Lakehouse consumer package."""

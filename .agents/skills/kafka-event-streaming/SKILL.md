@@ -15,7 +15,7 @@ Design and implement versioned Kafka event contracts (`EventEnvelopeV1`), topic 
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md`, target `README.md`, `src/shared/contracts/events.py` (`EventEnvelopeV1`), `docs/architecture/08-data-flow-and-event-contracts.md`, `ADR-002`, `src/streaming/consumers/`, `docker-compose.yml`.
+- `AGENTS.md`, target `README.md`, `src/shared/contracts/events/market_events.py` (`EventEnvelopeV1`), `src/streaming/contracts/topics.py`, `docs/architecture/08-data-flow-and-event-contracts.md`, `ADR-002`, `src/streaming/`, `docker-compose.yml`.
 
 ## 4. Preconditions
 
@@ -26,14 +26,14 @@ Design and implement versioned Kafka event contracts (`EventEnvelopeV1`), topic 
 1. Define versioned topic name (`KafkaTopic`), event schema (`EventEnvelopeV1`), partition key, partition count, and schema compatibility policy.
 2. Select partition key from required ordering scope (`{provider}:{symbol}` or `{provider}:{symbol}:{interval}`) and verify load distribution.
 3. Configure producer acknowledgements (`acks=all`), idempotence, retries, and delivery timeouts.
-4. Implement consumer poll lifecycle, bounded micro-batching, rebalance handling, and graceful shutdown (`src/consumers/`).
+4. Implement consumer poll lifecycle, bounded micro-batching, rebalance handling, and graceful shutdown (`src/streaming/consumers/`).
 5. Persist to the external sink first and commit the Kafka offset only after confirmed durable write completion; design deterministic sink idempotency (`UUIDv5` event IDs, Lua monotonic checks, `ReplacingMergeTree`).
 6. Route malformed or poison records to `market.dlq.v1` (`DeadLetterEnvelopeV1`) with sanitized failure metadata.
 7. Add consumer lag, processing latency, retry, and DLQ telemetry, then run `tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Topic/event contract specifications (`src/shared/contracts/events.py`, `docs/specifications/data-contracts.md`), consumer implementations (`src/consumers/`), unit/contract tests (`tests/`), and replay runbooks.
+- Topic/event contract specifications (`src/shared/contracts/events/market_events.py`, `src/streaming/contracts/topics.py`, `docs/specifications/data-contracts.md`), consumer implementations (`src/streaming/consumers/`), unit/contract tests (`tests/`), and replay runbooks.
 
 ## 7. Validation
 

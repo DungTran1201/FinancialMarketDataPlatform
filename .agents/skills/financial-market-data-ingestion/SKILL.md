@@ -15,7 +15,7 @@ Build resilient financial exchange REST (`collector-rest`) and WebSocket (`colle
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md`, target `README.md`, `src/ingestion/`, `src/shared/contracts/events.py`, `docs/specifications/data-contracts.md`, `docs/architecture/04-data-platform-architecture.md`, `deploy/postgres/init/01_schema.sql` (`ingestion_watermarks`).
+- `AGENTS.md`, target `README.md`, `src/ingestion/`, `src/shared/contracts/events/market_events.py`, `docs/specifications/data-contracts.md`, `docs/architecture/04-data-platform-architecture.md`, `deploy/postgres/init/01_schema.sql` (`ingestion_watermarks`).
 
 ## 4. Preconditions
 
@@ -23,7 +23,7 @@ Build resilient financial exchange REST (`collector-rest`) and WebSocket (`colle
 
 ## 5. Execution Procedure
 
-1. Isolate provider-specific transport and payload parsing behind collector ports (`src/collectors/ports.py`).
+1. Isolate provider-specific transport and payload parsing behind ingestion ports (`src/ingestion/domain/ports.py`).
 2. Normalize symbols, event types, units, and exact `Decimal` values into `EventEnvelopeV1` (`MarketTradePayloadV1`, `MarketKlinePayloadV1`).
 3. Preserve raw source payload and metadata for diagnosis and replay.
 4. Implement bounded REST pagination with explicit page boundaries, `HTTP 429` / `418` rate-limit parsing, exponential backoff with jitter, and idempotent resume.
@@ -34,7 +34,7 @@ Build resilient financial exchange REST (`collector-rest`) and WebSocket (`colle
 
 ## 6. Output Artifacts
 
-- Provider collector adapters (`src/collectors/`), normalization contract tests (`tests/`), updated data contracts (`docs/specifications/data-contracts.md`), and ingestion runbook notes.
+- Provider ingestion adapters (`src/ingestion/`), normalization contract tests (`tests/`), updated data contracts (`docs/specifications/data-contracts.md`), and ingestion runbook notes.
 
 ## 7. Validation
 

@@ -30,5 +30,5 @@ Guarantees exact numerical representation (`Decimal`), timezone-aware UTC timest
 
 ## 4. Verification Mechanism
 
-- Automated contract and unit tests (`tests/unit/test_contracts_and_guardrails.py`), ClickHouse/PostgreSQL DDL inspection, and `tools/validators/run_all.py`.
+- Automated contract and unit tests (`tests/contract/test_contracts_and_guardrails.py`, `tests/unit/test_domain_and_quant.py`), ClickHouse/PostgreSQL DDL inspection, and `tools/validators/run_all.py`.
 

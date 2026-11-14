@@ -1,0 +1,54 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-DP-004"
+  name: "Data Platform Quality Rules Model"
+  description: "Blocking pre-Gold Data Quality expectations executed by DataQualityGateEngine."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-15"
+  updated_at: "2026-11-15"
+  owner: "data-platform-architect"
+  source_documents:
+    - "docs/architecture/04-data-platform-architecture.md"
+    - "docs/architecture/14-data-platform-v01-and-microservices-architecture.md"
+
+gate_engine: "src/lakehouse/quality/gates.py"
+
+rules:
+  - rule_code: "DQ-KLINE-001"
+    dataset: "silver.market_klines"
+    severity: "CRITICAL"
+    blocks_gold_promotion: true
+    invariant: "high_price >= low_price"
+  - rule_code: "DQ-KLINE-002"
+    dataset: "silver.market_klines"
+    severity: "CRITICAL"
+    blocks_gold_promotion: true
+    invariant: "low_price <= open_price, close_price <= high_price"
+  - rule_code: "DQ-KLINE-003"
+    dataset: "silver.market_klines"
+    severity: "CRITICAL"
+    blocks_gold_promotion: true
+    invariant: "base_volume >= 0 and quote_volume >= 0"
+  - rule_code: "DQ-KLINE-004"
+    dataset: "silver.market_klines"
+    severity: "CRITICAL"
+    blocks_gold_promotion: true
+    invariant: "Natural key (provider, symbol, interval, open_time) uniqueness"
+  - rule_code: "DQ-KLINE-005"
+    dataset: "silver.market_klines"
+    severity: "CRITICAL"
+    blocks_gold_promotion: true
+    invariant: "open_price > 0, close_price > 0, close_time > open_time"
+  - rule_code: "DQ-TRADE-001"
+    dataset: "silver.market_trades"
+    severity: "CRITICAL"
+    blocks_gold_promotion: true
+    invariant: "price > 0 and quantity > 0"
+  - rule_code: "DQ-TRADE-002"
+    dataset: "silver.market_trades"
+    severity: "CRITICAL"
+    blocks_gold_promotion: true
+    invariant: "Natural key (provider, symbol, trade_id) uniqueness"
+

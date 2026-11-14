@@ -2,11 +2,11 @@
 
 ## 1. Directory Purpose
 
-`models/` is the authoritative structured YAML layer for `FinancialMarketDataPlatform`. It stores machine-readable models and reusable `.template.yaml` schemas across 12 engineering domains, serving as the structured source of truth for human-readable specifications (`docs/`) and visual diagrams (`docs/diagrams/`).
+`models/` is the authoritative structured YAML layer for `FinancialMarketDataPlatform`. It stores machine-readable models and reusable `.template.yaml` schemas across 13 engineering domains, serving as the structured source of truth for human-readable specifications (`docs/`) and visual diagrams (`docs/diagrams/`).
 
 ## 2. Scope and Boundaries
 
-- **Belongs in this directory**: 12 domain subdirectories (`requirements/`, `process/`, `context/`, `architecture/`, `domain/`, `api/`, `interaction/`, `state/`, `security/`, `ux/`, `testing/`, `deployment/`), their `README.md` contracts, `*.template.yaml` schemas, and `*.yaml` canonical models.
+- **Belongs in this directory**: 13 domain subdirectories (`requirements/`, `process/`, `context/`, `architecture/`, `domain/`, `api/`, `interaction/`, `state/`, `security/`, `ux/`, `testing/`, `deployment/`, `data-platform/`), their `README.md` contracts, `*.template.yaml` schemas, and `*.yaml` canonical models.
 - **Does NOT belong in this directory**: Long-form narrative explanations (`docs/`), Mermaid files (`docs/diagrams/`), or work-item logs (`work-items/`).
 
 ## 3. Agent Role and Responsibilities
@@ -36,10 +36,11 @@ Updated by domain-specific modeling Agents (`requirements-engineer`, `process-mo
 | `ux/` | Canonical UX, Information Architecture & Screen Models (`models/ux/`) | Required | `models/ux/README.md` |
 | `testing/` | Canonical Testing & Verification Models (`models/testing/`) | Required | `models/testing/README.md` |
 | `deployment/` | Canonical Deployment & Runtime Topology Models (`models/deployment/`) | Required | `models/deployment/README.md` |
+| `data-platform/` | Canonical Data Platform Models (`models/data-platform/`) | Required | `models/data-platform/README.md` |
 
 ## 6. Directory and File Organization
 
-12 subdirectories, each containing an operational `README.md`, a `<domain>.template.yaml` schema, and one or more canonical `*.yaml` files.
+13 subdirectories, each containing an operational `README.md`, a `<domain>.template.yaml` schema, and one or more canonical `*.yaml` files.
 
 ## 7. Document Creation Rules
 

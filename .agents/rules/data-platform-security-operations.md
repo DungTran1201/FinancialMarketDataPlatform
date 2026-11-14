@@ -19,7 +19,7 @@ Enforces secret isolation, least-privilege database/storage credentials, read-on
 
 1. **Secret Management**: Inject credentials via environment variables (`.env.example` template only in VCS) and redact secrets in logs, traces, and error payloads.
 2. **Least-Privilege Access**: Separate writer and reader credentials across Kafka, ClickHouse (`fmdp_ingest_writer` vs. read-only query roles), PostgreSQL (`fmdp_pg_admin` vs. service roles), and MinIO.
-3. **Controlled Tool Gateway Isolation**: Restrict `agent-worker` to the 10 whitelisted read-only tools in `ControlledToolGateway` (`src/agent/tools/gateway.py`) with enforced RBAC permissions, row caps, and execution timeouts.
+3. **Controlled Tool Gateway Isolation**: Restrict `agent-worker` to the 10 whitelisted read-only tools in `ControlledToolGateway` (`src/intelligence/tools/gateway.py`) with enforced RBAC permissions, row caps, and execution timeouts.
 4. **Destructive Operation Approval**: Require dry-run analysis, impact assessment, and explicit human approval before executing destructive DDL, Kafka offset resets, bulk overwrites, or snapshot expiration.
 
 ## 3. Prohibited Actions

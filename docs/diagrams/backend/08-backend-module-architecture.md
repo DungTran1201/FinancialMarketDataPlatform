@@ -10,7 +10,7 @@ The **Backend Module Architecture** demonstrates how the FastAPI Modular Monolit
 
 ```mermaid
 flowchart TB
-    subgraph FastAPIMonolith["FastAPI Modular Monolith (src/backend/)"]
+    subgraph FastAPIMonolith["FastAPI Modular Monolith (src/serving/api/)"]
         subgraph DomainModules["Business Domain Modules"]
             M1["market"]
             M2["historical"]

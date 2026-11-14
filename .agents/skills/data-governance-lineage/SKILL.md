@@ -15,7 +15,7 @@ Define dataset ownership, metadata, end-to-end lineage, access classes, retentio
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md`, target `README.md`, `docs/specifications/data-contracts.md`, `data-dictionary.md`, `data-requirements.md`, `.agents/config/data-platform-boundaries.yaml`, `models/domain/`, `models/security/`, `src/agent/tools/contracts.py` (`ToolProvenanceMetadata`).
+- `AGENTS.md`, target `README.md`, `docs/specifications/data-contracts.md`, `data-dictionary.md`, `data-requirements.md`, `.agents/config/data-platform-boundaries.yaml`, `models/domain/`, `models/data-platform/`, `models/security/`, `src/lakehouse/catalog/lineage.py`, `src/intelligence/tools/contracts.py` (`ToolProvenanceMetadata`).
 
 ## 4. Preconditions
 

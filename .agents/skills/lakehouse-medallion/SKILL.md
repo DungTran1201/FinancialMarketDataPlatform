@@ -7,7 +7,7 @@ description: MinIO/Iceberg Bronze-Silver-Gold tables, PySpark standardization, a
 
 ## 1. Description
 
-Engineer MinIO/S3, Parquet, and Apache Iceberg lakehouse layers with immutable Bronze (`consumer-lakehouse-bronze`), standardized Silver (`src/processing/spark/bronze_to_silver.py`), PySpark backfills, and safe table maintenance.
+Engineer MinIO/S3, Parquet, and Apache Iceberg lakehouse layers with immutable Bronze (`src/lakehouse/bronze/`), standardized Silver (`src/lakehouse/silver/merge_engine.py`), PySpark backfills, and safe table maintenance.
 
 ## 2. Trigger Conditions
 
@@ -15,7 +15,7 @@ Engineer MinIO/S3, Parquet, and Apache Iceberg lakehouse layers with immutable B
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md`, target `README.md`, `docs/architecture/04-data-platform-architecture.md`, `07-data-storage-and-modeling.md`, `ADR-002`, `ADR-003`, `src/processing/spark/bronze_to_silver.py`, `docs/specifications/data-contracts.md`, `models/domain/`.
+- `AGENTS.md`, target `README.md`, `docs/architecture/04-data-platform-architecture.md`, `07-data-storage-and-modeling.md`, `ADR-002`, `ADR-003`, `src/lakehouse/silver/merge_engine.py`, `docs/specifications/data-contracts.md`, `models/domain/`, `models/data-platform/`.
 
 ## 4. Preconditions
 
@@ -27,13 +27,13 @@ Engineer MinIO/S3, Parquet, and Apache Iceberg lakehouse layers with immutable B
 2. Keep Bronze append-only and source-preserving in MinIO (`Parquet`), recording `event_id`, `schema_version`, `ingested_at`, and source partition/offset metadata.
 3. Use deterministic file/object naming so retry and offset-commit crash windows remain idempotent.
 4. Configure Parquet compression (`ZSTD` / `Snappy`), target file size, and partition transforms without high-cardinality partition explosion.
-5. Implement Silver typing, UTC normalization, and deterministic deduplication via PySpark Iceberg `MERGE INTO` (`SilverMergeJobSpec` in `src/processing/spark/bronze_to_silver.py`).
+5. Implement Silver typing, UTC normalization, and deterministic deduplication via PySpark Iceberg `MERGE INTO` (`SilverMergeJobSpec` in `src/lakehouse/silver/merge_engine.py`).
 6. Integrate data quality checks (`QualityExpectationRule`) before promoting Silver tables.
 7. Implement bounded backfill, checkpointing, compaction, and snapshot maintenance with dry-run controls, then run `tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Iceberg table definitions, Bronze writer updates (`src/consumers/lakehouse_bronze/`), PySpark `Bronze -> Silver` jobs (`src/processing/spark/`), updated domain models (`models/domain/`), and lakehouse runbooks.
+- Iceberg table definitions, Bronze writer updates (`src/lakehouse/bronze/`), `Bronze -> Silver` jobs (`src/lakehouse/silver/`), updated domain/data-platform models (`models/`), and lakehouse runbooks.
 
 ## 7. Validation
 

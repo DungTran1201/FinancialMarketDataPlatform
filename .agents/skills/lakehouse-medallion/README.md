@@ -17,7 +17,7 @@ Primary owning Agent role: `lakehouse-engineer` (`.agents/agents/lakehouse-engin
 
 1. `AGENTS.md` — Root Agent operating protocol.
 2. `.agents/agents/lakehouse-engineer.md` — Owning role definition.
-3. `src/consumers/lakehouse_bronze/` and `src/processing/spark/` — Associated Bronze consumer and PySpark job locations.
+3. `src/lakehouse/bronze/` and `src/lakehouse/silver/` — Associated Bronze archival and PySpark Silver merge locations.
 
 ## 5. Required Artifacts
 

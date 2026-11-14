@@ -1,0 +1,41 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-DP-006"
+  name: "Polyglot Storage Retention & Compaction Model"
+  description: "Defines retention durations, TTLs, and Iceberg snapshot expiration policies per tier."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-15"
+  updated_at: "2026-11-15"
+  owner: "data-platform-architect"
+  source_documents:
+    - "docs/architecture/04-data-platform-architecture.md"
+    - "docs/architecture/12-deployment-architecture.md"
+
+policies:
+  - tier: "Kafka Hot Stream"
+    targets: ["market.raw.trades.v1", "market.raw.klines.v1", "market.raw.tickers.v1", "market.raw.orderbook.v1"]
+    retention: "7 days"
+    compaction_strategy: "time_based_delete"
+  - tier: "Kafka DLQ & Anomalies"
+    targets: ["market.dlq.v1", "market.anomalies.v1"]
+    retention: "30 days"
+    compaction_strategy: "time_based_delete"
+  - tier: "Redis Hot Cache"
+    targets: ["market:v1:price:*", "market:v1:snapshot:*", "market:v1:orderbook:*"]
+    retention: "3600s TTL on snapshots; monotonic overwrite on latest price"
+    compaction_strategy: "lua_monotonic_guard"
+  - tier: "ClickHouse OLAP"
+    targets: ["market_trades", "market_klines", "market_tickers"]
+    retention: "365 days online analytical partition"
+    compaction_strategy: "ReplacingMergeTree background merge"
+  - tier: "MinIO Iceberg Bronze"
+    targets: ["bronze.market_klines", "bronze.market_trades"]
+    retention: "Immutable append-only audit history"
+    compaction_strategy: "ZSTD partitioned Parquet"
+  - tier: "MinIO Iceberg Silver & Gold"
+    targets: ["silver.market_klines", "silver.market_trades", "gold.*"]
+    retention: "Cumulative Iceberg v2 snapshots (retain latest 5-10 snapshots)"
+    compaction_strategy: "ZSTD sort-by-natural-key small-file compaction"
+

@@ -80,13 +80,13 @@ Every stage of the platform's data lifecycle has a strictly defined contract, te
 
 ## 4. Data Platform v0.1 Production Implementation (`arch/microservices` / `ADR-007`)
 
-All 12 stages above are implemented as zero-mock executable engines orchestrated by `DataPlatformV01Pipeline` (`src/processing/pipeline_v01.py`) and exposed via the standalone Data Plane microservice `svc-data-plane-v01` (`src/microservices/data_plane_service.py`):
-- **Zero-Mock Exchange Transport (`ProductionExchangeHistoricalCollector`)**: Uses `httpx.AsyncClient` against `/api/v3/exchangeInfo` (Stage 1) and `/api/v3/klines` (Stage 2) with `TokenBucketRateLimiter` (`X-MBX-USED-WEIGHT-1M`), `SequenceAndGapDetector`, and durable SQLite/PostgreSQL watermark checkpointing (`IngestionWatermarkStore` in `src/collectors/main_rest.py`).
+All 12 stages above are implemented as zero-mock executable engines orchestrated by `DataPlatformV01Pipeline` (`src/lakehouse/orchestration/pipeline.py`) and exposed via the standalone Data Plane microservice `svc-data-plane-v01` (`src/serving/api/services/data_plane.py`):
+- **Zero-Mock Exchange Transport (`ProductionExchangeHistoricalCollector`)**: Uses `httpx.AsyncClient` against `/api/v3/exchangeInfo` (Stage 1) and `/api/v3/klines` (Stage 2) with `TokenBucketRateLimiter` (`X-MBX-USED-WEIGHT-1M`), `SequenceAndGapDetector` (`src/ingestion/application/rate_limiter.py`), and durable SQLite/PostgreSQL watermark checkpointing (`IngestionWatermarkStore` in `src/ingestion/infrastructure/watermark_store.py`).
 - **Complete Medallion Execution (`Bronze -> Silver -> Gold`)**:
-  - `BronzeParquetArchiver` writes immutable ZSTD Parquet files.
-  - `SilverLakehouseMergeEngine` deduplicates `silver.market_klines` and `silver.market_trades` and performs Stage 9 small-file compaction with Apache Iceberg v2 snapshot manifests (`metadata/v{snapshot_id}.metadata.json`).
-  - `GoldLayerMartEngine` (`src/processing/gold_marts.py`) materializes `gold.fct_daily_market_summary`, `gold.fct_realized_volatility`, and `gold.fct_orderbook_liquidity`.
-- **Prometheus Observability & Governance Lineage**: `DataObservabilityMetricsCollector` and `DataLineageGovernanceRegistry` (`src/quality/lineage_and_observability.py`) provide real-time OpenMetrics exposition and end-to-end lineage tracking.
+  - `BronzeParquetArchiver` (`src/lakehouse/bronze/archiver.py`) writes immutable ZSTD Parquet files.
+  - `SilverLakehouseMergeEngine` (`src/lakehouse/silver/merge_engine.py`) deduplicates `silver.market_klines` and `silver.market_trades` and performs Stage 9 small-file compaction with Apache Iceberg v2 snapshot manifests (`metadata/v{snapshot_id}.metadata.json`).
+  - `GoldLayerMartEngine` (`src/lakehouse/gold/mart_engine.py`) materializes `gold.fct_daily_market_summary`, `gold.fct_realized_volatility`, and `gold.fct_orderbook_liquidity`.
+- **Prometheus Observability & Governance Lineage**: `DataObservabilityMetricsCollector` (`src/shared/observability/metrics.py`) and `DataLineageGovernanceRegistry` (`src/lakehouse/catalog/lineage.py`) provide real-time OpenMetrics exposition and end-to-end lineage tracking.
 - See [14 — End-to-End Data Platform v0.1 & Domain Microservices Architecture](14-data-platform-v01-and-microservices-architecture.md), [Diagram 08](../diagrams/data-platform/08-end-to-end-data-platform-v01-pipeline.md), and [Diagram 09](../diagrams/data-platform/09-watermark-backfill-and-compaction-lifecycle.md).
 
 

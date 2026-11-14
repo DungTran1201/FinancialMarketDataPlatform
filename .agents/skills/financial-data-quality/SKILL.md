@@ -15,7 +15,7 @@ Define executable data quality controls (`QualityExpectationRule`, Great Expecta
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md`, target `README.md`, `docs/specifications/data-contracts.md`, `data-dictionary.md`, `data-requirements.md`, `src/quality/expectations/suite_definitions.py`, `src/shared/contracts/events.py`, `models/testing/testing.yaml`, `models/domain/`.
+- `AGENTS.md`, target `README.md`, `docs/specifications/data-contracts.md`, `data-dictionary.md`, `data-requirements.md`, `src/lakehouse/quality/gates.py`, `src/shared/contracts/events/market_events.py`, `models/testing/testing.yaml`, `models/domain/`, `models/data-platform/quality-rules.yaml`.
 
 ## 4. Preconditions
 
@@ -26,13 +26,13 @@ Define executable data quality controls (`QualityExpectationRule`, Great Expecta
 1. Build a dataset-specific quality matrix covering schema validity, completeness, uniqueness, referential integrity, freshness, timeliness, volume, and financial invariants.
 2. Encode financial invariants: strictly positive trade price/quantity, OHLC candle ordering (`high >= max(open, close, low)`, `low <= min(open, close, high)`), non-negative volumes, exact `Decimal` precision, and timezone-aware UTC timestamps.
 3. Assign each check to the appropriate execution layer: contract validation at ingestion (`EventEnvelopeV1`), table-level checks at Silver (`QualityExpectationRule`), semantic/integrity checks at Gold (`dbt test`), and staleness checks at serving (`GetLatestPriceQueryHandler`).
-4. Implement Great Expectations rules (`src/quality/expectations/`) or dbt tests (`src/transformation/dbt/`) with stable IDs (`DQ-*`) and documented severity.
+4. Implement quality gates (`src/lakehouse/quality/`) or dbt tests (`src/lakehouse/gold/dbt/`) with stable IDs (`DQ-*`) and documented severity.
 5. Configure quarantine/DLQ routing (`market.dlq.v1`) and promotion blocking for `CRITICAL` failures.
-6. Add positive, negative, and boundary unit tests in `tests/` and run `tools/validators/run_all.py`.
+6. Add positive, negative, and boundary unit tests in `tests/data_quality/` and run `tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- Quality expectation suites (`src/quality/expectations/`), dbt data tests, updated test models (`models/testing/testing.yaml`), and verification reports.
+- Quality expectation suites (`src/lakehouse/quality/`), dbt data tests, updated test models (`models/testing/testing.yaml`), and verification reports.
 
 ## 7. Validation
 

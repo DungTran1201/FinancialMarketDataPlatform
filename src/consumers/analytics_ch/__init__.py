@@ -1,1 +1,0 @@
-"""ClickHouse analytics consumer package."""

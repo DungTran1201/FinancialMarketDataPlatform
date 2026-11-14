@@ -10,30 +10,30 @@ See also: [Diagram 03: C4 Component Architecture Diagram](../diagrams/system/03-
 
 ## 2. Data Collector & Streaming Worker Components
 
-### 2.1. `src/collectors/` (Ingestion Components)
+### 2.1. `src/ingestion/` (Ingestion Components)
 
 | Component | Interface / Port | Responsibility | Failure Handling |
 |---|---|---|---|
-| `BinanceWebSocketClient` | `StreamingCollectorPort` | Manages multiplexed WSS connections, subscribes to configured symbol streams, handles ping/pong keepalives, and detects sequence/time gaps on disconnect. | Reconnects with exponential backoff ($1\text{s} \rightarrow 30\text{s}$ + jitter) and emits a gap descriptor to `ingestion_watermarks`. |
-| `BinanceRESTClient` | `HistoricalCollectorPort` | Executes paginated REST requests (`GET /api/v3/klines`, `/aggTrades`, `/exchangeInfo`) while tracking `X-MBX-USED-WEIGHT-*` headers. | Pauses before breaching rate limits; honours `Retry-After` on `HTTP 429`. |
-| `BinanceNormalizer` | `PayloadNormalizerPort` | Translates raw Binance JSON keys (`e`, `E`, `s`, `p`, `q`, `k`) into canonical `EventEnvelopeV1` payloads with exact string `Decimal` values and UTC timestamps. | Raises `NormalizationError` caught by the DLQ router. |
+| `WebSocketStreamCollector` (`src/ingestion/entrypoints/ws_collector.py`) | `StreamingCollectorPort` | Manages multiplexed WSS connections, subscribes to configured symbol streams, handles ping/pong keepalives, and detects sequence/time gaps on disconnect. | Reconnects with exponential backoff ($1\text{s} \rightarrow 30\text{s}$ + jitter) and emits a gap descriptor to `ingestion_watermarks`. |
+| `ProductionExchangeHistoricalCollector` (`src/ingestion/providers/binance/rest_client.py`) | `HistoricalCollectorPort` | Executes paginated REST requests (`GET /api/v3/klines`, `/aggTrades`, `/exchangeInfo`) while tracking `X-MBX-USED-WEIGHT-*` headers. | Pauses before breaching rate limits; honours `Retry-After` on `HTTP 429`. |
+| `BinancePayloadNormalizer` (`src/ingestion/providers/binance/normalizer.py`) | `PayloadNormalizerPort` | Translates raw Binance JSON keys (`e`, `E`, `s`, `p`, `q`, `k`) into canonical `EventEnvelopeV1` payloads with exact string `Decimal` values and UTC timestamps. | Raises `NormalizationError` caught by the DLQ router. |
 | `ContractValidator` | `EventValidatorPort` | Validates every normalized event against strict Pydantic v2 contracts and computes deterministic UUIDv5 `event_id`. | Routes invalid payloads to `DeadLetterRouter` (`market.dlq.v1`) and increments `collector_validation_errors_total`. |
-| `KafkaEventProducer` | `EventPublisherPort` | Serializes validated envelopes and publishes to topic-per-entity with partition key `{provider}:{symbol}`. | Uses `enable.idempotence=true`, `acks=all`, and local bounded retry queue. |
+| `PartitionedEventStreamingBroker` / `ConfluentKafkaStreamingAdapter` (`src/streaming/infrastructure/kafka_broker.py`) | `EventPublisherPort` | Serializes validated envelopes and publishes to topic-per-entity with partition key `{provider}:{symbol}`. | Uses `enable.idempotence=true`, `acks=all`, and local bounded retry queue. |
 
-### 2.2. `src/consumers/` (Streaming Projection & Detection Components)
+### 2.2. `src/streaming/` & `src/lakehouse/bronze/` (Streaming Projection & Detection Components)
 
 | Component | Consumer Group | Target Store | Responsibility & Idempotency Mechanism |
 |---|---|---|---|
-| `HotStateProjector` | `cg.hot.redis.v1` | Redis 7 | Updates `market:v1:price:{provider}:{symbol}`, `market:v1:snapshot:{provider}:{symbol}`, and `market:v1:orderbook:{provider}:{symbol}` via an atomic Lua script that only overwrites if `incoming.exchange_event_time >= stored.exchange_event_time`, then publishes a lightweight delta to Redis Pub/Sub for WebSocket clients. |
-| `ClickHouseBatchSink` | `cg.analytics.clickhouse.v1` | ClickHouse | Accumulates in-memory columnar buffers per topic up to `1,000 ms` or `5,000 events`, executes an async bulk insert into `ReplacingMergeTree` tables, and commits Kafka offsets only upon insert success. |
-| `BronzeParquetArchiver` | `cg.lakehouse.bronze.v1` | MinIO (Iceberg Bronze) | Buffers raw events up to `5 minutes` or `64 MB`, writes ZSTD-compressed Parquet files partitioned by `(provider, event_type, ingestion_date)`, and commits Kafka offsets after S3 `PutObject` verification. |
-| `StatisticalAnomalyDetector` | `cg.anomaly.detector.v1` | Kafka (`market.anomalies.v1`) | Computes rolling return Z-scores, volume spikes, and bid-ask spread anomalies on closed candles/tickers; suppresses duplicate alerts via a Redis cooldown key (`15m` TTL) before emitting `MarketAnomalyEventV1`. |
+| `HotStateProjector` (`src/streaming/consumers/hot_redis.py`) | `cg.hot.redis.v1` | Redis 7 | Updates `market:v1:price:{provider}:{symbol}`, `market:v1:snapshot:{provider}:{symbol}`, and `market:v1:orderbook:{provider}:{symbol}` via an atomic Lua script that only overwrites if `incoming.exchange_event_time >= stored.exchange_event_time`, then publishes a lightweight delta to Redis Pub/Sub for WebSocket clients. |
+| `ClickHouseBatchSink` (`src/streaming/consumers/analytics_ch.py`) | `cg.analytics.clickhouse.v1` | ClickHouse | Accumulates in-memory columnar buffers per topic up to `1,000 ms` or `5,000 events`, executes an async bulk insert into `ReplacingMergeTree` tables, and commits Kafka offsets only upon insert success. |
+| `BronzeParquetArchiver` (`src/lakehouse/bronze/archiver.py`) | `cg.lakehouse.bronze.v1` | MinIO (Iceberg Bronze) | Buffers raw events up to `5 minutes` or `64 MB`, writes ZSTD-compressed Parquet files partitioned by `(provider, event_type, ingestion_date)`, and commits Kafka offsets after S3 `PutObject` verification. |
+| `StatisticalAnomalyDetector` (`src/streaming/consumers/anomaly_detector.py`) | `cg.anomaly.detector.v1` | Kafka (`market.anomalies.v1`) | Computes rolling return Z-scores, volume spikes, and bid-ask spread anomalies on closed candles/tickers; suppresses duplicate alerts via a Redis cooldown key (`15m` TTL) before emitting `MarketAnomalyEventV1`. |
 
 ---
 
-## 3. FastAPI Modular Monolith Components (`src/backend/`)
+## 3. FastAPI Modular Monolith Components (`src/serving/api/`)
 
-Each domain module inside `src/backend/modules/<module_name>/` is structured into four explicit layers:
+Each domain module inside `src/serving/api/modules/<module_name>/` is structured into four explicit layers:
 
 | Layer | Allowed Imports | Forbidden Imports | Key Components |
 |---|---|---|---|
@@ -44,7 +44,7 @@ Each domain module inside `src/backend/modules/<module_name>/` is structured int
 
 ---
 
-## 4. Intelligence Plane Components (`src/agent/`)
+## 4. Intelligence Plane Components (`src/intelligence/`)
 
 | Component | Responsibility | Isolation & Safety Boundary |
 |---|---|---|

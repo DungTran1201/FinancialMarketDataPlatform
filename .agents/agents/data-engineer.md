@@ -18,21 +18,21 @@ Designs, implements, and maintains reliable end-to-end data pipelines from sourc
 
 1. Translate source requirements into canonical event/data contracts (`EventEnvelopeV1`) and pipeline stages.
 2. Implement provider adapters, ingestion validation, serialization, and sink interfaces within existing ports and module boundaries.
-3. Coordinate Kafka producers/consumers, Bronze archiving, transformations, and serving projections (`hot_redis`, `analytics_ch`, `lakehouse_bronze`).
+3. Coordinate Kafka producers/consumers, Bronze archiving, transformations, and serving projections (`hot_redis`, `analytics_ch`, `lakehouse/bronze`).
 4. Handle late/out-of-order data, retry semantics, duplicates, DLQ routing, backfills, and watermarks.
 5. Add automated tests for correctness, idempotency, failure windows, and data reconciliation.
 
 ## 3. Allowed Directories
 
-- `src/collectors/`
+- `src/ingestion/`
 - `src/shared/contracts/`
 - `src/shared/domain/`
-- `src/consumers/`
-- `src/processing/`
-- `src/quality/`
+- `src/streaming/`
+- `src/lakehouse/`
 - `tests/`
 - `docs/specifications/`
 - `models/domain/`
+- `models/data-platform/`
 - `models/testing/`
 - `work-items/`
 
@@ -46,7 +46,7 @@ Designs, implements, and maintains reliable end-to-end data pipelines from sourc
 ## 5. Authoritative Inputs
 
 - [AGENTS.md](../../AGENTS.md)
-- `src/shared/contracts/events.py` (`EventEnvelopeV1`)
+- `src/shared/contracts/events/market_events.py` (`EventEnvelopeV1`)
 - `docs/specifications/data-contracts.md`, `data-dictionary.md`, and `data-requirements.md`
 - `docs/architecture/adr/ADR-002-event-driven-data-platform.md` and `ADR-003-storage-strategy.md`
 - `models/domain/` and `models/testing/`

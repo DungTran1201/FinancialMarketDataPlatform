@@ -2,16 +2,40 @@ version: "1.0"
 
 metadata:
   model_id: "MODEL-UX-001"
-  name: "Product UX & Information Architecture Model (Uninitialized Baseline)"
-  description: "Structural container for future Website UX screens and flows. Intentionally unpopulated until Website Discovery begins."
-  status: "DRAFT"
+  name: "Product UX, Information Architecture & Real-Time Data Flow Observatory Model"
+  description: "Canonical UX model defining navigation groups, screens (SCR-001), and user flows (UX-001) for the Real-Time 12-Stage Data Flow & Latency Observatory."
+  status: "BASELINED"
   canonical_model: true
   created_at: "2026-11-12"
-  updated_at: "2026-11-12"
+  updated_at: "2026-11-15"
   owner: "ux-modeler"
   source_documents:
     - "docs/product/11-ux/README.md"
+    - "docs/product/11-ux/screen-specifications.md"
+    - "docs/product/11-ux/user-flows.md"
 
-navigation_groups: []
-screens: []
-user_flows: []
+navigation_groups:
+  - id: "NAV-001"
+    name: "Data Platform Observatory"
+    route_prefix: "/ui"
+    allowed_roles: ["viewer", "analyst", "operator", "admin"]
+
+screens:
+  - id: "SCR-001"
+    name: "Real-Time 12-Stage Data Flow & End-to-End Latency Observatory"
+    route: "/ui/data-flow"
+    module_path: "src/serving/api/gateway/ui.py"
+    states: ["loading", "streaming", "processing", "degraded", "stale-data"]
+    bound_endpoints: ["API-011", "API-012", "API-014", "API-015", "API-016"]
+
+user_flows:
+  - id: "UX-001"
+    name: "Real-Time Data Flow Inspection & End-to-End Ingestion-to-Monitoring Latency Audit"
+    actor: "Data Engineer / Operator / Quant Analyst"
+    entry_screen: "SCR-001"
+    steps:
+      - "Open /ui/data-flow to subscribe to real-time 12-stage telemetry (API-016)."
+      - "Inspect live exchange feeds (BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT, XRPUSDT) and source network lag (ms)."
+      - "Monitor stage-by-stage processing duration (ms), cumulative time (ms), and progress across Stages 1..12."
+      - "Verify Total Ingestion-to-Monitoring Latency (sum of Stages 1..11) against the 200ms SLA budget."
+      - "Trigger on-demand 12-stage pipeline execution (API-011) or inspect Gold marts (API-012) and lineage (API-014)."

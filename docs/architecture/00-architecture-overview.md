@@ -118,7 +118,7 @@ Every architectural pattern in this platform has explicit boundaries documented 
 ### Phase 1 — Data Foundation
 - **Objective**: Implement working real-time and historical ingestion from Binance into Kafka and ClickHouse with foundational data quality.
 - **Scope**: `collector-ws`, `collector-rest`, Kafka topic provisioning, Pydantic event validation, DLQ routing, `consumer-analytics-ch`, ClickHouse base tables (`market_trades`, `market_klines`, `market_tickers`, `order_book_snapshots`), and basic Great Expectations checks.
-- **Required Components**: `src/collectors/`, `src/consumers/analytics_ch/`, `deploy/clickhouse/init/`, Kafka broker.
+- **Required Components**: `src/ingestion/`, `src/streaming/consumers/analytics_ch.py`, `deploy/clickhouse/init/`, Kafka broker (`deploy/kafka/`).
 - **Dependencies**: Phase 0 contracts and Docker Compose `core` profile.
 - **Deliverables**: Live ingestion of top 10 spot symbols into ClickHouse with $<5\text{ s}$ end-to-end lag and zero unvalidated events.
 - **Acceptance Criteria**: Sustained 30-minute ingestion run with automatic WebSocket reconnect recovery and verified `ReplacingMergeTree` deduplication.
@@ -127,7 +127,7 @@ Every architectural pattern in this platform has explicit boundaries documented 
 ### Phase 2 — Data Platform (Medallion Lakehouse & Batch Orchestration)
 - **Objective**: Build the Bronze–Silver–Gold Lakehouse on MinIO/Iceberg orchestrated by Apache Airflow.
 - **Scope**: `consumer-lakehouse-bronze`, Iceberg catalog setup, PySpark Bronze-to-Silver deduplication jobs, dbt Core Silver-to-Gold models and ClickHouse marts, Great Expectations validation suites, and historical backfill DAGs.
-- **Required Components**: `src/consumers/lakehouse_bronze/`, `src/processing/spark/`, `src/transformation/dbt/`, `src/quality/`, `deploy/airflow/dags/`, MinIO.
+- **Required Components**: `src/lakehouse/bronze/`, `src/lakehouse/silver/`, `src/lakehouse/gold/dbt/`, `src/lakehouse/quality/`, `src/lakehouse/catalog/`, `deploy/iceberg/`, `deploy/object-storage/`, `deploy/airflow/dags/`, MinIO.
 - **Dependencies**: Phase 1 Kafka streams and REST collector watermarks.
 - **Deliverables**: Automated Airflow DAGs producing validated Silver and Gold Iceberg tables and historical ClickHouse backfills.
 - **Acceptance Criteria**: Re-running any historical backfill or PySpark Silver job over the same time window is 100% idempotent (zero duplicate rows).
@@ -136,7 +136,7 @@ Every architectural pattern in this platform has explicit boundaries documented 
 ### Phase 3 — High-Performance Backend & BI
 - **Objective**: Deliver the production-grade FastAPI Modular Monolith, Redis Hot Path, WebSocket live streaming, and Apache Superset dashboards.
 - **Scope**: `consumer-hot-redis` (with Lua monotonic scripts), FastAPI domain modules (`market`, `historical`, `analytics`, `catalog`, `iam`, `platform_config`), Redis-to-ClickHouse fallback circuit breaker, WebSocket multiplexer, and Superset dashboards.
-- **Required Components**: `src/consumers/hot_redis/`, `src/backend/`, PostgreSQL migrations, Redis, Superset.
+- **Required Components**: `src/streaming/consumers/hot_redis.py`, `src/serving/api/`, PostgreSQL migrations, Redis, Superset.
 - **Dependencies**: Phase 1 ClickHouse tables and Kafka topics.
 - **Deliverables**: Versioned `/api/v1/*` and `/ws/v1/*` endpoints meeting P95 latency baselines.
 - **Acceptance Criteria**: Load test confirms P95 $<15\text{ ms}$ for hot price reads, P95 $<80\text{ ms}$ for bounded historical candle queries, and seamless fallback when Redis container is paused.
@@ -144,8 +144,8 @@ Every architectural pattern in this platform has explicit boundaries documented 
 
 ### Phase 4 — Agentic Intelligence
 - **Objective**: Deploy the isolated LangGraph Agent Service, Controlled Tool Gateway, and anomaly-triggered investigation workflows.
-- **Scope**: `MarketIntelligenceGraph`, 10 deterministic tools in `src/agent/tools/`, `StatisticalAnomalyDetector`, `agent-worker`, PostgreSQL run/tool audit persistence, SSE progress streaming, and token budget circuit breakers.
-- **Required Components**: `src/agent/`, `src/backend/modules/agent_api/`, `src/backend/modules/reporting/`.
+- **Scope**: `MarketIntelligenceGraph`, 10 deterministic tools in `src/intelligence/tools/`, `StatisticalAnomalyDetector`, `agent-worker`, PostgreSQL run/tool audit persistence, SSE progress streaming, and token budget circuit breakers.
+- **Required Components**: `src/intelligence/`, `src/serving/api/modules/agent_api/`, `src/serving/api/modules/reporting/`.
 - **Dependencies**: Phase 3 read adapters (Redis & ClickHouse) and PostgreSQL state tables.
 - **Deliverables**: On-demand and anomaly-triggered structured market intelligence reports with 100% deterministic quantitative citations.
 - **Acceptance Criteria**: Every numeric metric in generated reports matches deterministic tool outputs; stopping or breaking the LLM adapter has zero effect on Phase 1–3 components.
@@ -154,7 +154,7 @@ Every architectural pattern in this platform has explicit boundaries documented 
 ### Phase 5 — Production Readiness & Operational Hardening
 - **Objective**: Harden security, observability, failure recovery, CI/CD pipelines, and performance benchmarks.
 - **Scope**: Prometheus/Grafana dashboards and alert rules, full RBAC and secret rotation verification, chaos/recovery tests (Kafka replay, ClickHouse rebuild from Iceberg), load testing, and operational runbooks.
-- **Required Components**: `.github/workflows/`, `deploy/prometheus/`, `deploy/grafana/`, `tests/load/`, `docs/architecture/11-reliability-and-observability.md`.
+- **Required Components**: `.github/workflows/`, `deploy/observability/prometheus/`, `deploy/observability/grafana/`, `tests/performance/`, `docs/architecture/11-reliability-and-observability.md`.
 - **Dependencies**: Phases 1–4.
 - **Deliverables**: Automated CI/CD pipeline, benchmark report finalizing NFR targets, backup/restore scripts, and incident runbooks.
 - **Acceptance Criteria**: All unit, architectural, contract, integration, and recovery tests pass in CI; zero high/critical security findings.

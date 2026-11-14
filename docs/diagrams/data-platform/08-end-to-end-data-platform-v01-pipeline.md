@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-Illustrates the complete, zero-mock **12-Stage Data Platform v0.1** execution pipeline (`DataPlatformV01Pipeline` in `src/processing/pipeline_v01.py`), tracing data from Stage 1 (`exchangeInfo` Discovery) through Stage 12 (Governance Lineage & Prometheus SLIs).
+Illustrates the complete, zero-mock **12-Stage Data Platform v0.1** execution pipeline (`DataPlatformV01Pipeline` in `src/lakehouse/orchestration/pipeline.py`), tracing data from Stage 1 (`exchangeInfo` Discovery) through Stage 12 (Governance Lineage & Prometheus SLIs).
 
 ---
 

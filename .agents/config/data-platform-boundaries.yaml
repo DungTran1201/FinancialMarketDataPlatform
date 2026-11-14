@@ -7,20 +7,20 @@ metadata:
 planes:
   data_plane:
     purpose: "Ingestion, event distribution, persistence, transformation and data quality"
-    source_roots: ["src/collectors", "src/shared/contracts", "src/consumers", "src/processing", "src/quality"]
-    forbidden_dependencies: ["src/agent"]
+    source_roots: ["src/ingestion", "src/shared/contracts", "src/streaming", "src/lakehouse"]
+    forbidden_dependencies: ["src/intelligence", "src/serving"]
   application_control_plane:
     purpose: "API serving, IAM, control metadata and platform configuration"
-    source_roots: ["src/backend", "deploy/postgres"]
+    source_roots: ["src/serving", "deploy/postgres"]
   intelligence_plane:
     purpose: "Bounded agent orchestration and read-only analytical tools"
-    source_roots: ["src/agent"]
+    source_roots: ["src/intelligence"]
     access_policy: "Read-only market data through Controlled Tool Gateway; no arbitrary SQL"
 
 technology_ownership:
   collectors:
     owner_role: "streaming-data-engineer"
-    paths: ["src/collectors"]
+    paths: ["src/ingestion"]
     responsibilities: ["provider transport", "normalization", "rate limits", "watermark-aware backfill"]
   event_contracts:
     owner_role: "data-engineer"
@@ -28,19 +28,19 @@ technology_ownership:
     responsibilities: ["versioning", "schema compatibility", "natural keys", "partition keys"]
   kafka_streaming:
     owner_role: "streaming-data-engineer"
-    paths: ["src/consumers", "docker-compose.yml"]
+    paths: ["src/streaming", "docker-compose.yml", "deploy/kafka"]
     responsibilities: ["topics", "consumer groups", "offset semantics", "DLQ", "backpressure"]
   hot_state:
     owner_role: "data-engineer"
-    paths: ["src/consumers/hot_redis"]
+    paths: ["src/streaming/consumers/hot_redis.py"]
     datastore: "Redis"
   olap:
     owner_role: "analytics-engineer"
-    paths: ["deploy/clickhouse", "src/consumers/analytics_ch"]
+    paths: ["deploy/clickhouse", "src/streaming/consumers/analytics_ch.py"]
     datastore: "ClickHouse"
   lakehouse:
     owner_role: "lakehouse-engineer"
-    paths: ["src/consumers/lakehouse_bronze", "src/processing/spark"]
+    paths: ["src/lakehouse/bronze", "src/lakehouse/silver", "src/lakehouse/catalog", "src/lakehouse/orchestration", "deploy/iceberg", "deploy/object-storage"]
     storage: ["MinIO", "Parquet", "Apache Iceberg"]
     layer_owners:
       bronze: "source-preserving append-only archive"
@@ -48,11 +48,11 @@ technology_ownership:
       gold: "dbt curated business/analytical models"
   analytical_models:
     owner_role: "analytics-engineer"
-    paths: ["src/transformation/dbt"]
+    paths: ["src/lakehouse/gold", "src/lakehouse/gold/dbt"]
     responsibilities: ["Gold semantic definitions", "incremental models", "data tests"]
   data_quality:
     owner_role: "data-quality-governance-engineer"
-    paths: ["src/quality", "models/testing"]
+    paths: ["src/lakehouse/quality", "models/testing", "tests/data_quality"]
   platform_operations:
     owner_role: "dataops-engineer"
     paths: ["deploy", "docker-compose.yml", ".github/workflows"]

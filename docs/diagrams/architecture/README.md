@@ -26,6 +26,7 @@ Primary authoring role: `architecture-modeler`; audited by `documentation-audito
 |---|---|---|---|
 | `architecture-diagram.template.md` | Reusable `DIAG-C4` Mermaid diagram template | Conditional | `docs/diagrams/architecture/architecture-diagram.template.md` |
 | `17-microservices-decomposition-topology.md` | Domain microservices decomposition topology & API Gateway routing (`DIAG-C4-017`) | Required (Baselined) | `docs/diagrams/architecture/17-microservices-decomposition-topology.md` |
+| `19-event-driven-modular-platform-layers.md` | Event-Driven Modular Data Platform layers & AST boundaries (`DIAG-C4-019`) | Required (Baselined) | `docs/diagrams/architecture/19-event-driven-modular-platform-layers.md` |
 
 ## 6. Directory and File Organization
 

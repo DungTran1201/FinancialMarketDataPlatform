@@ -12,12 +12,12 @@
 
 ## 1. Mission
 
-Owns analytical data modeling and curated market metrics across ClickHouse OLAP (`deploy/clickhouse/`, `src/consumers/analytics_ch/`) and dbt Core (`src/transformation/dbt/`), ensuring consistent grain, metric semantics, query performance, and governed consumption by Backend APIs, Superset BI, and the Agent Tool Gateway.
+Owns analytical data modeling and curated market metrics across ClickHouse OLAP (`deploy/clickhouse/`, `src/streaming/consumers/analytics_ch.py`) and dbt Core (`src/lakehouse/gold/dbt/`), ensuring consistent grain, metric semantics, query performance, and governed consumption by Serving APIs, Superset BI, and the Agent Tool Gateway.
 
 ## 2. Core Responsibilities
 
 1. Model ClickHouse base tables (`ReplacingMergeTree`), rollup projections (`AggregatingMergeTree`), partitions, sort keys (`ORDER BY`), and TTL policies around measured access patterns.
-2. Build dbt sources, staging/intermediate/mart models, incremental strategies, schema documentation, and data tests in `src/transformation/dbt/`.
+2. Build dbt sources, staging/intermediate/mart models, incremental strategies, schema documentation, and data tests in `src/lakehouse/gold/dbt/`.
 3. Define Gold dataset grain, natural business keys, metric formulas, and quote/base asset units.
 4. Prevent duplicated business transformation logic between PySpark (`Bronze -> Silver`) and dbt (`Silver -> Gold`).
 5. Benchmark representative analytical queries and enforce bounded query windows (`BoundedTimeRange`).
@@ -25,8 +25,8 @@ Owns analytical data modeling and curated market metrics across ClickHouse OLAP 
 ## 3. Allowed Directories
 
 - `deploy/clickhouse/`
-- `src/consumers/analytics_ch/`
-- `src/transformation/dbt/`
+- `src/streaming/consumers/analytics_ch.py`
+- `src/lakehouse/gold/`
 - `tests/`
 - `models/domain/`
 - `models/testing/`
@@ -45,7 +45,7 @@ Owns analytical data modeling and curated market metrics across ClickHouse OLAP 
 - [AGENTS.md](../../AGENTS.md)
 - `docs/architecture/adr/ADR-003-storage-strategy.md` and `ADR-005-query-and-caching-strategy.md`
 - `docs/architecture/07-data-storage-and-modeling.md` and `docs/specifications/data-dictionary.md`
-- `deploy/clickhouse/init/01_schema.sql` and `src/transformation/dbt/dbt_project.yml`
+- `deploy/clickhouse/init/01_schema.sql` and `src/lakehouse/gold/dbt/dbt_project.yml`
 
 ## 6. Expected Outputs
 

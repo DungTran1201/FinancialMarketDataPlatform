@@ -15,7 +15,7 @@ Models DDD bounded contexts (`DOM-###`), aggregates, entities (`ENT-###`), value
 
 ## 3. Authoritative Inputs
 
-- `models/domain/domain.yaml`, `entities.yaml`, `data-dictionary.yaml`, `docs/specifications/data-dictionary.md`, `src/backend/modules/*/domain/`, `docs/templates/domain/`.
+- `models/domain/domain.yaml`, `entities.yaml`, `data-dictionary.yaml`, `docs/specifications/data-dictionary.md`, `src/serving/api/modules/*/domain/`, `src/shared/domain/`, `src/ingestion/domain/`, `docs/templates/domain/`.
 
 ## 4. Preconditions
 
@@ -24,7 +24,7 @@ Models DDD bounded contexts (`DOM-###`), aggregates, entities (`ENT-###`), value
 ## 5. Execution Procedure
 
 1. Update `models/domain/domain.yaml`, `entities.yaml`, and `data-dictionary.yaml` first with `DOM-###` and `ENT-###` IDs.
-2. Enforce exact `Decimal` monetary/quantity types, UTC timestamps, and zero framework dependencies in `src/backend/modules/*/domain/`.
+2. Enforce exact `Decimal` monetary/quantity types, UTC timestamps, and zero framework dependencies in `src/serving/api/modules/*/domain/` and `src/shared/domain/`.
 3. Synchronize `docs/product/07-domain/` and `docs/specifications/data-dictionary.md` using `docs/templates/domain/`.
 4. Update derived class/ER diagrams in `docs/diagrams/domain/` and run `python tools/validators/run_all.py`.
 

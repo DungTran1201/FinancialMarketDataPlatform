@@ -17,7 +17,7 @@ Mandates executable data quality expectations (`QualityExpectationRule`, Great E
 
 ## 2. Mandatory Directives
 
-1. **Structured Rule Metadata**: Assign every quality rule a stable ID (`DQ-*`), target dataset, expression/expectation, severity, owner, execution point, and failure action (`src/quality/expectations/suite_definitions.py`).
+1. **Structured Rule Metadata**: Assign every quality rule a stable ID (`DQ-*`), target dataset, expression/expectation, severity, owner, execution point, and failure action (`src/lakehouse/quality/gates.py`).
 2. **Multi-Layer Coverage**: Cover schema validity, completeness, uniqueness, referential integrity, freshness, financial candle/trade invariants, and volume reconciliation.
 3. **Promotion Blocking**: Ensure `CRITICAL` quality failures block Silver/Gold promotion or trusted serving, while `WARNING` findings are recorded and alerted.
 4. **Execution Evidence**: Persist validation outcomes with dataset version, time window, and run correlation; distinguish declared rules from executed validation runs.

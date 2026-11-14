@@ -56,3 +56,7 @@ decisions:
     title: "Zero-Mock End-to-End Data Platform v0.1 & Domain Microservices Decomposition"
     path: "docs/architecture/adr/ADR-007-microservices-and-data-platform-v01.md"
     status: "APPROVED"
+  - id: "ADR-008"
+    title: "Event-Driven Modular Data Platform Architecture & Sub-Plane Isolation"
+    path: "docs/architecture/adr/ADR-008-event-driven-modular-data-platform.md"
+    status: "APPROVED"

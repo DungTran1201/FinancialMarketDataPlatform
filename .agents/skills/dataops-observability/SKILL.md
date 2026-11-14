@@ -15,7 +15,7 @@ Operate streaming and batch data services with actionable SLIs, bounded-cardinal
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md`, target `README.md`, `docs/architecture/11-reliability-and-observability.md`, `12-deployment-architecture.md`, `docker-compose.yml`, `.env.example`, `deploy/prometheus/prometheus.yml`, `src/shared/config.py`, `models/deployment/deployment.yaml`.
+- `AGENTS.md`, target `README.md`, `docs/architecture/11-reliability-and-observability.md`, `12-deployment-architecture.md`, `docker-compose.yml`, `.env.example`, `deploy/observability/prometheus/prometheus.yml`, `src/shared/config/settings.py`, `src/shared/observability/metrics.py`, `models/deployment/deployment.yaml`.
 
 ## 4. Preconditions
 
@@ -33,7 +33,7 @@ Operate streaming and batch data services with actionable SLIs, bounded-cardinal
 
 ## 6. Output Artifacts
 
-- Prometheus configuration (`deploy/prometheus/`), Docker Compose profile updates (`docker-compose.yml`), operational runbooks (`docs/product/13-operations/`), and updated deployment models (`models/deployment/`).
+- Prometheus configuration (`deploy/observability/prometheus/`), Docker Compose profile updates (`docker-compose.yml`), operational runbooks (`docs/product/13-operations/`), and updated deployment models (`models/deployment/`).
 
 ## 7. Validation
 

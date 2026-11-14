@@ -15,7 +15,7 @@ Test data pipeline correctness and operational recovery, including replay, dupli
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md`, target `README.md`, `work-items/<ID>/`, `models/testing/testing.yaml`, `models/requirements/acceptance-criteria.yaml`, `src/shared/contracts/events.py`, `src/agent/tools/gateway.py`, `tests/`, `docker-compose.yml`.
+- `AGENTS.md`, target `README.md`, `work-items/<ID>/`, `models/testing/testing.yaml`, `models/requirements/acceptance-criteria.yaml`, `src/shared/contracts/events/market_events.py`, `src/intelligence/tools/gateway.py`, `tests/`, `docker-compose.yml`.
 
 ## 4. Preconditions
 

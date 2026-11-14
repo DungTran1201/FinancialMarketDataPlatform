@@ -1,0 +1,46 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-DP-002"
+  name: "Canonical Event Envelope Contracts Model"
+  description: "Versioned EventEnvelopeV1 and DeadLetterEnvelopeV1 specifications for Kafka streaming."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-15"
+  updated_at: "2026-11-15"
+  owner: "data-platform-architect"
+  source_documents:
+    - "docs/architecture/04-data-platform-architecture.md"
+    - "docs/specifications/data-dictionary.md"
+
+schema_version: "1.0.0"
+idempotency_strategy: "UUIDv5(PLATFORM_EVENT_NAMESPACE, '{provider}:{event_type}:{symbol}:{natural_key}')"
+partition_key_strategy: "'{provider}:{symbol}'"
+contract_module: "src/shared/contracts/events/market_events.py"
+
+events:
+  - event_type: "market.trade.v1"
+    topic: "market.raw.trades.v1"
+    payload_model: "MarketTradePayloadV1"
+    numeric_precision: "Decimal fixed-point"
+  - event_type: "market.kline.v1"
+    topic: "market.raw.klines.v1"
+    payload_model: "MarketKlinePayloadV1"
+    numeric_precision: "Decimal fixed-point"
+  - event_type: "market.ticker.v1"
+    topic: "market.raw.tickers.v1"
+    payload_model: "dict (ticker snapshot)"
+    numeric_precision: "Decimal fixed-point"
+  - event_type: "market.orderbook.v1"
+    topic: "market.raw.orderbook.v1"
+    payload_model: "dict (top-N bids/asks)"
+    numeric_precision: "Decimal fixed-point"
+  - event_type: "market.anomaly.v1"
+    topic: "market.anomalies.v1"
+    payload_model: "DetectedMarketAnomaly"
+    numeric_precision: "float z-score + UTC timestamp"
+  - event_type: "market.dlq.v1"
+    topic: "market.dlq.v1"
+    payload_model: "DeadLetterEnvelopeV1"
+    numeric_precision: "raw payload preservation"
+

@@ -15,7 +15,7 @@ Specifies versioned REST, WebSocket, SSE, and Kafka event contracts (`API-###`, 
 
 ## 3. Authoritative Inputs
 
-- `models/api/api-contracts.yaml`, `events.yaml`, `docs/specifications/api-specification.md`, `data-contracts.md`, `src/shared/contracts/events.py`, `docs/templates/api/`.
+- `models/api/api-contracts.yaml`, `events.yaml`, `docs/specifications/api-specification.md`, `data-contracts.md`, `src/shared/contracts/events/market_events.py`, `docs/templates/api/`.
 
 ## 4. Preconditions
 

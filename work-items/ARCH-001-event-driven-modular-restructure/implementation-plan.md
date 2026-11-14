@@ -1,0 +1,12 @@
+# Implementation Plan — `ARCH-001`
+
+## 1. Execution Phases
+
+1. **Phase 1 — `src/shared/` Foundation**: Move config and event contracts into `shared/config/` and `shared/contracts/events/`, extract shared dataset schemas (`shared/contracts/schemas/`), shared pure quant math (`shared/domain/quant.py`), shared OpenMetrics telemetry (`shared/observability/metrics.py`), and shared security primitives (`shared/security/primitives.py`).
+2. **Phase 2 — `src/ingestion/`, `src/streaming/`, `src/lakehouse/`**: Separate collectors into clean Ingestion layers (`domain`, `application`, `providers/binance`, `infrastructure`, `entrypoints`), extract Streaming (`infrastructure/kafka_broker.py`, `contracts/dlq.py`, `consumers/{hot_redis,analytics_ch,anomaly_detector}.py`), and assemble Lakehouse (`bronze`, `silver`, `gold/{mart_engine.py,dbt/}`, `quality`, `catalog`, `orchestration`).
+3. **Phase 3 — `src/serving/` & `src/intelligence/`**: Move Modular Monolith API modules to `src/serving/api/modules/`, gateway & UI observatory to `src/serving/api/gateway/`, split service entrypoints to `src/serving/api/services/`, DI runtime to `src/serving/infrastructure/runtime.py`, and decompose Agent runtime into `src/intelligence/{orchestrator,workflows,tools,reporting,main.py}`.
+4. **Phase 4 — Remove Legacy `src/` Folders & Author Package READMEs**: Verify zero remaining imports of legacy `src.{collectors,consumers,processing,quality,transformation,backend,microservices,frontend,agent}`, delete empty/superseded packages, and write explanatory `README.md` files for `src/` and its subsystem packages.
+5. **Phase 5 — `deploy/` Standardization**: Reorganize Prometheus into `deploy/observability/prometheus/`, add Grafana datasource provisioning, Kafka topic init, MinIO bucket init, Iceberg catalog config, update `docker-compose.yml`, `setup.bat`, `run.bat`, `.github/workflows/ci.yml`, `.gitignore`, `.env.example`, and author `deploy/` READMEs.
+6. **Phase 6 — `tests/` & `models/data-platform/`**: Reorganize `tests/` into `architecture/`, `unit/`, `contract/`, `data_quality/`, `integration/`, `e2e/`, `resilience/`, `performance/`, update Clean Architecture boundary assertions (`TC-006`), create `models/data-platform/*.yaml` + 12-section `README.md`, and synchronize `models/`, `docs/`, `docs/diagrams/`, `.agents/config/`, and `ADR-008`.
+7. **Phase 7 — Full Verification & Cleanup**: Clean redundant dbt build artifacts, verify `ruff`, `pytest`, `unittest`, `dbt parse`, `docker-compose.yml`, and `tools/validators/run_all.py`.
+

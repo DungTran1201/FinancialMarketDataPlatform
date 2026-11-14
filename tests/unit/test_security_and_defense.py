@@ -5,18 +5,20 @@ from __future__ import annotations
 import unittest
 
 from fastapi.testclient import TestClient
-from src.backend.main import create_app
-from src.backend.modules.iam.domain.ports import UserRole
-from src.backend.modules.iam.domain.security import (
+from src.serving.api.main import create_app
+from src.serving.api.modules.iam.domain.ports import UserRole
+from src.serving.api.modules.iam.domain.security import (
     CredentialHasher,
-    IPAndEndpointCipher,
     JwtSecurityService,
+)
+from src.shared.config.settings import PlatformConfig
+from src.shared.security.primitives import (
+    IPAndEndpointCipher,
     RateLimitTier,
     SecurityViolationError,
     SlidingWindowRateLimiter,
     inspect_request_for_waf_threats,
 )
-from src.shared.config import PlatformConfig
 
 
 class TestDomainCryptographyAndDefensePrimitives(unittest.TestCase):
