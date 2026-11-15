@@ -3,7 +3,7 @@
 - **Status**: Accepted (`BASELINED` on `arch/microservices`)
 - **Date**: 2026-11-15
 - **Owners**: `data-platform-architect`, `data-engineer`, `system-architect`
-- **Supersedes / Extends**: Extends [ADR-001](ADR-001-modular-monolith-and-three-plane-separation.md), [ADR-002](ADR-002-streaming-backbone-and-polyglot-storage.md), and [ADR-005](ADR-005-idempotency-deduplication-and-event-ordering.md)
+- **Supersedes / Extends**: Extends [ADR-001](ADR-001-overall-architecture.md), [ADR-002](ADR-002-event-driven-data-platform.md), and [ADR-005](ADR-005-query-and-caching-strategy.md)
 
 ---
 
