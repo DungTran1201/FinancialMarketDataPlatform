@@ -56,7 +56,6 @@ def create_app(
     from fastapi.responses import PlainTextResponse
 
     from src.serving.api.gateway.service import build_microservices_gateway_router
-    from src.serving.api.gateway.ui import build_frontend_ui_router
     from src.serving.api.modules.agent_api.presentation.router import build_agent_api_router
     from src.serving.api.modules.analytics.presentation.router import build_analytics_router
     from src.serving.api.modules.catalog.presentation.router import build_catalog_router
@@ -153,10 +152,19 @@ def create_app(
         prefix="/api/v1/microservices",
         tags=["Microservices Gateway & Service Topology (ADR-007)"],
     )
+    from src.serving.api.gateway.observability import (
+        build_observability_router,
+        build_observability_ws_router,
+    )
+
     app.include_router(
-        build_frontend_ui_router(runtime=rt),
-        prefix="/ui",
-        tags=["Frontend UX/UI (Real-Time Data Flow Observatory SCR-001)"],
+        build_observability_router(runtime=rt),
+        prefix="/api/v1/observability",
+        tags=["Real-Time Data Platform Observatory Telemetry (FEAT-001)"],
+    )
+    app.include_router(
+        build_observability_ws_router(runtime=rt),
+        tags=["Real-Time Data Platform Observatory WebSocket (FEAT-001)"],
     )
     return app
 

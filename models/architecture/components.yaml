@@ -94,3 +94,8 @@ components:
     plane: "PLANE-A"
     code_path: "src/serving/api/services/data_plane.py"
     diagram_id: "DIAG-C4-017"
+  - id: "COMP-017"
+    name: "frontend-experience-layer"
+    plane: "EXPERIENCE-LAYER"
+    code_path: "frontend/src/main.ts"
+    diagram_id: "DIAG-UX-001"

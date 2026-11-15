@@ -15,6 +15,8 @@ The **C4 Container Diagram** decomposes the platform into its deployable contain
   - `clickhouse` (ClickHouse Server): Columnar OLAP database with `ReplacingMergeTree` tables and Materialized Views.
   - `minio` (MinIO S3-Compatible Storage): Object storage hosting Apache Iceberg tables (Bronze, Silver, Gold).
   - `spark-worker` (PySpark) & `dbt-runner` (dbt Core) orchestrated by `airflow` (Apache Airflow): Batch Lakehouse processing and SQL modeling, validated by `great-expectations`.
+- **Experience Layer Container**:
+  - `frontend` (TypeScript SPA / Nginx): Serves Overview Dashboard, Data Flow Observatory, Market Candlesticks, Data Management, AI Workspace, and Administration interfaces.
 - **Application & Control Plane Containers**:
   - `backend-api` (FastAPI Modular Monolith): Serves REST, WebSocket, and SSE APIs; enforces Auth/RBAC and rate limits.
   - `postgres` (PostgreSQL 16): Stores users, RBAC, platform config, watermarks, Airflow metadata, and Agent execution checkpoints.
@@ -44,6 +46,10 @@ flowchart TB
         DBT["dbt Core<br/>(Silver -> Gold & OLAP Marts)"]
         GE["Great Expectations<br/>(Data Quality Validation)"]
         Airflow["Apache Airflow<br/>(Batch Orchestrator)"]
+    end
+
+    subgraph ExperienceLayer["Experience / Presentation Layer"]
+        FrontendApp["frontend<br/>(TypeScript SPA / Nginx Container)"]
     end
 
     subgraph ControlPlane["Plane B: Application & Control Plane"]
@@ -85,7 +91,9 @@ flowchart TB
     GE -->|"Validate Tables"| ClickHouse
     GE -->|"Validate Iceberg"| MinIO
 
-    Users -->|"HTTPS REST / WSS / SSE"| FastAPI
+    Users -->|"HTTPS Web Access"| FrontendApp
+    FrontendApp -->|"REST / WSS / SSE"| FastAPI
+    Users -->|"Direct API Access"| FastAPI
     Users -->|"BI Queries"| Superset
     FastAPI -->|"Hot Reads (<15ms)"| Redis
     FastAPI -->|"Historical & Analytical Reads"| ClickHouse

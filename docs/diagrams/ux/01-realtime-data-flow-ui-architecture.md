@@ -2,9 +2,9 @@
 
 ## 1. Purpose
 
-Illustrates the frontend UX/UI component hierarchy (`SCR-001`), real-time telemetry loop (`API-016`), and stage-by-stage latency calculation from **Stage 1/2 (Ingestion)** to **Stage 11/12 (Monitoring & Lineage)**.
+Illustrates the frontend Observatory UI (`SCR-001`), Content-Security-Policy-compliant static assets (`/ui/assets/*`), live SSE/WebSocket push, non-mutating `/api/v1/observability/*` REST endpoints (`API-017`..`API-022`), and parallel-branch trace correlation via `PipelineTraceRegistry`.
 
-- **Authoritative Sources**: [models/ux/ux.yaml](../../../models/ux/ux.yaml), [screen-specifications.md](../../product/11-ux/screen-specifications.md)
+- **Authoritative Sources**: [models/ux/ux.yaml](../../../models/ux/ux.yaml), [screen-specifications.md](../../product/11-ux/screen-specifications.md), [monitoring.md](../../product/13-operations/monitoring.md)
 
 ---
 
@@ -12,31 +12,40 @@ Illustrates the frontend UX/UI component hierarchy (`SCR-001`), real-time teleme
 
 ```mermaid
 flowchart TD
-    subgraph UI["Frontend Observatory UI (SCR-001: /ui/data-flow)"]
-        HDR["Header & Polling Controller<br/>(500ms / 1000ms / 2000ms + Full Run Trigger)"]
-        KPI["4 Real-Time KPI Cards<br/>(T_ingest_to_monitor, Source Lag, E2E Lag, SLA %)"]
-        TBL["Live Exchange Feed Table<br/>(BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT, XRPUSDT)"]
-        GRID["12-Stage Visual Data Flow & Latency Waterfall<br/>(Processing ms, Cumulative ms, Progress %)"]
+    subgraph UI["Frontend Observatory UI (SCR-001: /ui/data-flow + /ui/assets/*)"]
+        HDR["Top Bar: SSE Badge, LIVE/DEMO Filter, Infra Probe & Actions"]
+        KPI["KPI Strip: Ingested, Processed, DLQ, Lag, E2E P50, Freshness"]
+        DAG["Tab 1: Zoom/Pan Parallel SVG DAG + Node Drawer + Pulse Animation"]
+        KFK["Tab 2: Kafka Cluster B1..B3, Partitions & CG Lag"]
+        STG["Tab 3: Lakehouse Parquet/Iceberg v2 & ClickHouse/Redis"]
+        CND["Tab 4: Real OHLCV Candlestick Chart + Decimal Rollups"]
+        LAT["Tab 5: Parallel Branch Percentiles, Histogram & Clickable Buckets"]
+        TRC["Tab 6: 10-Timestamp Event Trace Inspector"]
     end
 
-    subgraph API["Plane A / B Telemetry & Control Endpoints"]
-        TEL["GET /api/v1/data-platform/v01/telemetry (API-016)<br/>(step_realtime_tick_and_collect_telemetry)"]
-        RUN["POST /api/v1/data-platform/v01/run (API-011)<br/>(run_end_to_end_pipeline)"]
+    subgraph API["Observability Gateway (src/serving/api/gateway/observability.py)"]
+        SSE["SSE /api/v1/observability/stream & WS /ws/v1/observability/stream"]
+        REST["REST /api/v1/observability/{overview,topology,kafka,storage,latency,traces,candles}"]
+        ACT["Actions /api/v1/observability/{live/probe,demo/emit} & API-016 /telemetry"]
     end
 
-    subgraph Engine["12-Stage Real-Time Pipeline Timing (perf_counter_ns)"]
-        S1_4["Stages 1-4: Discovery -> Ingestion -> Validation -> Kafka"]
-        S5_8["Stages 5-8: MinIO Bronze -> Silver/Redis/CH -> Gold -> DQ Gate"]
-        S9_12["Stages 9-12: Iceberg Compaction -> Serving -> Monitoring -> Lineage"]
-        CALC["Latency Aggregator:<br/>T_ingest_to_monitor = Sum(S01..S11)<br/>T_E2E = Source_Lag + T_ingest_to_monitor"]
+    subgraph Core["Shared Observability & Runtime Facade"]
+        REG["PipelineTraceRegistry (10 Timestamps, Parallel Critical Path, Ring Buffer)"]
+        MET["DataObservabilityMetricsCollector (Bounded Prometheus Histograms)"]
+        FS["Disk & Memory Inspectors (.local_lakehouse Iceberg v2, Broker, CH, Redis, TCP Probe)"]
     end
 
-    HDR -- "Poll Every 500..2000ms" --> TEL
-    HDR -- "Click Run Full Pipeline" --> RUN
-    TEL --> Engine
-    S1_4 --> S5_8 --> S9_12 --> CALC
-    CALC --> KPI
-    CALC --> TBL
-    CALC --> GRID
+    HDR --> ACT
+    SSE --> DAG
+    REST --> KPI
+    REST --> KFK
+    REST --> STG
+    REST --> CND
+    REST --> LAT
+    REST --> TRC
+    ACT --> REG
+    REG --> SSE
+    REG --> REST
+    REG --> MET
+    FS --> REST
 ```
-

@@ -261,8 +261,7 @@ class TestDataPlatformV01AndMicroservices(unittest.TestCase):
                 self.assertGreater(tel["summary_metrics"]["end_to_end_source_to_monitoring_lag_ms"], 0.0)
 
                 ui_resp = await client.get("/ui/data-flow")
-                self.assertEqual(ui_resp.status_code, 200)
-                self.assertIn("Real-Time Data Flow", ui_resp.text)
+                self.assertEqual(ui_resp.status_code, 404)
 
                 root_metrics = await client.get("/metrics")
                 self.assertEqual(root_metrics.status_code, 200)

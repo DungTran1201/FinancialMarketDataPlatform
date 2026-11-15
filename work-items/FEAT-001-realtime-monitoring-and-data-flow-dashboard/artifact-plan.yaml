@@ -1,0 +1,49 @@
+version: "1.0"
+work_item_id: "FEAT-001"
+change_type: "FEAT"
+risk_tier: "R2"
+approval_gate: "G6_RELEASE"
+
+signal_flags:
+  business_process: false
+  api: true
+  data: true
+  lifecycle: false
+  external_integration: true
+  security: true
+  ui: true
+  ai_or_agent: false
+
+planned_artifacts:
+  - artifact_type: "source_code"
+    path: "src/shared/observability/tracing.py"
+    action: "CREATED"
+    reason: "Unified EventLifecycleTrace across 10 timestamps, parallel branch math, percentiles, and SSE event queue."
+  - artifact_type: "source_code"
+    path: "src/shared/observability/metrics.py"
+    action: "UPDATED"
+    reason: "Add bounded-cardinality Prometheus stage processing and E2E latency histograms."
+  - artifact_type: "source_code"
+    path: "src/serving/api/gateway/observability.py"
+    action: "CREATED"
+    reason: "Non-mutating REST, SSE, LIVE probe, and explicit DEMO simulation endpoints under /api/v1/observability/*."
+  - artifact_type: "source_code"
+    path: "src/serving/api/gateway/ui.py"
+    action: "DEPRECATED"
+    reason: "Demo UI decommissioned; UI router and static assets removed to keep serving plane headless and clean."
+  - artifact_type: "documentation"
+    path: "docs/product/13-operations/monitoring.md"
+    action: "CREATED"
+    reason: "Monitoring SLIs, observability API architecture, parallel latency methodology, and honest AS-IS vs Unavailable report."
+  - artifact_type: "diagram"
+    path: "docs/diagrams/ux/01-realtime-data-flow-ui-architecture.md"
+    action: "UPDATED"
+    reason: "Synchronize DIAG-UX-001 diagram with SSE/WebSocket Observatory routes and parallel trace paths."
+  - artifact_type: "model"
+    path: "models/ux/ux.yaml"
+    action: "UPDATED"
+    reason: "Update SCR-001 capability list and data sources to match FEAT-001 Observatory modules."
+  - artifact_type: "test"
+    path: "tests/integration/test_realtime_observability_dashboard.py"
+    action: "CREATED"
+    reason: "Verify 10-stage trace correlation, non-summed parallel E2E latency, Kafka lag, Iceberg inspection, OHLCV rollups, CSP, and SSE."

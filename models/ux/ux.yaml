@@ -22,20 +22,56 @@ navigation_groups:
 
 screens:
   - id: "SCR-001"
-    name: "Real-Time 12-Stage Data Flow & End-to-End Latency Observatory"
-    route: "/ui/data-flow"
-    module_path: "src/serving/api/gateway/ui.py"
-    states: ["loading", "streaming", "processing", "degraded", "stale-data"]
-    bound_endpoints: ["API-011", "API-012", "API-014", "API-015", "API-016"]
+    name: "Real-Time Data Flow Observatory & Parallel-Branch Telemetry UI (Decommissioned)"
+    route: "/ui/data-flow (decommissioned)"
+    module_path: "src/serving/api/gateway/ui.py (decommissioned)"
+    states: ["decommissioned", "retired"]
+    bound_endpoints: ["API-011", "API-012", "API-014", "API-015", "API-016", "API-017", "API-018", "API-019", "API-020", "API-021", "API-022"]
+  - id: "SCR-002"
+    name: "Experience Layer: Overview Dashboard"
+    route: "/dashboard"
+    module_path: "frontend/src/modules/dashboard/DashboardModule.ts"
+    states: ["active", "production_ready"]
+    bound_endpoints: ["API-017", "API-018"]
+  - id: "SCR-003"
+    name: "Experience Layer: Data Flow Observatory"
+    route: "/data-flow"
+    module_path: "frontend/src/modules/data-flow/DataFlowModule.ts"
+    states: ["active", "production_ready"]
+    bound_endpoints: ["API-017", "API-018", "API-019", "API-020", "API-021", "API-022"]
+  - id: "SCR-004"
+    name: "Experience Layer: Market Analytics"
+    route: "/market-analytics"
+    module_path: "frontend/src/modules/market-analytics/MarketAnalyticsModule.ts"
+    states: ["active", "production_ready"]
+    bound_endpoints: ["API-001", "API-002", "API-004", "API-005", "API-006"]
+  - id: "SCR-005"
+    name: "Experience Layer: Data Management"
+    route: "/data-management"
+    module_path: "frontend/src/modules/data-management/DataManagementModule.ts"
+    states: ["active", "production_ready"]
+    bound_endpoints: ["API-007", "API-008", "API-016"]
+  - id: "SCR-006"
+    name: "Experience Layer: AI Workspace"
+    route: "/ai-workspace"
+    module_path: "frontend/src/modules/ai-workspace/AiWorkspaceModule.ts"
+    states: ["active", "production_ready"]
+    bound_endpoints: ["API-009", "API-010"]
+  - id: "SCR-007"
+    name: "Experience Layer: Administration"
+    route: "/administration"
+    module_path: "frontend/src/modules/administration/AdministrationModule.ts"
+    states: ["active", "production_ready"]
+    bound_endpoints: ["API-011", "API-012"]
 
 user_flows:
   - id: "UX-001"
-    name: "Real-Time Data Flow Inspection & End-to-End Ingestion-to-Monitoring Latency Audit"
+    name: "Real-Time Parallel Data Flow, Kafka Partition, Lakehouse & Event Trace Telemetry"
     actor: "Data Engineer / Operator / Quant Analyst"
     entry_screen: "SCR-001"
     steps:
-      - "Open /ui/data-flow to subscribe to real-time 12-stage telemetry (API-016)."
-      - "Inspect live exchange feeds (BTCUSDT, ETHUSDT, SOLUSDT, BNBUSDT, XRPUSDT) and source network lag (ms)."
-      - "Monitor stage-by-stage processing duration (ms), cumulative time (ms), and progress across Stages 1..12."
-      - "Verify Total Ingestion-to-Monitoring Latency (sum of Stages 1..11) against the 200ms SLA budget."
-      - "Trigger on-demand 12-stage pipeline execution (API-011) or inspect Gold marts (API-012) and lineage (API-014)."
+      - "Subscribe to /api/v1/observability/stream SSE updates or query REST endpoints under /api/v1/observability/*."
+      - "Inspect parallel post-Kafka flow topology (Redis Hot State || ClickHouse OLAP || Bronze->Silver->Gold) via zoomable SVG DAG (API-018)."
+      - "Inspect Kafka broker truth (1-node KRaft active vs Brokers 2 & 3 UNAVAILABLE), topic partitions, and consumer group lag (API-019)."
+      - "Explore .local_lakehouse Bronze Parquet files, Silver Iceberg v2 manifests, Gold marts, and ClickHouse/Redis buffers (API-020)."
+      - "Analyze non-summed parallel-branch percentiles (API-021), Decimal OHLCV candlesticks, and 10-timestamp event traces (API-022)."

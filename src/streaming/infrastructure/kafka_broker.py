@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
-from collections import defaultdict
+import time
+from collections import defaultdict, deque
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -105,15 +107,20 @@ class PartitionedEventStreamingBroker:
 
         self._seen_event_ids[topic].add(ev_id_str)
         offset = len(self._topics[topic])
+        now_epoch = time.time()
         self._topics[topic].append(
             {
                 "topic": topic,
                 "partition": partition,
                 "offset": offset,
                 "key": event.partition_key,
+                "event_id": ev_id_str,
+                "published_at_utc": datetime.now(UTC).isoformat(),
+                "published_epoch_s": now_epoch,
                 "envelope": event,
             }
         )
+        self._record_activity("publish", topic, 1, now_epoch)
         if self._confluent_adapter is not None:
             self._confluent_adapter.publish_serialized(
                 topic=topic,
@@ -125,15 +132,21 @@ class PartitionedEventStreamingBroker:
 
     async def publish_dlq(self, dlq_event: DeadLetterEnvelopeV1) -> None:
         self._dlq.append(dlq_event)
-        self._topics[KafkaTopic.DLQ_V1.value].append(
+        now_epoch = time.time()
+        dlq_topic = KafkaTopic.DLQ_V1.value
+        self._topics[dlq_topic].append(
             {
-                "topic": KafkaTopic.DLQ_V1.value,
+                "topic": dlq_topic,
                 "partition": 0,
-                "offset": len(self._topics[KafkaTopic.DLQ_V1.value]),
+                "offset": len(self._topics[dlq_topic]),
                 "key": dlq_event.source_provider,
+                "event_id": str(dlq_event.dlq_id),
+                "published_at_utc": datetime.now(UTC).isoformat(),
+                "published_epoch_s": now_epoch,
                 "dlq": dlq_event,
             }
         )
+        self._record_activity("dlq", dlq_topic, 1, now_epoch)
 
     def poll_topic(
         self,
@@ -152,12 +165,27 @@ class PartitionedEventStreamingBroker:
         if count < 0:
             raise ValueError("Offset commit count must be non-negative")
         total = len(self._topics.get(topic, []))
-        self._committed_offsets[(consumer_group, topic)] = min(
-            total, self._committed_offsets[(consumer_group, topic)] + count
-        )
+        prev_offset = self._committed_offsets[(consumer_group, topic)]
+        new_offset = min(total, prev_offset + count)
+        self._committed_offsets[(consumer_group, topic)] = new_offset
+        delta = max(0, new_offset - prev_offset)
+        if delta > 0:
+            self._record_activity("consume", topic, delta, time.time())
         if self._state_path is not None:
             self._persist_offsets_to_disk()
-        return self._committed_offsets[(consumer_group, topic)]
+        return new_offset
+
+    def commit_up_to_latest(self, consumer_group: str, topic: str) -> int:
+        """Commit all currently published messages on `topic` for `consumer_group`."""
+        lag = self.get_topic_lag(consumer_group, topic)
+        return self.commit_offsets(consumer_group, topic, lag)
+
+    def _record_activity(self, kind: str, topic: str, count: int, epoch_s: float) -> None:
+        log = getattr(self, "_activity_log", None)
+        if log is None:
+            log = deque(maxlen=5000)
+            self._activity_log = log
+        log.append((epoch_s, kind, topic, count))
 
     def get_topic_lag(self, consumer_group: str, topic: str) -> int:
         total = len(self._topics.get(topic, []))
@@ -179,3 +207,164 @@ class PartitionedEventStreamingBroker:
     @property
     def duplicate_drops_count(self) -> int:
         return self._duplicate_drops
+
+    def get_cluster_snapshot(
+        self,
+        selected_topic: str | None = None,
+        window_seconds: float | None = 300.0,
+    ) -> dict[str, Any]:
+        """Return honest read-only topology, partitions, offsets, lag, and publish/consume activity."""
+        canonical_cgs: dict[str, list[str]] = {
+            KafkaTopic.TRADES_V1.value: [
+                "cg.hot.redis.v1",
+                "cg.analytics.clickhouse.v1",
+                "cg.lakehouse.bronze.v1",
+            ],
+            KafkaTopic.KLINES_V1.value: [
+                "cg.hot.redis.v1",
+                "cg.analytics.clickhouse.v1",
+                "cg.lakehouse.bronze.v1",
+            ],
+            KafkaTopic.TICKERS_V1.value: [
+                "cg.hot.redis.v1",
+                "cg.analytics.clickhouse.v1",
+                "cg.lakehouse.bronze.v1",
+            ],
+            KafkaTopic.ORDERBOOK_V1.value: [
+                "cg.hot.redis.v1",
+                "cg.analytics.clickhouse.v1",
+                "cg.lakehouse.bronze.v1",
+            ],
+            KafkaTopic.ANOMALIES_V1.value: ["cg.anomaly.detector.v1", "cg.lakehouse.bronze.v1"],
+            KafkaTopic.DLQ_V1.value: ["cg.dlq.inspector.v1"],
+        }
+
+        all_topics = sorted({t.value for t in KafkaTopic} | set(self._topics.keys()))
+        active_topic = selected_topic if selected_topic in all_topics else KafkaTopic.TRADES_V1.value
+        topics_summary: list[dict[str, Any]] = []
+        total_messages_all = 0
+        total_lag_all = 0
+
+        for tp in all_topics:
+            records = self._topics.get(tp, [])
+            total_messages = len(records)
+            total_messages_all += total_messages
+
+            cgs_for_topic = list(canonical_cgs.get(tp, []))
+            for cg_key, tp_key in self._committed_offsets:
+                if tp_key == tp and cg_key not in cgs_for_topic:
+                    cgs_for_topic.append(cg_key)
+
+            cg_statuses: list[dict[str, Any]] = []
+            topic_lag_sum = 0
+            for cg in cgs_for_topic:
+                committed = self._committed_offsets.get((cg, tp), 0)
+                lag = max(0, total_messages - committed)
+                topic_lag_sum += lag
+                cg_statuses.append(
+                    {
+                        "consumer_group": cg,
+                        "committed_offset": committed,
+                        "total_messages": total_messages,
+                        "lag": lag,
+                        "status": "LAGGING" if lag > 0 else ("CAUGHT_UP" if total_messages > 0 else "IDLE"),
+                    }
+                )
+            total_lag_all += topic_lag_sum
+
+            part_buckets: dict[int, list[dict[str, Any]]] = {p: [] for p in range(self._num_partitions)}
+            for rec in records:
+                p_id = int(rec.get("partition", 0))
+                part_buckets.setdefault(p_id, []).append(rec)
+
+            partitions_info = []
+            for p_id in sorted(part_buckets.keys()):
+                p_recs = part_buckets[p_id]
+                partitions_info.append(
+                    {
+                        "partition_id": p_id,
+                        "message_count": len(p_recs),
+                        "latest_offset": p_recs[-1]["offset"] if p_recs else None,
+                        "recent_messages": [
+                            {
+                                "offset": r["offset"],
+                                "event_id": (
+                                    r.get("event_id") or str(r["envelope"].event_id)
+                                    if "envelope" in r
+                                    else r.get("event_id", "")
+                                ),
+                                "key": r.get("key", ""),
+                                "symbol": r["envelope"].symbol if "envelope" in r else r.get("key", ""),
+                                "event_type": r["envelope"].event_type.value if "envelope" in r else "dlq",
+                                "published_at_utc": r.get("published_at_utc"),
+                            }
+                            for r in p_recs[-8:]
+                        ],
+                    }
+                )
+
+            topics_summary.append(
+                {
+                    "topic": tp,
+                    "partition_count": self._num_partitions,
+                    "total_messages": total_messages,
+                    "total_lag": topic_lag_sum,
+                    "partitions": partitions_info,
+                    "consumer_groups": cg_statuses,
+                }
+            )
+
+        selected_detail = next((t for t in topics_summary if t["topic"] == active_topic), topics_summary[0])
+
+        # Build publish / consume timeseries from activity log
+        act_log: deque[tuple[float, str, str, int]] = getattr(self, "_activity_log", deque())
+        now = time.time()
+        cutoff = (now - window_seconds) if window_seconds is not None else None
+        relevant = [item for item in act_log if cutoff is None or item[0] >= cutoff]
+        timeseries: list[dict[str, Any]] = []
+        if relevant:
+            t_min = relevant[0][0]
+            t_max = max(relevant[-1][0], t_min + 1.0)
+            num_buckets = 12
+            width = max(0.05, (t_max - t_min) / num_buckets)
+            for idx in range(num_buckets):
+                b_start = t_min + idx * width
+                b_end = t_min + (idx + 1) * width + (1e-6 if idx == num_buckets - 1 else 0.0)
+                pub_c = sum(cnt for ts, kind, _tp, cnt in relevant if kind == "publish" and b_start <= ts < b_end)
+                con_c = sum(cnt for ts, kind, _tp, cnt in relevant if kind == "consume" and b_start <= ts < b_end)
+                dlq_c = sum(cnt for ts, kind, _tp, cnt in relevant if kind == "dlq" and b_start <= ts < b_end)
+                if pub_c or con_c or dlq_c:
+                    timeseries.append(
+                        {
+                            "label": datetime.fromtimestamp(b_end, tz=UTC).strftime("%H:%M:%S"),
+                            "published": pub_c,
+                            "consumed": con_c,
+                            "dlq": dlq_c,
+                        }
+                    )
+
+        return {
+            "engine_mode": "LIVE_CONFLUENT_ADAPTER"
+            if self._confluent_adapter is not None
+            else "IN_PROCESS_PARTITIONED_BROKER",
+            "num_partitions_per_topic": self._num_partitions,
+            "total_messages_all_topics": total_messages_all,
+            "total_lag_all_topics": total_lag_all,
+            "total_dlq_messages": len(self._dlq),
+            "duplicate_drops_count": self._duplicate_drops,
+            "selected_topic": active_topic,
+            "topics": topics_summary,
+            "selected_topic_detail": selected_detail,
+            "dlq_recent": [
+                {
+                    "dlq_id": str(d.dlq_id),
+                    "source_provider": d.source_provider,
+                    "source_stream": d.source_stream,
+                    "error_type": d.error_type,
+                    "error_message": d.error_message,
+                    "failed_at": d.failed_at.isoformat(),
+                }
+                for d in self._dlq[-20:]
+            ],
+            "publish_consume_timeseries": timeseries,
+        }

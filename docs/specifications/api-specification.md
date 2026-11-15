@@ -115,3 +115,20 @@ The Backend Application Plane exposes a versioned REST and WebSocket API impleme
 | `GET` | `/api/v1/health/live` | Liveness probe (verifies FastAPI event loop responsiveness). | Public | `1.0s` | In-Process |
 | `GET` | `/api/v1/health/ready` | Readiness probe (verifies connectivity to PostgreSQL, ClickHouse, Redis, and Kafka). | Public | `2.0s` | Dependency Checks |
 
+### 3.6. Real-Time Observatory & Telemetry Domain (`FEAT-001`)
+
+| Method | Path | Description | Auth Role | Timeout | Target Source |
+|---|---|---|---|---|---|
+| `GET` | `/api/v1/observability/overview` | Non-mutating KPI summary, freshness & cached TCP infrastructure probe (`API-017`). | Public/Viewer | `2.0s` | `PipelineTraceRegistry` + TCP Prober |
+| `GET` | `/api/v1/observability/topology` | Parallel-branch DAG nodes & edges (`API-018`). | Public/Viewer | `2.0s` | `PlatformRuntimeContainer` |
+| `GET` | `/api/v1/observability/kafka` | Kafka Cluster, Broker 1..3 honest status, partitions, CG lag & DLQ (`API-019`). | Public/Viewer | `1.5s` | `PartitionedEventStreamingBroker` |
+| `GET` | `/api/v1/observability/storage` | `.local_lakehouse` Bronze/Silver/Gold Parquet & Iceberg v2 manifests + ClickHouse/Redis stats (`API-020`). | Public/Viewer | `2.5s` | Local FS + In-Memory Stores |
+| `GET` | `/api/v1/observability/latency` | Parallel branch stats (`avg/P50/P95/P99`), histogram & clickable buckets (`API-021`). | Public/Viewer | `2.0s` | `PipelineTraceRegistry` |
+| `GET` | `/api/v1/observability/traces` | Filterable event trace list & `/traces/{event_id}` 10-timestamp waterfall (`API-022`). | Public/Viewer | `1.5s` | `PipelineTraceRegistry` |
+| `GET` | `/api/v1/observability/candles` | Real OHLCV bars & `Decimal` timeframe rollups (`1m/5m/15m/1h/4h/1d`), zero fake bars. | Public/Viewer | `2.0s` | `ClickHouseBatchSink` |
+| `GET` | `/api/v1/observability/stream` | Server-Sent Events (SSE) live push of snapshots, traces & heartbeats. | Public/Viewer | Stream | `PipelineTraceRegistry` |
+| `WS` | `/ws/v1/observability/stream` | Bidirectional WebSocket live telemetry feed. | Public/Viewer | Stream | `PipelineTraceRegistry` |
+| `POST` | `/api/v1/observability/live/probe` | Explicit live TCP probe & optional real `api.binance.com` HTTPS kline pull (`LIVE` mode). | Operator | `4.0s` | External Network |
+| `POST` | `/api/v1/observability/demo/emit` | Explicit `DEMO` simulation (`emit_batch`, `inject_dlq`, `flush_lakehouse`, `run_full_pipeline`). | Operator | `5.0s` | `PlatformRuntimeContainer` |
+
+
