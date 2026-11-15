@@ -1,0 +1,34 @@
+# Git and metadata
+.git
+.gitignore
+.gitattributes
+
+# Python artifacts and virtualenvs
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+env/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+
+# Frontend artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+frontend/npm-debug.log*
+
+# Documentation and temporary data
+docs/
+.agents/
+work-items/
+.local_lakehouse/
+.local_storage/
+logs/

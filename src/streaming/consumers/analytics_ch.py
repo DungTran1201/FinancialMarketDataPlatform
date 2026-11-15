@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -213,7 +213,7 @@ class ClickHouseBatchSink:
         end_time: datetime,
         limit: int = 500,
     ) -> list[dict[str, Any]]:
-        """Query deduplicated klines ordered by `open_time ASC`."""
+        """Query deduplicated klines ordered by `open_time ASC`, rolling up 1m bars if needed."""
         prov = provider.lower()
         sym = symbol.upper()
         matched = [
@@ -221,8 +221,113 @@ class ClickHouseBatchSink:
             for (p, s, iv, _), row in self._klines_table.items()
             if p == prov and s == sym and iv == interval and start_time <= row["open_time"] <= end_time
         ]
-        matched.sort(key=lambda r: r["open_time"])
-        return matched[:limit]
+        if matched:
+            matched.sort(key=lambda r: r["open_time"])
+            return matched[:limit]
+
+        interval_seconds_map = {
+            "1m": 60,
+            "5m": 300,
+            "15m": 900,
+            "1h": 3600,
+            "4h": 14400,
+            "1d": 86400,
+        }
+        target_sec = interval_seconds_map.get(interval)
+        if target_sec is None or interval == "1m":
+            return []
+
+        source_bars = [
+            row
+            for (p, s, iv, _), row in self._klines_table.items()
+            if p == prov
+            and s == sym
+            and interval_seconds_map.get(iv, 9999999) < target_sec
+            and start_time <= row["open_time"] <= end_time
+        ]
+        if not source_bars:
+            return []
+
+        buckets: dict[int, list[dict[str, Any]]] = {}
+        for row in source_bars:
+            open_dt = row["open_time"]
+            epoch_s = int(open_dt.timestamp())
+            bucket_epoch = (epoch_s // target_sec) * target_sec
+            buckets.setdefault(bucket_epoch, []).append(row)
+
+        rolled_up: list[dict[str, Any]] = []
+        for bucket_epoch in sorted(buckets.keys()):
+            items = sorted(buckets[bucket_epoch], key=lambda r: r["open_time"])
+            first = items[0]
+            last = items[-1]
+            open_dt = datetime.fromtimestamp(bucket_epoch, tz=UTC)
+            close_dt = datetime.fromtimestamp(bucket_epoch + target_sec, tz=UTC) - timedelta(milliseconds=1)
+            rolled_up.append(
+                {
+                    "provider": prov,
+                    "symbol": sym,
+                    "interval": interval,
+                    "open_time": open_dt,
+                    "close_time": close_dt,
+                    "open_price": first["open_price"],
+                    "high_price": max(r["high_price"] for r in items),
+                    "low_price": min(r["low_price"] for r in items),
+                    "close_price": last["close_price"],
+                    "base_volume": sum((r["base_volume"] for r in items), Decimal("0")),
+                    "quote_volume": sum((r["quote_volume"] for r in items), Decimal("0")),
+                    "trade_count": sum(int(r["trade_count"]) for r in items),
+                    "exchange_event_time": last["exchange_event_time"],
+                    "ingested_at": last["ingested_at"],
+                    "rolled_up_from_bars": len(items),
+                }
+            )
+        return rolled_up[:limit]
+
+    def get_storage_snapshot(self) -> dict[str, Any]:
+        """Return real ClickHouse in-memory OLAP & micro-batch buffer telemetry."""
+        symbols = sorted(
+            {s for (_p, s, _t) in self._trades_table}
+            | {s for (_p, s, _iv, _t) in self._klines_table}
+            | {s for (_p, s) in self._tickers_table}
+        )
+        intervals = sorted({iv for (_p, _s, iv, _t) in self._klines_table})
+        latest_ingested = max(
+            (
+                row["ingested_at"]
+                for row in (
+                    list(self._trades_table.values())
+                    + list(self._klines_table.values())
+                    + list(self._tickers_table.values())
+                )
+            ),
+            default=None,
+        )
+        pending_rows = list(self.buffer._rows)
+        trades_pending = sum(1 for r in pending_rows if r.get("_table") == "trades")
+        klines_pending = sum(1 for r in pending_rows if r.get("_table") == "klines")
+        tickers_pending = sum(1 for r in pending_rows if r.get("_table") == "tickers")
+        return {
+            "engine_mode": "IN_PROCESS_REPLACING_MERGE_TREE_SIMULATION",
+            "ddl_schema_path": "deploy/clickhouse/init/01_schema.sql",
+            "tables": {
+                "market_trades_raw": len(self._trades_table),
+                "market_klines_1m": len(self._klines_table),
+                "market_tickers_latest": len(self._tickers_table),
+            },
+            "total_rows": len(self._trades_table) + len(self._klines_table) + len(self._tickers_table),
+            "buffers": {
+                "trades_pending": trades_pending,
+                "klines_pending": klines_pending,
+                "tickers_pending": tickers_pending,
+                "total_pending": len(pending_rows),
+                "max_rows_per_batch": self.buffer.max_rows,
+                "flush_interval_ms": self.buffer.flush_interval_ms,
+            },
+            "flushed_batches_count": self._flushed_batches_count,
+            "symbols_present": symbols,
+            "intervals_present": intervals,
+            "latest_ingested_at": latest_ingested.isoformat() if latest_ingested else None,
+        }
 
     def get_latest_price_from_olap(self, provider: str, symbol: str) -> dict[str, Any] | None:
         """Fallback query returning the most recent trade or kline close price from ClickHouse."""

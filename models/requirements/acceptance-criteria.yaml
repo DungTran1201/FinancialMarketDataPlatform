@@ -34,3 +34,10 @@ acceptance_criteria:
     then: "The gateway rejects the call before touching any database"
     test_case_refs: ["TC-004"]
     status: "BASELINED"
+  - id: "AC-004"
+    requirement_id: "FR-04"
+    given: "An event flows through Ingestion, Kafka, parallel Redis/ClickHouse/Bronze->Silver->Gold sinks, and Serving"
+    when: "Operators or monitoring tools query /api/v1/observability/* or /ws/v1/observability/stream"
+    then: "Traces correlate all reached timestamps without summing parallel sink branches or fabricating unavailable nodes"
+    test_case_refs: ["TC-015"]
+    status: "BASELINED"

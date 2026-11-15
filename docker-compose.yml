@@ -175,6 +175,20 @@ services:
       - data_plane_net
 
   # ---------------------------------------------------------------------------
+  # EXPERIENCE LAYER: Frontend Web Application SPA (TypeScript / Vite / Nginx)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.frontend
+    container_name: fmdp-frontend
+    profiles: ["core", "frontend"]
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-3001}:3000"
+    networks:
+      - frontend_net
+
+  # ---------------------------------------------------------------------------
   # TRUST ZONE 2: HTTPS Edge Reverse Proxy & WAF Gateway (Nginx TLS 1.3)
   # ---------------------------------------------------------------------------
   edge-gateway:

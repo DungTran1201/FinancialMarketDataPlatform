@@ -19,8 +19,14 @@ from src.lakehouse.catalog.lineage import DataLineageGovernanceRegistry
 from src.lakehouse.gold.mart_engine import GoldLayerMartEngine, GoldMartMaterializationResult
 from src.lakehouse.quality.gates import DataQualityGateEngine, QualityGateBlockedError
 from src.lakehouse.silver.merge_engine import SilverLakehouseMergeEngine
-from src.shared.contracts.events.market_events import KafkaTopic
+from src.shared.contracts.events.market_events import EventEnvelopeV1, KafkaTopic
 from src.shared.observability.metrics import DataObservabilityMetricsCollector
+from src.shared.observability.tracing import (
+    EventLifecycleTrace,
+    PipelineTraceRegistry,
+    compute_parallel_branch_latencies,
+    utc_now_iso,
+)
 from src.streaming.consumers.analytics_ch import ClickHouseBatchSink
 from src.streaming.consumers.hot_redis import HotStateProjector
 from src.streaming.infrastructure.kafka_broker import PartitionedEventStreamingBroker
@@ -108,6 +114,7 @@ class DataPlatformV01Pipeline:
         watermark_store: IngestionWatermarkStore | None = None,
         observability: DataObservabilityMetricsCollector | None = None,
         lineage_registry: DataLineageGovernanceRegistry | None = None,
+        trace_registry: PipelineTraceRegistry | None = None,
         lakehouse_root: Path | str = ".local_lakehouse",
     ) -> None:
         self.normalizer = normalizer or BinancePayloadNormalizer()
@@ -139,6 +146,7 @@ class DataPlatformV01Pipeline:
         )
         self.observability = observability or DataObservabilityMetricsCollector()
         self.lineage_registry = lineage_registry or DataLineageGovernanceRegistry()
+        self.trace_registry = trace_registry or PipelineTraceRegistry()
         self._last_report: DataPlatformV01ExecutionReport | None = None
         self._realtime_tick_seq: int = 0
 
@@ -223,32 +231,58 @@ class DataPlatformV01Pipeline:
 
         # --- Stage 4: Partitioned Kafka Polling (Offsets Committed ONLY After Sink Write Succeeds) ---
         t_s4 = time.perf_counter_ns()
+        kafka_pub_ts = utc_now_iso()
         topics_to_consume = [
             KafkaTopic.KLINES_V1.value,
             KafkaTopic.TRADES_V1.value,
             KafkaTopic.ORDERBOOK_V1.value,
         ]
-        bronze_batch = []
+        bronze_batch: list[EventEnvelopeV1] = []
+        topic_events_map: list[tuple[str, EventEnvelopeV1]] = []
         pending_bronze_by_topic: dict[str, int] = {}
         committed_offsets: dict[str, int] = {}
+        hot_ns_total = 0
+        ch_ns_total = 0
+        poll_ns_total = 0
 
         for topic in topics_to_consume:
+            t_p0 = time.perf_counter_ns()
             hot_events = self.kafka_broker.poll_topic(HotStateProjector.CONSUMER_GROUP, topic, max_records=2000)
+            poll_ns_total += time.perf_counter_ns() - t_p0
+
+            t_h0 = time.perf_counter_ns()
             for ev in hot_events:
                 self.hot_redis_projector.project_event(ev)
+                topic_events_map.append((topic, ev))
             # Commit HotStateProjector offsets only AFTER projection succeeds
             self.kafka_broker.commit_offsets(HotStateProjector.CONSUMER_GROUP, topic, len(hot_events))
+            self.observability.set_consumer_lag(
+                HotStateProjector.CONSUMER_GROUP,
+                topic,
+                self.kafka_broker.get_topic_lag(HotStateProjector.CONSUMER_GROUP, topic),
+            )
+            hot_ns_total += time.perf_counter_ns() - t_h0
 
+            t_c0 = time.perf_counter_ns()
             ch_events = self.kafka_broker.poll_topic(ClickHouseBatchSink.CONSUMER_GROUP, topic, max_records=2000)
             for ev in ch_events:
                 self.clickhouse_sink.ingest_event(ev, auto_flush=False)
             self.clickhouse_sink.flush()
             # Commit ClickHouseBatchSink offsets only AFTER flush succeeds
             self.kafka_broker.commit_offsets(ClickHouseBatchSink.CONSUMER_GROUP, topic, len(ch_events))
+            self.observability.set_consumer_lag(
+                ClickHouseBatchSink.CONSUMER_GROUP,
+                topic,
+                self.kafka_broker.get_topic_lag(ClickHouseBatchSink.CONSUMER_GROUP, topic),
+            )
+            ch_ns_total += time.perf_counter_ns() - t_c0
 
             br_events = self.kafka_broker.poll_topic(BronzeParquetArchiver.CONSUMER_GROUP, topic, max_records=2000)
             bronze_batch.extend(br_events)
             pending_bronze_by_topic[topic] = len(br_events)
+        kafka_consume_ts = utc_now_iso()
+        redis_written_ts = kafka_consume_ts
+        clickhouse_written_ts = kafka_consume_ts
         timings_ms["stage_04_kafka_streaming"] = round((time.perf_counter_ns() - t_s4) / 1_000_000.0, 3)
 
         # --- Stage 5: Bronze Layer Archival (Immutable ZSTD Parquet BEFORE Committing Offsets) ---
@@ -266,6 +300,7 @@ class DataPlatformV01Pipeline:
                 topic,
                 self.kafka_broker.get_topic_lag(BronzeParquetArchiver.CONSUMER_GROUP, topic),
             )
+        bronze_ts = utc_now_iso()
         timings_ms["stage_05_bronze_lakehouse"] = round((time.perf_counter_ns() - t_s5) / 1_000_000.0, 3)
 
         # --- Stage 6: Silver Layer Standardization & Deduplication (`MERGE INTO`) ---
@@ -276,6 +311,7 @@ class DataPlatformV01Pipeline:
         _, silver_trades = self.silver_merge_engine.merge_bronze_trades_to_silver(trade_files)
         if injected_silver_klines is not None:
             silver_klines = list(injected_silver_klines)
+        silver_ts = utc_now_iso()
         timings_ms["stage_06_silver_standardization"] = round(
             (time.perf_counter_ns() - t_s6) / 1_000_000.0, 3
         )
@@ -317,6 +353,7 @@ class DataPlatformV01Pipeline:
             gold_liquidity = GoldMartMaterializationResult(
                 "gold.fct_orderbook_liquidity", 0, blocked_path, ()
             )
+        gold_ts = utc_now_iso()
         timings_ms["stage_07_gold_analytical_marts"] = round(
             (time.perf_counter_ns() - t_s7) / 1_000_000.0, 3
         )
@@ -342,6 +379,7 @@ class DataPlatformV01Pipeline:
             and gold_summary.row_count > 0
             and self.hot_redis_projector.get_hot_price("binance", active_symbols[0]) is not None
         )
+        serving_ts = utc_now_iso()
         timings_ms["stage_10_serving_readiness"] = round((time.perf_counter_ns() - t_s10) / 1_000_000.0, 3)
 
         # --- Stage 11: Prometheus Observability Sampling ---
@@ -463,7 +501,128 @@ class DataPlatformV01Pipeline:
             gold_promotion_blocked=gold_promotion_blocked,
         )
         self._last_report = report
+        self._record_pipeline_event_traces(
+            topic_events=topic_events_map,
+            timings_ms=timings_ms,
+            hot_ms=round(hot_ns_total / 1_000_000.0, 3),
+            ch_ms=round(ch_ns_total / 1_000_000.0, 3),
+            kafka_consume_ms=round(poll_ns_total / 1_000_000.0, 3),
+            kafka_pub_ts=kafka_pub_ts,
+            kafka_consume_ts=kafka_consume_ts,
+            redis_written_ts=redis_written_ts,
+            clickhouse_written_ts=clickhouse_written_ts,
+            bronze_ts=bronze_ts,
+            silver_ts=silver_ts,
+            gold_ts=gold_ts,
+            serving_ts=serving_ts,
+            gold_promotion_blocked=gold_promotion_blocked,
+            failed_rules=combined_failed_rules,
+        )
         return report
+
+    def _record_pipeline_event_traces(
+        self,
+        *,
+        topic_events: list[tuple[str, EventEnvelopeV1]],
+        timings_ms: dict[str, float],
+        hot_ms: float,
+        ch_ms: float,
+        kafka_consume_ms: float,
+        kafka_pub_ts: str,
+        kafka_consume_ts: str,
+        redis_written_ts: str,
+        clickhouse_written_ts: str,
+        bronze_ts: str,
+        silver_ts: str,
+        gold_ts: str,
+        serving_ts: str,
+        gold_promotion_blocked: bool,
+        failed_rules: tuple[str, ...],
+    ) -> None:
+        """Record real batch per-event lifecycle traces and bounded Prometheus histograms."""
+        is_demo_transport = bool(getattr(self.historical_collector, "use_embedded_asgi_transport", True))
+        mode = "DEMO" if is_demo_transport else "LIVE"
+        n_events = max(1, len(topic_events))
+        ing_per_event = round(timings_ms.get("stage_02_ingestion", 0.0) / n_events, 3)
+        pub_per_event = round(timings_ms.get("stage_03_validation_and_dlq", 0.0) / n_events, 3)
+        consume_per_event = round(kafka_consume_ms / n_events, 3)
+        hot_per_event = round(hot_ms / n_events, 3)
+        ch_per_event = round(ch_ms / n_events, 3)
+        bronze_per_event = round(timings_ms.get("stage_05_bronze_lakehouse", 0.0) / n_events, 3)
+        silver_per_event = round(timings_ms.get("stage_06_silver_standardization", 0.0) / n_events, 3)
+        dq_per_event = round(timings_ms.get("stage_08_quality_gates", 0.0) / n_events, 3)
+        gold_per_event = round(timings_ms.get("stage_07_gold_analytical_marts", 0.0) / n_events, 3)
+        serving_per_event = round(timings_ms.get("stage_10_serving_readiness", 0.0) / n_events, 3)
+
+        stage_map = {
+            "ingestion": ing_per_event,
+            "kafka_publish": pub_per_event,
+            "kafka_consume": consume_per_event,
+            "redis_hot_write": hot_per_event,
+            "clickhouse_olap_write": ch_per_event,
+            "bronze_archive": bronze_per_event,
+            "silver_merge": silver_per_event,
+            "dq_gate": dq_per_event,
+            "gold_mart": gold_per_event,
+            "serving_ready": serving_per_event,
+        }
+        status_label = "DQ_BLOCKED" if gold_promotion_blocked else "OK"
+        for st_name, st_val in stage_map.items():
+            self.observability.record_stage_duration(st_name, st_val, mode=mode, status=status_label)
+
+        branch_summary = compute_parallel_branch_latencies(
+            stage_map,
+            final_status="DQ_BLOCKED" if gold_promotion_blocked else "SERVING_COMPLETE",
+        )
+        if branch_summary["serving_hot_e2e_ms"] is not None:
+            self.observability.record_e2e_latency("hot", branch_summary["serving_hot_e2e_ms"], mode=mode)
+        if branch_summary["serving_olap_e2e_ms"] is not None:
+            self.observability.record_e2e_latency("olap", branch_summary["serving_olap_e2e_ms"], mode=mode)
+        if branch_summary["serving_lakehouse_e2e_ms"] is not None:
+            self.observability.record_e2e_latency(
+                "lakehouse", branch_summary["serving_lakehouse_e2e_ms"], mode=mode
+            )
+        if branch_summary["end_to_end_serving_ms"] is not None:
+            self.observability.record_e2e_latency(
+                "critical_serving", branch_summary["end_to_end_serving_ms"], mode=mode
+            )
+
+        cgs = [
+            HotStateProjector.CONSUMER_GROUP,
+            ClickHouseBatchSink.CONSUMER_GROUP,
+            BronzeParquetArchiver.CONSUMER_GROUP,
+        ]
+        # Record individual event traces (tail 40 events in batch to avoid exhausting memory on giant backfills)
+        for topic, ev in topic_events[-40:]:
+            partition = hash(ev.partition_key) % self.kafka_broker._num_partitions
+            trace = EventLifecycleTrace(
+                event_id=str(ev.event_id),
+                correlation_id=str(getattr(ev, "correlation_id", None) or ev.event_id),
+                execution_mode=mode,
+                provider=ev.provider,
+                symbol=ev.symbol,
+                event_type=ev.event_type.value,
+                topic=topic,
+                partition=partition,
+                offset=None,
+                consumer_groups_acked=list(cgs),
+                exchange_event_time=ev.exchange_event_time.isoformat(),
+                ingested_at=ev.ingested_at.isoformat(),
+                kafka_published_at=kafka_pub_ts,
+                kafka_consumed_at=kafka_consume_ts,
+                redis_written_at=redis_written_ts,
+                clickhouse_written_at=clickhouse_written_ts,
+                bronze_committed_at=bronze_ts,
+                silver_processed_at=silver_ts,
+                gold_loaded_at=None if gold_promotion_blocked else gold_ts,
+                serving_available_at=serving_ts,
+                stage_durations_ms=dict(stage_map),
+                final_status="DQ_BLOCKED" if gold_promotion_blocked else "SERVING_COMPLETE",
+                error_detail=f"Blocked by DQ rules: {', '.join(failed_rules)}"
+                if gold_promotion_blocked
+                else None,
+            )
+            self.trace_registry.upsert_trace(trace)
 
     async def step_realtime_tick_and_collect_telemetry(self) -> dict[str, Any]:
         """Advance live market stream tick across active instruments and compute real-time 12-stage telemetry."""
