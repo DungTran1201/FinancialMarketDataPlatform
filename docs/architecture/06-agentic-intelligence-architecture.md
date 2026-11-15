@@ -52,12 +52,13 @@ All Agent data access passes through `ControlledToolGateway` (`src/intelligence/
 
 ## 4. Dual Triggering Modes & Storm Prevention
 
-### 4.1. Mode 1 — On-Demand Analysis
-- **Flow**: `Authenticated Analyst -> POST /api/v1/agents/runs -> PostgreSQL (QUEUED) -> Redis Queue -> agent-worker -> LangGraph -> Tool Gateway -> Structured Report`.
-- **Guardrails**: Requires `analyst`, `operator`, or `admin` role; rate-limited to `5 requests / minute` per user; supports `Idempotency-Key` header to prevent duplicate submissions.
+### 4.1. Mode 1 — On-Demand Analysis (`IMPLEMENTED` In-Process; PostgreSQL Queue Target)
+- **Active v0.1 Flow**: `Client -> POST /api/v1/agents/runs -> PlatformRuntimeContainer -> MarketIntelligenceGraph (5 nodes) -> ControlledToolGateway (10 approved tools) -> ReportValidator -> /api/v1/reports/{run_id}`.
+- **Target Distributed Flow**: `Authenticated Analyst -> POST /api/v1/agents/runs -> PostgreSQL (QUEUED) -> Redis Queue -> agent-worker -> LangGraph -> Tool Gateway -> PostgreSQL report persistence`.
+- **Guardrails**: `AUTH` / `AGENT_TRIGGER` rate-limit tier (`5 requests / minute` per hashed IP on `/api/v1/agents/runs*`); target `analyst`/`operator`/`admin` RBAC check per `UserRole` (`PROP-APP-004` notes route-level RBAC enforcement pending).
 
-### 4.2. Mode 2 — Event-Triggered Anomaly Investigation
-- **Flow**: `Kafka (klines/tickers) -> StatisticalAnomalyDetector (Deterministic Z-Score > 3.5 or Freshness Gap > 60s) -> Redis Cooldown Check -> Kafka (market.anomalies.v1) -> agent-worker -> Investigation Workflow -> Report / Alert`.
+### 4.2. Mode 2 — Event-Triggered Anomaly Investigation (`PARTIALLY_IMPLEMENTED` / `PLANNED` Consumer Loop)
+- **Active vs. Target Flow**: `StatisticalAnomalyDetector` (`src/streaming/consumers/anomaly_detector.py`) evaluates Z-scores and emits `market.anomalies.v1` with 15-minute cooldown semantics. Autonomous Kafka consumption via `cg.agent.anomaly.v1` inside `src/intelligence/main.py` (`agent-worker`) remains `PLANNED` (currently a startup logging stub).
 - **Anti-Storm Policies (Never Invoke LLM per Market Event)**:
   1. **Deterministic Pre-Filter**: Only closed candles (`is_closed = true`) or periodic 10-second statistical windows are evaluated by `StatisticalAnomalyDetector`.
   2. **Per-Symbol Cooldown Deduplication**: Before emitting to `market.anomalies.v1`, the detector sets `SET agent:cooldown:{provider}:{symbol}:{detector_name} 1 NX EX 900` (15-minute cooldown). Subsequent breaches within those 15 minutes increment a Prometheus counter without triggering additional LLM runs.

@@ -53,11 +53,11 @@ sequenceDiagram
 ## 3. Flow 2: Historical REST Backfill & WebSocket Gap Recovery
 
 When the platform initializes a symbol or recovers from a WebSocket disconnection gap:
-1. **Watermark Check**: `collector-rest` (triggered by Airflow or gap-fill event) reads `last_synced_timestamp` from PostgreSQL `ingestion_watermarks` for `(binance, BTCUSDT, klines_1m)`.
-2. **Rate-Limited Paginated Fetch**: Queries `GET /api/v3/klines?symbol=BTCUSDT&interval=1m&startTime=...&limit=1000` using a token-bucket rate limiter that inspects Binance `X-MBX-USED-WEIGHT-1M` headers.
+1. **Watermark Check**: `collector-rest` (`PLANNED` standalone daemon; in-process `IngestionWatermarkStore` / `HistoricalRestBackfillWorker` `IMPLEMENTED`) reads `last_synced_timestamp` from SQLite/PostgreSQL `ingestion_watermarks` for `(binance, BTCUSDT, klines_1m)`.
+2. **Rate-Limited Paginated Fetch**: Queries `GET /api/v3/klines?symbol=BTCUSDT&interval=1m&startTime=...&limit=1000` using a `TokenBucketRateLimiter` that inspects Binance `X-MBX-USED-WEIGHT-1M` headers (`IMPLEMENTED` in `src/ingestion/providers/binance/rest_client.py`).
 3. **Dual Routing**:
    - For short disconnection gaps ($<24\text{ hours}$), normalized `EventEnvelopeV1` events are published directly to `market.raw.klines.v1` so both ClickHouse and Bronze Lakehouse receive the missing candles through standard idempotent sinks.
-   - For deep historical backfills ($90+\text{ days}$), batches are written directly to MinIO Bronze Parquet files and merged into Silver Iceberg and ClickHouse via PySpark to avoid flooding real-time Kafka topics with millions of historical archive messages.
+   - For deep historical backfills ($90+\text{ days}$), batches target direct Bronze Parquet archival and Silver Iceberg/ClickHouse merge (Airflow + PySpark distributed DAG is `PLANNED`; v0.1 merges in-process via `SilverLakehouseMergeEngine`).
 4. **Watermark Advancement**: Only after the batch is durably committed to Kafka/MinIO does `collector-rest` advance `last_synced_timestamp` in PostgreSQL.
 
 ---
@@ -67,7 +67,7 @@ When the platform initializes a symbol or recovers from a WebSocket disconnectio
 | Scenario | Detection Signal | Automated Backpressure / Recovery Mechanism |
 |---|---|---|
 | **ClickHouse Slow Insert / Merge Pressure** | `clickhouse_insert_latency_ms > 2000` or `Too many parts` error | `consumer-analytics-ch` dynamically increases batch flush window from `1s` to `5s` (up to `25,000` rows) and pauses `consumer.poll()` while retrying with exponential backoff. Kafka safely buffers incoming events on disk. |
-| **Consumer Lag Breach** | `kafka_consumer_group_lag > 50,000` messages | Prometheus fires `KafkaConsumerLagHigh` alert; stateless consumer containers (`consumer-analytics-ch`) can be scaled up to the topic partition count (`6` instances). |
-| **Corrupted Downstream Projection** | Great Expectations validation failure on ClickHouse or Redis | Reset consumer group offset to a historical timestamp (`kafka-consumer-groups --to-datetime`) for `<72h` recovery, or trigger the Airflow `lakehouse_to_clickhouse_rebuild` DAG for deep historical recovery from Iceberg Silver. |
+| **Consumer Lag Breach** | `fmdp_consumer_lag_records > 5,000` (`alerts.yml`: `FMDPConsumerLagHigh`); target high-water `> 50,000` | Prometheus fires `FMDPConsumerLagHigh` alert; stateless consumer instances (`consumer-analytics-ch`) can scale up to the topic partition count (`6` partitions). |
+| **Corrupted Downstream Projection** | `DataQualityGateEngine` (`DQ-KLINE-001..005`, `DQ-TRADE-001..003`) `CRITICAL` block, or `PLANNED` Great Expectations failure | Reset consumer group offset to a historical timestamp (`kafka-consumer-groups --to-datetime`) within raw retention (`168h` / `7 days`), or trigger the `PLANNED` Airflow `lakehouse_to_clickhouse_rebuild` DAG for deep historical recovery from Silver Parquet/Iceberg. |
 | **Poison Pill / Schema Mismatch** | `pydantic.ValidationError` in Collector or Consumer | Wrapped in `DeadLetterEnvelopeV1` (preserving raw bytes, topic, partition, offset, error trace) and routed to `market.dlq.v1` so a single malformed record never blocks partition consumption. |
 

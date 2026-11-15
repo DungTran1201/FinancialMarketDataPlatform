@@ -14,6 +14,12 @@ metadata:
     - "docs/architecture/14-data-platform-v01-and-microservices-architecture.md"
     - "docs/specifications/data-dictionary.md"
 
+implementation_note: "Active local runtime writes Bronze/Silver/Gold ZSTD Parquet files and JSON Iceberg v2 manifests under .local_lakehouse/ via pyarrow; external MinIO S3 buckets (lakehouse-bronze, lakehouse-silver, lakehouse-gold, lakehouse-checkpoints) and Iceberg REST catalog synchronization remain PLANNED/PARTIALLY_IMPLEMENTED."
+object_storage_buckets:
+  bootstrap_script: "deploy/object-storage/init-buckets.sh"
+  buckets: ["lakehouse-bronze", "lakehouse-silver", "lakehouse-gold", "lakehouse-checkpoints"]
+  config_drift_note: ".env.example still defines legacy LAKEHOUSE_BUCKET=market-data (PROP-APP-003)."
+
 datasets:
   - name: "raw.market_trades"
     layer: "raw"
@@ -29,49 +35,52 @@ datasets:
     code_ref: "src/shared/contracts/events/market_events.py"
   - name: "bronze.market_klines"
     layer: "bronze"
-    storage_engine: "MinIO_Iceberg"
+    storage_engine: "Parquet_Local_Iceberg_Target_MinIO"
     natural_key: ["event_id"]
     partition_by: ["provider", "ingestion_date"]
     code_ref: "src/lakehouse/bronze/archiver.py"
   - name: "bronze.market_trades"
     layer: "bronze"
-    storage_engine: "MinIO_Iceberg"
+    storage_engine: "Parquet_Local_Iceberg_Target_MinIO"
     natural_key: ["event_id"]
     partition_by: ["provider", "ingestion_date"]
     code_ref: "src/lakehouse/bronze/archiver.py"
   - name: "silver.market_klines"
     layer: "silver"
-    storage_engine: "MinIO_Iceberg"
+    storage_engine: "Parquet_Local_Iceberg_v2_Target_MinIO"
     natural_key: ["provider", "symbol", "interval", "open_time"]
     partition_by: ["provider", "symbol", "interval"]
     code_ref: "src/lakehouse/silver/merge_engine.py"
   - name: "silver.market_trades"
     layer: "silver"
-    storage_engine: "MinIO_Iceberg"
+    storage_engine: "Parquet_Local_Iceberg_v2_Target_MinIO"
     natural_key: ["provider", "symbol", "trade_id"]
     partition_by: ["provider", "symbol"]
     code_ref: "src/lakehouse/silver/merge_engine.py"
   - name: "silver.order_book_snapshots"
     layer: "silver"
-    storage_engine: "MinIO_Iceberg"
+    storage_engine: "Parquet_Local_Iceberg_v2_Target_MinIO"
     natural_key: ["provider", "symbol", "last_update_id"]
     partition_by: ["provider", "symbol"]
     code_ref: "src/lakehouse/silver/merge_engine.py"
   - name: "gold.fct_daily_market_summary"
     layer: "gold"
-    storage_engine: "ClickHouse"
+    storage_engine: "Parquet_Local_Lakehouse_Gold"
+    olap_mirror_target: "ClickHouse (PLANNED)"
     natural_key: ["provider", "symbol", "trading_date"]
     partition_by: ["trading_date"]
     code_ref: "src/lakehouse/gold/mart_engine.py"
   - name: "gold.fct_realized_volatility"
     layer: "gold"
-    storage_engine: "ClickHouse"
+    storage_engine: "Parquet_Local_Lakehouse_Gold"
+    olap_mirror_target: "ClickHouse (PLANNED)"
     natural_key: ["provider", "symbol", "interval"]
     partition_by: ["interval"]
     code_ref: "src/lakehouse/gold/mart_engine.py"
   - name: "gold.fct_orderbook_liquidity"
     layer: "gold"
-    storage_engine: "ClickHouse"
+    storage_engine: "Parquet_Local_Lakehouse_Gold"
+    olap_mirror_target: "ClickHouse (PLANNED)"
     natural_key: ["provider", "symbol", "last_update_id"]
     partition_by: ["provider"]
     code_ref: "src/lakehouse/gold/mart_engine.py"

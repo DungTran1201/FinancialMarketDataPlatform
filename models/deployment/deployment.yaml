@@ -3,11 +3,11 @@ version: "1.0"
 metadata:
   model_id: "MODEL-DEP-001"
   name: "Docker Compose Profiled Deployment Model"
-  description: "Canonical model of Compose profiles (core, intelligence, lakehouse, observability, bi) and isolated networks."
+  description: "Canonical model of Compose profiles (core, intelligence, lakehouse, observability, bi, microservices, frontend), host ports, and isolated networks."
   status: "BASELINED"
   canonical_model: true
   created_at: "2026-11-12"
-  updated_at: "2026-11-12"
+  updated_at: "2026-11-15"
   owner: "architecture-modeler"
   source_documents:
     - "docs/architecture/12-deployment-architecture.md"
@@ -16,22 +16,37 @@ metadata:
 profiles:
   - id: "DEP-001"
     name: "core"
-    services: ["postgres", "redis", "kafka", "clickhouse", "collector-ws", "consumer-hot-redis", "consumer-analytics-ch", "backend-api", "edge-gateway"]
+    services: ["postgres", "redis", "kafka", "clickhouse", "backend-api", "frontend", "edge-gateway", "collector-ws", "consumer-hot-redis", "consumer-analytics-ch", "collector-rest"]
+    host_ports: ["5432 (postgres)", "6379 (redis)", "9092 (kafka)", "8123/9000 (clickhouse)", "8000 (backend-api)", "3001 (frontend)", "80/443 (edge-gateway)"]
   - id: "DEP-002"
     name: "intelligence"
     services: ["agent-worker"]
+    pulled_via_depends_on: ["postgres", "clickhouse"]
+    shared_infrastructure: ["redis", "kafka"]
   - id: "DEP-003"
     name: "lakehouse"
-    services: ["minio"]
+    services: ["minio", "consumer-lakehouse-bronze"]
+    pulled_via_depends_on: ["kafka"]
+    shared_infrastructure: ["postgres", "clickhouse"]
+    host_ports: ["${MINIO_API_PORT:-9010}->9000 (minio S3 API)", "9001->9001 (minio Console)"]
   - id: "DEP-004"
     name: "observability"
     services: ["prometheus", "grafana"]
+    host_ports: ["9090 (prometheus)", "3000 (grafana)"]
+    note: "Requires core backend-api or microservices svc-data-plane-v01 running to resolve scrape targets."
   - id: "DEP-005"
     name: "bi"
     services: ["superset"]
+    pulled_via_depends_on: ["clickhouse", "postgres"]
+    host_ports: ["8088 (superset)"]
   - id: "DEP-006"
     name: "microservices"
     services: ["svc-market-hot", "svc-historical-backfill", "svc-analytics-quant", "svc-catalog-governance", "svc-iam-security", "svc-intelligence-agent", "svc-data-plane-v01"]
+    host_ports: ["8001..8007"]
+  - id: "DEP-007"
+    name: "frontend"
+    services: ["frontend"]
+    host_ports: ["${FRONTEND_PORT:-3001}->3000"]
 
 networks:
   - name: "frontend_net"

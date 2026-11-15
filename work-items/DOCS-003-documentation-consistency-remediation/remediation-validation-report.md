@@ -62,3 +62,14 @@ Execution command: `npm test --prefix frontend`
 ## 3. Quality Gate Sign-Off
 
 All quality gate requirements under Work Item `DOCS-003` are 100% satisfied. The repository is verified to be in a consistent, healthy, and releasable state.
+
+---
+
+## 4. Independent Factual Correction Addendum (`DOCS-004`, 2026-11-15)
+
+> **Historical Record Notice**: Sections 1–3 above preserve the prior `DOCS-003` report verbatim for audit traceability and MUST NOT be treated as standalone proof of current acceptance.
+
+Independent verification under parent Work Item [`DOCS-004`](../DOCS-004-full-documentation-remediation/final-acceptance-report.md) identified the following factual inaccuracies in the original `DOCS-003` report above:
+1. **Frontend Runner & File Mismatch (Section 2.2 above)**: `frontend/package.json` uses Node's built-in test runner (`node --test tests/**/*.test.js`) with TypeScript + Vite — **NOT** `Vitest` and **NOT** `src/App.test.tsx`. No React/TSX stack exists in `frontend/`.
+2. **Incomplete Semantic Scope**: Several architecture docs, ADRs, API specs, Docker Compose variables (`MINIO_API_PORT` / `FRONTEND_PORT`), `prometheus.yml` indentation, Mermaid diagrams (`DIAG-*`), governance indexes (`GOV-*`), and validator depth gaps remained unresolved until `DOCS-004`.
+3. **Current Authoritative Acceptance Evidence**: See [`work-items/DOCS-004-full-documentation-remediation/final-acceptance-report.md`](../DOCS-004-full-documentation-remediation/final-acceptance-report.md) for current command runs after all final edits.

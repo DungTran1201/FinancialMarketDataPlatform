@@ -8,14 +8,14 @@ All asynchronous communication across the Data Plane is governed by explicit, ve
 
 ## 2. Kafka Topic Topology & Partitioning Strategy
 
-| Kafka Topic | Event Contract | Partition Key | Initial Partitions | Retention Policy | Compaction | Primary Consumers |
+| Kafka Topic | Event Contract | Partition Key | Initial Partitions | Configured Retention (`topics-init.sh`) | Compaction | Primary Consumer Groups (`topics.yaml`) |
 |---|---|---|---|---|---|---|
-| `market.raw.trades.v1` | `MarketTradeEventV1` | `{provider}:{symbol}` | 6 | 72 hours (size cap 20 GB) | `delete` | ClickHouse Sink, Hot Cache Updater, Bronze Lakehouse Writer |
-| `market.raw.klines.v1` | `MarketKlineEventV1` | `{provider}:{symbol}:{interval}` | 6 | 72 hours | `delete` | ClickHouse Sink, Hot Cache Updater, Bronze Lakehouse Writer |
-| `market.raw.tickers.v1` | `MarketTickerEventV1` | `{provider}:{symbol}` | 6 | 24 hours | `compact,delete` | Hot Cache Updater, ClickHouse Sink, WebSocket Broadcaster |
-| `market.raw.orderbook.v1` | `OrderBookSnapshotEventV1` | `{provider}:{symbol}` | 6 | 24 hours | `delete` | Hot Cache Updater, ClickHouse Sink, Bronze Lakehouse Writer |
-| `market.anomalies.v1` | `MarketAnomalyEventV1` | `{provider}:{symbol}` | 3 | 7 days | `delete` | Agent Anomaly Worker, Control Plane Alert Sink |
-| `market.dlq.v1` | `DeadLetterEnvelopeV1` | `{source_topic}:{symbol}` | 3 | 14 days | `delete` | Data Quality Monitor / Alerting |
+| `market.raw.trades.v1` | `MarketTradePayloadV1` | `{provider}:{symbol}` | 6 | `168 hours` (`7 days`) | `delete` | `cg.hot.redis.v1`, `cg.analytics.clickhouse.v1`, `cg.lakehouse.bronze.v1` (`PARTIALLY_IMPLEMENTED`) |
+| `market.raw.klines.v1` | `MarketKlinePayloadV1` | `{provider}:{symbol}:{interval}` | 6 | `168 hours` (`7 days`) | `delete` | `cg.hot.redis.v1`, `cg.analytics.clickhouse.v1`, `cg.lakehouse.bronze.v1` (`PARTIALLY_IMPLEMENTED`) |
+| `market.raw.tickers.v1` | Ticker payload dict | `{provider}:{symbol}` | 6 | `168 hours` (`7 days`) | `delete` | `cg.hot.redis.v1`, `cg.analytics.clickhouse.v1` |
+| `market.raw.orderbook.v1` | Order book payload dict | `{provider}:{symbol}` | 6 | `168 hours` (`7 days`) | `delete` | `cg.hot.redis.v1`, `cg.analytics.clickhouse.v1`, `cg.lakehouse.bronze.v1` (`PARTIALLY_IMPLEMENTED`) |
+| `market.anomalies.v1` | `MarketAnomalyEventV1` | `{provider}:{symbol}` | 3 | `720 hours` (`30 days`) | `delete` | `cg.agent.anomaly.v1` (`PLANNED`) |
+| `market.dlq.v1` | `DeadLetterEnvelopeV1` | `{source_topic}:{symbol}` | 3 | `720 hours` (`30 days`) | `delete` | `cg.dlq.inspector.v1` *(trace/observability label only; manual/operator inspection)* |
 
 ### Partition Key Rationale
 - Partitioning by `{provider}:{symbol}` guarantees **strict in-order delivery per trading pair** within a single Kafka partition while distributing load evenly across consumer group instances when multiple symbols are active.
@@ -23,7 +23,10 @@ All asynchronous communication across the Data Plane is governed by explicit, ve
 
 ---
 
-## 3. Canonical JSON / Avro-Compatible Event Schemas
+## 3. Canonical JSON / Python Dataclass Event Schemas
+
+> [!NOTE]
+> Runtime event envelopes (`EventEnvelopeV1`, `MarketTradePayloadV1`, `MarketKlinePayloadV1`, `DeadLetterEnvelopeV1`) are implemented in `src/shared/contracts/events/market_events.py` as frozen Python `@dataclass(frozen=True, slots=True)` contracts enforcing `Decimal` financial invariants and timezone-aware UTC timestamps.
 
 ### 3.1. Common Envelope Contract (`EventEnvelopeV1`)
 
@@ -169,6 +172,23 @@ Emitted by deterministic threshold/statistical anomaly detectors when price retu
 
 ---
 
+### 3.6. `DeadLetterEnvelopeV1` Payload (`market.dlq.v1`)
+
+Runtime wrapper fields emitted when normalization/parsing fails (`src/shared/contracts/events/market_events.py`):
+```json
+{
+  "dlq_id": "dlq-7c81a9f0-32b4-5d9e-bc41-89012a45d678",
+  "source_provider": "binance",
+  "source_stream": "market.raw.klines.v1",
+  "error_type": "ValidationError",
+  "error_message": "Kline invariant violated: high_price < low_price",
+  "raw_payload": "{\"e\":\"kline\",\"s\":\"BTCUSDT\"}",
+  "failed_at": "2026-11-15T09:00:00.052000Z"
+}
+```
+
+---
+
 ## 4. Schema Evolution & Contract Governance Rules
 
 1. **Backward Compatibility by Default**:
@@ -177,6 +197,6 @@ Emitted by deterministic threshold/statistical anomaly detectors when price retu
 2. **Breaking Changes Require Major Topic Version**:
    - Any breaking contract change requires introducing a new topic suffix (e.g., `market.raw.trades.v2`) and dual-publishing during consumer migration.
 3. **Validation Gate at Producer & Consumer Boundaries**:
-   - Collectors validate payloads using Pydantic v2 strict models before serializing to Kafka.
-   - If an exchange emits an unexpected malformed message, the collector wraps the raw payload, error trace, and metadata into `DeadLetterEnvelopeV1` and publishes to `market.dlq.v1` without crashing the WebSocket loop.
+   - Normalizers validate payloads strictly (`EventEnvelopeV1`, `MarketTradePayloadV1`, `MarketKlinePayloadV1`) before publishing to Kafka.
+   - If an exchange emits a malformed message, the ingestion boundary wraps it in `DeadLetterEnvelopeV1` and routes it to `market.dlq.v1` without crashing the collector loop.
 

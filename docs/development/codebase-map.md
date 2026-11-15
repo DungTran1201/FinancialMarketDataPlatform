@@ -16,11 +16,11 @@
 ```text
 FinancialMarketDataPlatform/
 ├── src/                  # Core Data Platform, Serving & Intelligence Source Tree
-├── frontend/             # Single Page Application (TypeScript / Vite / Nginx)
+├── frontend/             # Single Page Application (TypeScript / Vite)
 ├── deploy/               # Deployment configs (Docker, Kafka, Nginx, Prometheus)
-├── tests/                # 50 Automated tests (Unit, Contract, Integration, DQ, E2E)
+├── tests/                # 50+ Automated tests (Unit, Contract, Integration, DQ, E2E) + Frontend JS tests
 ├── models/               # Canonical machine-readable YAML models (38 models)
-├── docs/                 # Human-readable documentation organized by 9 domains
+├── docs/                 # Human-readable documentation organized across 11 domain dirs
 ├── work-items/           # Change lifecycle, discovery, and gate management
 ├── .agents/              # Agent Operating System (Roles, Rules, Skills, Configs)
 └── tools/                # Automated validators & documentation engineering utilities
@@ -58,29 +58,33 @@ FinancialMarketDataPlatform/
 - `quality/`: Blocking financial data quality engine (`DataQualityGateEngine`).
 - `orchestration/`: 12-stage E2E data pipeline orchestrator (`DataPlatformV01Pipeline`).
 
-### 2.5. `src/serving/` — Edge Gateway & Microservice Handlers
-- `api/gateway/`: Edge routing, JWT auth middleware, and Prometheus observability metrics exporter.
+### 2.5. `src/serving/` — Edge Gateway, Modular Monolith & Microservice Wrappers
+- `api/main.py`: FastAPI Modular Monolith entrypoint (`55` mounted HTTP/WS/SSE routes, `SlidingWindowRateLimiter`, security headers).
+- `api/gateway/service.py` & `api/services/`: Edge Gateway and 7 standalone ASGI domain microservice wrappers (`svc-*`).
 - `api/modules/`: 8 Clean Architecture bounded modules (`market`, `historical`, `analytics`, `catalog`, `iam`, `platform_config`, `agent_api`, `reporting`).
-- `infrastructure/runtime.py`: Service registry supporting both `IN_PROCESS_ASGI` and `REMOTE_HTTP_CONTAINER` dispatch.
+- `infrastructure/runtime.py`: `PlatformRuntimeContainer` supporting both `IN_PROCESS_ASGI` and `REMOTE_HTTP_CONTAINER` dispatch.
 
 ### 2.6. `src/intelligence/` — Agentic AI Intelligence
-- `orchestrator/`: LangGraph 6-node state graph orchestrating anomaly investigations.
-- `tools/`: Controlled Tool Gateway enforcing provenance tracking.
+- `orchestrator/`: LangGraph **5-node** state graph (`MarketIntelligenceGraph`) orchestrating investigation workflows.
+- `tools/`: `ControlledToolGateway` (`10` whitelisted deterministic read-only tools) enforcing provenance tracking.
 
 ---
 
-## 3. Frontend Architecture (`frontend/src/`)
+## 3. Frontend Architecture (`frontend/`)
 
-- `main.ts` & `index.html`: Application bootstrapping and DOM injection.
-- `app/router/`: Single-page client-side router supporting 6 modules.
-- `app/layouts/`: Main application layout with header, navigation sidebar, and status bar.
-- `modules/`:
+- `frontend/index.html` & `frontend/src/main.ts`: Vite SPA entrypoint and TypeScript bootstrapping.
+- `frontend/src/app/router/router.ts`: Single-page client-side router supporting 6 modules.
+- `frontend/src/app/layouts/MainLayout.ts`: Main application layout with header, navigation sidebar, and status bar.
+- `src/modules/`:
   - `dashboard/`: Real-time KPIs, pipeline throughput, latency, and system health cards.
   - `data-flow/`: Interactive visual SVG data flow diagram depicting the end-to-end pipeline.
   - `market-analytics/`: Candlestick charts, order book depth, and VWAP tables.
   - `data-management/`: Lakehouse partition inspection, Silver/Gold data browser.
   - `ai-workspace/`: Autonomous agent investigation triggers and provenance report viewer.
   - `administration/`: System configuration and audit logs.
-- `services/`: API client (`client.ts`), WebSocket client (`ws-client.ts`), and Server-Sent Events (`sse.ts`).
-- `stores/`: Reactive state management (`app.store.ts`, `market.store.ts`, `observability.store.ts`).
+- `src/services/`:
+  - `api/client.ts`, `api/sse.ts`, and domain services (`market.service.ts`, `analytics.service.ts`, `catalog.service.ts`, `agent.service.ts`, `observability.service.ts`).
+  - `auth/auth.service.ts`: Frontend authentication client.
+  - `websocket/ws-client.ts`: WebSocket stream client.
+- `src/stores/`: Reactive state management (`app.store.ts`, `market.store.ts`, `observability.store.ts`).
 

@@ -24,6 +24,12 @@ shared_platform_baselines:
       - "models/requirements/requirements.yaml"
       - "models/domain/domain.yaml"
       - "models/api/api.yaml"
+      - "models/data-platform/datasets.yaml"
+      - "models/data-platform/events.yaml"
+      - "models/data-platform/topics.yaml"
+      - "models/data-platform/quality-rules.yaml"
+      - "models/data-platform/lineage.yaml"
+      - "models/data-platform/retention.yaml"
 
 reader_journey_domains:
   overview:

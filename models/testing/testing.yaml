@@ -7,7 +7,7 @@ metadata:
   status: "BASELINED"
   canonical_model: true
   created_at: "2026-11-12"
-  updated_at: "2026-11-12"
+  updated_at: "2026-11-15"
   owner: "qa-reviewer"
   source_documents:
     - "tests/architecture/test_clean_architecture_boundaries.py"
@@ -16,7 +16,9 @@ metadata:
     - "tests/data_quality/test_medallion_quality_gates.py"
     - "tests/unit/test_domain_and_quant.py"
     - "tests/unit/test_security_and_defense.py"
+    - "tests/unit/test_documentation_validators.py"
     - "tests/integration/test_three_planes_framework.py"
+    - "tests/integration/test_realtime_observability_dashboard.py"
     - "tests/resilience/test_gap_recovery_and_dlq.py"
     - "tests/performance/test_100_bots_data_plane_swarm.py"
     - "tests/e2e/test_data_platform_v01_e2e.py"
@@ -141,4 +143,23 @@ test_cases:
     requirement_refs: ["FR-04", "FR-10", "NFR-001"]
     acceptance_criteria_refs: ["AC-004"]
     test_path: "tests/integration/test_realtime_observability_dashboard.py"
+    execution_mode: "in_process_asgi"
+    status: "BASELINED"
+  - id: "TC-016"
+    title: "Domain Entities, Quantitative Return/Volatility/Correlation Math & Invariants Verification"
+    test_type: "unit"
+    priority: "P0"
+    requirement_refs: ["FR-05", "BR-001", "BR-002"]
+    acceptance_criteria_refs: []
+    test_path: "tests/unit/test_domain_and_quant.py"
+    execution_mode: "in_process_unit"
+    status: "BASELINED"
+  - id: "TC-017"
+    title: "Documentation Engineering Validators, Semantic Parity & Negative Failure Regression Suite"
+    test_type: "unit"
+    priority: "P0"
+    requirement_refs: ["FR-10", "CTRL-004"]
+    acceptance_criteria_refs: []
+    test_path: "tests/unit/test_documentation_validators.py"
+    execution_mode: "in_process_unit"
     status: "BASELINED"

@@ -7,25 +7,32 @@ metadata:
   status: "BASELINED"
   canonical_model: true
   created_at: "2026-11-12"
-  updated_at: "2026-11-12"
+  updated_at: "2026-11-15"
   owner: "architecture-modeler"
   source_documents:
     - "docs/architecture/00-architecture-overview.md"
     - "docs/architecture/02-system-container-architecture.md"
+    - "docs/architecture/14-data-platform-v01-and-microservices-architecture.md"
 
 planes:
   - id: "PLANE-A"
     name: "Data Plane"
     responsibility: "Ingestion, Kafka streaming, Redis hot state, ClickHouse OLAP, and MinIO/Iceberg Lakehouse."
     depends_on_planes: []
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    runtime_mode: "Core ingestion connectors, pipeline stages (DataPlatformV01Pipeline), Decimal quality gates, and local Parquet/Iceberg v2 writers execute in-process or via library APIs; standalone Compose worker CLIs (collector-ws, collector-rest, consumer-lakehouse-bronze) remain startup stubs."
   - id: "PLANE-B"
     name: "Application & Control Plane"
-    responsibility: "FastAPI Modular Monolith, Auth/RBAC, PostgreSQL control state, and Apache Superset BI."
+    responsibility: "FastAPI Modular Monolith, Auth/RBAC, PostgreSQL control state, Experience Layer SPA proxy, and Apache Superset BI."
     depends_on_planes: ["PLANE-A"]
+    implementation_status: "IMPLEMENTED"
+    runtime_mode: "Modular Monolith backend-api (55 routes) plus optional 7 svc-* FastAPI sub-apps under --profile microservices."
   - id: "PLANE-C"
     name: "Intelligence Plane"
     responsibility: "Isolated LangGraph Agent Orchestrator and Read-Only Controlled Tool Gateway."
     depends_on_planes: ["PLANE-A", "PLANE-B"]
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    runtime_mode: "ControlledToolGateway and 5-node LangGraph investigation workflow execute in-process via backend-api / svc-intelligence-agent; standalone agent-worker CLI and cg.agent.anomaly.v1 Kafka loop are PLANNED."
 
 decisions:
   - id: "ADR-001"

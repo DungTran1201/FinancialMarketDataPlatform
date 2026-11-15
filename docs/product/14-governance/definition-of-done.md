@@ -25,4 +25,7 @@ A work item or documentation change in `FinancialMarketDataPlatform` is consider
 5. **Template & Diagram Conformance**: Human-readable docs are instantiated from `docs/templates/` and derived diagrams in `docs/diagrams/` match upstream models.
 6. **Zero Validator or Test Errors**:
    - `.\.venv\Scripts\python.exe tools/validators/run_all.py` exits with code `0`.
+   - `.\.venv\Scripts\pytest.exe tests -v` exits with code `0` (verified unit/contract & isolated negative validator tests).
    - `.\.venv\Scripts\python.exe -m unittest discover -s tests -v` exits with code `0`.
+   - `.\.venv\Scripts\ruff.exe check src tests tools` exits with code `0`.
+   - `npm test --prefix frontend` and `npm run build --prefix frontend` exit with code `0` (TypeScript + Vite SPA verification).

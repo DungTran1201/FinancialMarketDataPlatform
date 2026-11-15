@@ -14,6 +14,7 @@ metadata:
     - "docs/architecture/14-data-platform-v01-and-microservices-architecture.md"
 
 catalog_module: "src/lakehouse/catalog/lineage.py"
+implementation_note: "Stage labels reflect src/lakehouse/orchestration/pipeline.py 12-stage logical lifecycle; Bronze/Silver/Gold stages execute in-process against .local_lakehouse/ Parquet files and Iceberg v2 manifests with MinIO S3 target configuration in deploy/iceberg/catalog-config.yaml."
 
 edges:
   - upstream: "external.binance_ws_rest"

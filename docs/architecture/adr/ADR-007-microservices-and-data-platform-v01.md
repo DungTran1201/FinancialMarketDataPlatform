@@ -38,11 +38,11 @@ On branch `arch/microservices`, the engineering organization requires:
    - **Silver (`SilverLakehouseMergeEngine`)**: Reads existing Silver state and merges new Bronze batches by natural key (`MERGE INTO`), and executes idempotent Stage 9 small-file compaction that deduplicates across all Parquet files, removes superseded files (`files_after_compaction == 1`), and maintains cumulative Apache Iceberg v2 snapshot history (`metadata/v{snapshot_id}.metadata.json` + `metadata/version-hint.text`).
    - **Mandatory Pre-Gold Quality Gate (`DataQualityGateEngine`)**: Evaluates `DQ-KLINE-001..005` and `DQ-TRADE-001..003` using `Decimal` arithmetic and **strictly blocks** promotion to Gold (`gold_promotion_blocked = True` / `QualityGateBlockedError`) whenever any `CRITICAL` rule fails.
 4. **Prometheus Observability & Governance Lineage (`Stages 11 & 12`)**:
-   - `DataObservabilityMetricsCollector` exports `fmdp_ingested_events_total`, `fmdp_dlq_events_total`, `fmdp_consumer_lag_records`, `fmdp_dq_validation_runs_total`, and `fmdp_gold_mart_rows_total` on both `/metrics` (`backend-api:8000`) and `/api/v1/data-platform/v01/metrics` (`svc-data-plane-v01:8007`).
+   - `DataObservabilityMetricsCollector` exports all 10 implemented `fmdp_*` metrics (`fmdp_ingested_events_total`, `fmdp_dlq_events_total`, `fmdp_consumer_lag_records`, `fmdp_hot_out_of_order_dropped_total`, `fmdp_dq_validation_runs_total`, `fmdp_gold_mart_rows_total`, `fmdp_serving_requests_total`, `fmdp_stage_events_total`, `fmdp_stage_processing_duration_ms`, `fmdp_end_to_end_latency_ms`) on both `/metrics` (`backend-api:8000`) and `/api/v1/data-platform/v01/metrics` (`svc-data-plane-v01:8007`).
    - `DataLineageGovernanceRegistry` records directed acyclic lineage edges across all 12 stages.
 
-### 2.2 Decomposition into 8 Domain Microservices (`src/microservices/`) & Runtime Transparency
-While keeping `src/backend/modules/*` as the canonical Clean Architecture domain/application libraries (`TC-006`), runtime deployment supports two explicitly distinguished execution modes reported in `/api/v1/microservices/topology`:
+### 2.2 Decomposition into 8 Domain Microservices (`src/serving/api/services/` & `gateway/`) & Runtime Transparency
+While keeping `src/serving/api/modules/*` as the canonical Clean Architecture domain/application libraries (`TC-006`), runtime deployment supports two explicitly distinguished execution modes reported in `/api/v1/microservices/topology`:
 - `IN_PROCESS_ASGI` (`process_isolation: "SHARED_GATEWAY_PROCESS"`): Used in single-process local/CI execution where `svc-api-gateway` dispatches to isolated FastAPI microservice apps via `httpx.ASGITransport`.
 - `REMOTE_HTTP_CONTAINER` (`process_isolation: "ISOLATED_CONTAINER_PROCESS"`): Used when running standalone container processes (`docker compose --profile microservices up`) where `MicroserviceRegistry.register_remote_endpoint` routes over HTTP to ports `8001..8007`:
 1. `svc-api-gateway` (Port `8000`): Unified HTTPS/WAF/Rate-Limiter Edge Gateway & Service Registry Dispatcher.
@@ -51,7 +51,7 @@ While keeping `src/backend/modules/*` as the canonical Clean Architecture domain
 4. `svc-analytics-quant` (Port `8003`): Rolling VWAP/volatility statistics, Pearson correlations, and Z-score anomaly evaluation (`analytics`).
 5. `svc-catalog-governance` (Port `8004`): Instrument catalog, freshness SLIs, and platform configuration (`catalog`, `platform_config`).
 6. `svc-iam-security` (Port `8005`): JWT HS256 issuance/verification with IP-HMAC binding, token revocation, and standard NIST `AES-256-GCM` (`cryptography.hazmat.primitives.ciphers.aead.AESGCM`) endpoint masking (`iam`).
-7. `svc-intelligence-agent` (Port `8006`): LangGraph 6-node investigation orchestrator, Controlled Tool Gateway, and verified provenance reports (`agent_api`, `reporting`).
+7. `svc-intelligence-agent` (Port `8006`): LangGraph 5-node investigation orchestrator (`intake_and_guardrail_node`, `investigation_planner_node`, `tool_gateway_executor_node`, `evidence_verifier_node`, `report_synthesizer_node`), Controlled Tool Gateway (`10` tools), and verified provenance reports (`agent_api`, `reporting`).
 8. `svc-data-plane-v01` (Port `8007`): End-to-End Data Platform v0.1 orchestrator, Gold mart query engine, Iceberg compaction controller, lineage catalog, and Prometheus metrics exporter.
 
 ---

@@ -15,7 +15,7 @@ Models actor goals, preconditions, main/alternative/exception flows, and postcon
 
 ## 3. Authoritative Inputs
 
-- `models/requirements/requirements.yaml`, `models/context/context.yaml`, `docs/product/04-use-cases/README.md`, `docs/templates/use-cases/`.
+- `models/requirements/requirements.yaml`, `models/context/` (or `models/architecture/architecture.yaml`) and `models/requirements/requirements.yaml`, `docs/product/04-use-cases/README.md`, `docs/templates/use-cases/`.
 
 ## 4. Preconditions
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -15,6 +16,7 @@ EXPECTED_MODEL_DIRS = {
     "context",
     "architecture",
     "domain",
+    "data-platform",
     "api",
     "interaction",
     "state",
@@ -49,23 +51,25 @@ REQUIRED_META_KEYS = {
 }
 
 
-def main() -> int:
+def validate_repo(repo_root: Path = REPO_ROOT) -> int:
+    """Validate all canonical YAML model directories and schemas under `repo_root/models`."""
     errors = 0
-    if not MODELS_ROOT.exists():
+    models_root = repo_root / "models"
+    if not models_root.exists():
         print("[ERROR] models/ directory does not exist.")
         return 1
 
-    existing_dirs = {p.name for p in MODELS_ROOT.iterdir() if p.is_dir()}
+    existing_dirs = {p.name for p in models_root.iterdir() if p.is_dir()}
     missing = EXPECTED_MODEL_DIRS - existing_dirs
     if missing:
         print(f"[ERROR] Missing model directories: {sorted(missing)}")
         errors += 1
 
-    yaml_files = sorted(MODELS_ROOT.rglob("*.yaml"))
+    yaml_files = sorted(models_root.rglob("*.yaml"))
     seen_model_ids: set[str] = set()
 
     for yf in yaml_files:
-        rel = yf.relative_to(REPO_ROOT).as_posix()
+        rel = yf.relative_to(repo_root).as_posix()
         try:
             data = yaml.safe_load(yf.read_text(encoding="utf-8"))
         except Exception as exc:
@@ -101,12 +105,16 @@ def main() -> int:
             errors += 1
 
         for src_doc in meta.get("source_documents", []):
-            if not (REPO_ROOT / src_doc).exists():
+            if not (repo_root / src_doc).exists():
                 print(f"[ERROR] {rel}: Referenced source_document does not exist: '{src_doc}'")
                 errors += 1
 
     print(f"[validate_models] Checked {len(yaml_files)} YAML model files -> {errors} error(s).")
     return 1 if errors else 0
+
+
+def main() -> int:
+    return validate_repo(REPO_ROOT)
 
 
 if __name__ == "__main__":

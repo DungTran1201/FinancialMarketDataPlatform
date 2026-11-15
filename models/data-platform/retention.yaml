@@ -28,14 +28,16 @@ policies:
     compaction_strategy: "lua_monotonic_guard"
   - tier: "ClickHouse OLAP"
     targets: ["market_trades", "market_klines", "market_tickers"]
-    retention: "365 days online analytical partition"
+    ddl_path: "deploy/clickhouse/init/01_schema.sql"
+    retention: "90 days TTL DELETE on market_trades and market_tickers in DDL; no table TTL defined on market_klines (target policy: 365 days)"
     compaction_strategy: "ReplacingMergeTree background merge"
-  - tier: "MinIO Iceberg Bronze"
+  - tier: "Local Lakehouse / MinIO Iceberg Bronze Target"
     targets: ["bronze.market_klines", "bronze.market_trades"]
     retention: "Immutable append-only audit history"
     compaction_strategy: "ZSTD partitioned Parquet"
-  - tier: "MinIO Iceberg Silver & Gold"
+  - tier: "Local Lakehouse / MinIO Iceberg Silver & Gold Target"
     targets: ["silver.market_klines", "silver.market_trades", "gold.*"]
-    retention: "Cumulative Iceberg v2 snapshots (retain latest 5-10 snapshots)"
+    config_ref: "deploy/iceberg/catalog-config.yaml"
+    retention: "Iceberg v2 snapshots (catalog-config.yaml history.expire.min-snapshots-to-keep: 10)"
     compaction_strategy: "ZSTD sort-by-natural-key small-file compaction"
 

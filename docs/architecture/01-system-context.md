@@ -34,24 +34,24 @@ flowchart TB
 
     Platform -->|"HTTPS (Isolated, Circuit-Protected)"| LLMAPI
 
-    Trader -->|"HTTPS REST / WSS / SSE / Superset BI"| Platform
+    Trader -->|"HTTPS REST / WSS / SSE / Frontend SPA / Superset BI"| Platform
     ClientApp -->|"HTTPS REST (/api/v1) & WSS (/ws/v1)"| Platform
-    Operator -->|"Admin API / Airflow UI / Grafana UI"| Platform
+    Operator -->|"Admin API / Grafana UI (Airflow UI PLANNED)"| Platform
 ```
 
 ---
 
 ## 2. External Actors & Interfaces
 
-| External Actor / System | Direction | Protocol & Authentication | Interaction Summary | Failure / Availability Assumption |
+| External Actor / System | Direction | Protocol & Authentication | Interaction Summary | Implementation Status / Availability Assumption |
 |---|---|---|---|---|
-| **Binance WebSocket API** | Inbound (Stream) | `wss://stream.binance.com:9443/ws` (Public market streams; TLS 1.3) | Pushes live `trade`, `kline_<interval>`, `ticker`, and `depth20` events. | Connections drop periodically (24h max lifetime or network jitter); collector must auto-reconnect and trigger gap backfill. |
-| **Binance REST API** | Outbound Request / Inbound Data | `https://api.binance.com/api/v3/*` (HTTPS; optional API Key for higher rate weight) | Serves historical `klines`, `aggTrades`, `depth` snapshots, and `exchangeInfo`. | Enforces strict IP/UID request weight limits (`HTTP 429` / `418`); collector must enforce token-bucket rate limiting. |
-| **Future Data Providers** | Inbound | Provider-specific REST / WebSocket / FIX | Additional crypto or traditional exchanges integrated via the `MarketDataProviderPort` interface. | Provider-specific anomalies isolated at collector edge; canonical platform schemas remain unchanged. |
-| **External LLM Provider** | Outbound Request | HTTPS REST (API Key via environment secret) | Used exclusively by the Intelligence Plane to plan deterministic tool calls and synthesize narrative reports. | **Untrusted & Non-Critical**: May experience high latency, rate limits, or total outage. Core platform must operate 100% when unavailable. |
-| **Market Analyst / Trader** | Inbound / Outbound | HTTPS (`/api/v1/*`), WSS (`/ws/v1/*`), SSE, Superset UI (JWT Auth) | Views live prices, historical charts, quantitative metrics, BI dashboards, and requests on-demand Agent reports. | Requires bounded response latencies and explicit data staleness indicators (`is_stale`). |
-| **External Client Application** | Inbound / Outbound | HTTPS REST & WebSocket (`X-API-Key` or Bearer JWT) | Integrates normalized market prices, candles, and analytics into downstream systems. | Subject to strict per-key sliding-window rate limits and query range caps. |
-| **Platform Operator / Data Engineer** | Inbound / Outbound | Admin API (`role=operator/admin`), Airflow UI, Grafana UI | Configures monitored symbols, triggers historical backfills, monitors consumer lag, and inspects data quality alerts. | Audited via PostgreSQL control-plane logs. |
+| **Binance WebSocket API** | Inbound (Stream) | `wss://stream.binance.com:9443/ws` (Public market streams; TLS 1.3) | Pushes live `trade`, `kline_<interval>`, `ticker`, and `depth20` events. | `PARTIALLY_IMPLEMENTED`: `BinancePayloadNormalizer` active; standalone `collector-ws` daemon loop is an entrypoint stub while REST probes supply live frames. |
+| **Binance REST API** | Outbound Request / Inbound Data | `https://api.binance.com/api/v3/*` (HTTPS; optional API Key for higher rate weight) | Serves historical `klines`, `aggTrades`, `depth` snapshots, and `exchangeInfo`. | `IMPLEMENTED`: `ProductionExchangeHistoricalCollector` and `/api/v1/observability/live/probe` execute HTTPS fetches with token-bucket rate limit handling. |
+| **Future Data Providers** | Inbound | Provider-specific REST / WebSocket / FIX | Additional crypto or traditional exchanges extensible behind provider adapters. | `PLANNED`: Multi-provider normalization pattern designed; Binance Spot implemented in `v0.1`. |
+| **External LLM Provider** | Outbound Request | HTTPS REST (API Key via environment secret) | Used exclusively by the Intelligence Plane to plan deterministic tool calls and synthesize narrative reports. | `PARTIALLY_IMPLEMENTED` (**Non-Critical**): Deterministic mock/fallback adapter (`DeterministicMockLLMAdapter`) runs offline when no LLM API key is configured. |
+| **Market Analyst / Trader** | Inbound / Outbound | HTTPS (`/api/v1/*`, SPA `frontend:3001`), WSS (`/ws/v1/observability/stream`), SSE (`/api/v1/observability/stream`, `/api/v1/agents/runs/{run_id}/events`) | Views live observatory telemetry, prices, historical candles, analytics, and on-demand Agent reports (`WS /ws/v1/market/stream` is `PLANNED`, Superset dashboards `PLANNED`). | `PARTIALLY_IMPLEMENTED`: Observatory SPA + REST/SSE/WS endpoints active; SPA path drift tracked in `PROP-APP-001`. |
+| **External Client Application** | Inbound / Outbound | HTTPS REST & WebSocket (`X-API-Key` or Bearer JWT) | Integrates normalized market prices, candles, and analytics into downstream systems. | `PARTIALLY_IMPLEMENTED`: Sliding-window rate limits active; IAM issues JWT/API keys, while domain-route RBAC enforcement is pending (`PROP-APP-004`). |
+| **Platform Operator / Data Engineer** | Inbound / Outbound | Admin/Observability API, Grafana UI (`:3000`), Airflow UI (`PLANNED`) | Configures monitored symbols, triggers `v01` pipelines/backfills, monitors Kafka/storage telemetry and Grafana panels. | `PARTIALLY_IMPLEMENTED`: APIs and Compose `observability` profile defined; standalone `airflow` container is `PLANNED`. |
 
 ---
 

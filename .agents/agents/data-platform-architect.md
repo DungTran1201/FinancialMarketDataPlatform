@@ -45,7 +45,7 @@ Owns the end-to-end architecture of the financial data platform across ingestion
 ## 5. Authoritative Inputs
 
 - [AGENTS.md](../../AGENTS.md)
-- `docs/architecture/adr/ADR-001..006`
+- `docs/architecture/adr/ADR-001..008`
 - `docs/architecture/00-architecture-overview.md`, `04-data-platform-architecture.md`, `07-data-storage-and-modeling.md`, `08-data-flow-and-event-contracts.md`, `11-reliability-and-observability.md`, `12-deployment-architecture.md`
 - `docs/specifications/` and `.agents/config/data-platform-boundaries.yaml`
 - `src/` and `docker-compose.yml`

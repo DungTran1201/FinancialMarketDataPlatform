@@ -13,7 +13,7 @@ See also:
 
 ## 2. Complete Query Classification & Routing Matrix
 
-In accordance with Section `7.1`, no single database serves all query types:
+In accordance with Section `7.1`, no single database serves all query types. Latency and throughput numbers below represent **architectural design targets** (`UNVERIFIED_UNDER_PRODUCTION_LOAD` in local/CI environments, where v0.1 in-memory/Parquet/SQLite adapters also operate in single-host mode):
 
 | Query Category | Storage Source | Access Pattern | Expected Frequency | Freshness Target | Query Complexity | Cache Strategy | Failure Behavior |
 |---|---|---|---|---|---|---|---|
@@ -25,19 +25,19 @@ In accordance with Section `7.1`, no single database serves all query types:
 | **6. Aggregated Analytics (Volatility / Correlation)** | **ClickHouse Materialized Views & Base** | Multi-symbol time-series join / array aggregation | Low ($1-10\text{ req/s}$) | $15-60\text{ s}$ | Medium column scan ($\le 90\text{ days}$) | Redis Cache-Aside (`TTL 60s`) with single-flight stampede lock | Offloads windows $>90\text{ days}$ to asynchronous analytics job queue. |
 | **7. User & Platform Configuration** | **PostgreSQL** (`monitored_instruments`, `users`) | Primary key / indexed lookup | Low–Medium ($5-30\text{ req/s}$) | Immediate ACID | $O(\log N)$ B-Tree index lookup | Instrument list cached in-memory/Redis (`TTL 60s`), invalidated on `PUT` | Direct PostgreSQL read; fails closed (`HTTP 503`) for auth writes if PG is down. |
 | **8. Agent Execution State** | **PostgreSQL** (`agent_runs`, `agent_tool_invocations`) | Primary key lookup by `run_id` | Low ($1-10\text{ req/s}$) | Immediate ACID | $O(\log N)$ PK lookup | No cache for active `RUNNING` state; `COMPLETED` reports cached (`TTL 300s`) | Returns `HTTP 503` on `/api/v1/agents/*`; zero impact on Market/Analytics APIs. |
-| **9. Historical Raw Data** | **MinIO / Apache Iceberg** (`bronze.*`, `silver.*`) | Batch partition scan by `(provider, date)` | Batch / Scheduled only | $5-60\text{ m}$ | Large sequential columnar scan | Never queried synchronously by REST API | Retried by Airflow / PySpark job runner. |
+| **9. Historical Raw Data** | **MinIO / Apache Iceberg (`Parquet`)** (`bronze.*`, `silver.*`) | Batch partition scan by `(provider, date)` | Batch / Scheduled only | $5-60\text{ m}$ | Large sequential columnar scan | Never queried synchronously by REST API | Retried by `SilverLakehouseMergeEngine` (`PLANNED`: Airflow / PySpark job runner). |
 
 ---
 
 ## 3. Caching Architecture Details
 
 1. **Key Naming Convention**:
-   - Hot Price: `market:v1:price:{provider}:{symbol}`
-   - Hot Snapshot: `market:v1:snapshot:{provider}:{symbol}`
-   - Hot Order Book: `market:v1:orderbook:{provider}:{symbol}`
-   - Analytical Cache-Aside: `cache:v1:analytics:{endpoint}:{sha256_canonical_params}`
-   - Stampede Lease Lock: `lock:v1:cache:{sha256_canonical_params}`
-   - Rate Limit Counter: `ratelimit:v1:{scope}:{identifier}:{minute_bucket}`
+   - Hot Price: `market:v1:price:{provider}:{symbol}` (`IMPLEMENTED` target namespace)
+   - Hot Snapshot: `market:v1:snapshot:{provider}:{symbol}` (`IMPLEMENTED` target namespace)
+   - Hot Order Book: `market:v1:orderbook:{provider}:{symbol}` (`IMPLEMENTED` target namespace)
+   - Analytical Cache-Aside (`PLANNED`): `cache:v1:analytics:{endpoint}:{sha256_canonical_params}`
+   - Stampede Lease Lock (`PLANNED`): `lock:v1:cache:{sha256_canonical_params}`
+   - Rate Limit Counter (`PLANNED` distributed Redis backend; active `SlidingWindowRateLimiter` uses in-process sliding window): `ratelimit:v1:{scope}:{identifier}:{minute_bucket}`
 2. **Cache Stampede Protection**:
    - Analytical Cache-Aside uses a distributed Redis lock (`SET lock:v1:cache:{hash} 1 NX PX 3000`). Only the lock holder queries ClickHouse and populates the cache key; concurrent requests wait up to `150ms` for the key to appear before falling back.
 3. **Stale Data Policy**:
@@ -54,5 +54,5 @@ In accordance with Section `7.1`, no single database serves all query types:
    - Every ClickHouse read connection from `backend-api` and `agent-worker` sets `max_execution_time = 5` (or `8` for correlation matrices), `max_rows_to_read = 500000`, and `readonly = 1`.
 3. **FastAPI Event Loop Non-Blocking Rule**:
    - All I/O drivers in `backend-api` are asynchronous (`redis.asyncio`, `asyncpg`, async ClickHouse HTTP client).
-   - CPU-bound tasks (Spark transformations, multi-step LangGraph reasoning, historical backfills) run in separate container processes (`spark-worker`, `agent-worker`, `collector-rest`).
+   - CPU-bound or batch distributed workloads (multi-step LangGraph reasoning, historical backfills; plus `PLANNED` Spark transformations) run off the request handler in separate worker processes (`agent-worker`, `collector-rest`; `spark-worker` `PLANNED`).
 

@@ -15,7 +15,7 @@ Designs test strategies, test plans, and deterministic test cases (`TC-###`) in 
 
 ## 3. Authoritative Inputs
 
-- `models/testing/testing.yaml`, `models/requirements/acceptance-criteria.yaml`, `models/security/threats.yaml`, `tests/`, `docs/templates/testing/`.
+- `models/testing/testing.yaml`, `models/requirements/acceptance-criteria.yaml`, `models/security/threat-model.yaml`, `tests/`, `docs/templates/testing/`.
 
 ## 4. Preconditions
 

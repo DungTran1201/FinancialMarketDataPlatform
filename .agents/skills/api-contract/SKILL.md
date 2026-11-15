@@ -15,7 +15,7 @@ Specifies versioned REST, WebSocket, SSE, and Kafka event contracts (`API-###`, 
 
 ## 3. Authoritative Inputs
 
-- `models/api/api-contracts.yaml`, `events.yaml`, `docs/specifications/api-specification.md`, `data-contracts.md`, `src/shared/contracts/events/market_events.py`, `docs/templates/api/`.
+- `models/api/api.yaml`, `models/api/integrations.yaml`, `models/data-platform/events.yaml`, `docs/specifications/api-specification.md`, `data-contracts.md`, `src/shared/contracts/events/market_events.py`, `docs/templates/api/`.
 
 ## 4. Preconditions
 
@@ -23,7 +23,7 @@ Specifies versioned REST, WebSocket, SSE, and Kafka event contracts (`API-###`, 
 
 ## 5. Execution Procedure
 
-1. Update `models/api/api-contracts.yaml` and `events.yaml` first with `API-###` and `EVT-###` IDs, schemas, status codes, and RBAC scopes.
+1. Update `models/api/api.yaml`, `models/api/integrations.yaml`, and `models/data-platform/events.yaml` first with `API-###` and `EVT-###` IDs, schemas, status codes, and RBAC scopes.
 2. Enforce `Decimal` string/number serialization, UTC ISO-8601 timestamps, `BoundedTimeRange`, and backward-compatible schema evolution.
 3. Synchronize `docs/product/08-api/` and `docs/specifications/` using `docs/templates/api/`.
 4. Update derived topology/sequence diagrams in `docs/diagrams/api/` and `docs/diagrams/sequence/`, then run `python tools/validators/run_all.py`.

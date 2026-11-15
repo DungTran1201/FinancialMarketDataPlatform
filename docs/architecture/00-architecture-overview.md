@@ -11,7 +11,7 @@ The architecture is governed by seven core engineering objectives:
 4. **O4 — Reliable Data Processing**: End-to-end schema contracts, deterministic UUIDv5 deduplication, `ReplacingMergeTree` eventual deduplication, PySpark `MERGE INTO` ACID Lakehouse tables, and Great Expectations quality gates.
 5. **O5 — Maintainable Backend Architecture**: Modular Monolith organized by business domains (`market`, `historical`, `analytics`, `catalog`, `iam`, `platform_config`, `agent_api`, `reporting`) enforcing inward Clean/Hexagonal dependency rules.
 6. **O6 — Agentic Analytics Integration**: Stateful LangGraph orchestration isolated in an Intelligence Plane that accesses data exclusively via a read-only deterministic Tool Gateway.
-7. **O7 — Resource Efficiency**: Designed for local and single-host deployment via Docker Compose profiles (`core`, `lakehouse`, `intelligence`, `observability`, `bi`) without premature Kubernetes or microservice complexity.
+7. **O7 — Resource Efficiency**: Designed for local and single-host deployment via Docker Compose profiles (`core`, `lakehouse`, `intelligence`, `observability`, `bi`, `microservices`, `frontend`) without premature Kubernetes complexity.
 
 ---
 
@@ -24,8 +24,8 @@ flowchart TB
         Kafka["Apache Kafka<br/>(Partitioned Event Backbone)"]
         HotStore[("Redis 7<br/>(Hot State & Cache)")]
         OLAPStore[("ClickHouse<br/>(Real-Time & Historical OLAP)")]
-        Lakehouse[("MinIO + Parquet + Iceberg<br/>(Bronze / Silver / Gold)")]
-        BatchProc["PySpark + dbt Core + Great Expectations<br/>(Orchestrated by Apache Airflow)"]
+        Lakehouse[("MinIO / Local Parquet + Iceberg<br/>(Bronze / Silver / Gold)")]
+        BatchProc["PySpark + dbt Core + GE + Airflow<br/>(PLANNED Distributed Batch Targets)"]
 
         Collectors --> Kafka
         Kafka --> HotStore & OLAPStore & Lakehouse
@@ -72,16 +72,16 @@ flowchart TB
 | **Language & Runtime** | Python 3.12+ | Collectors, Kafka consumers, FastAPI backend, PySpark jobs, LangGraph agent | Not used for ad-hoc unvalidated scripts bypassing contracts |
 | **Query Language** | SQL | ClickHouse OLAP queries, dbt transformations, PostgreSQL control queries | Never dynamically generated as unrestricted raw SQL by LLMs |
 | **Data Sources** | Binance WS & REST APIs | Initial real-time and historical spot market data | Normalized at collector edge; never leaked into internal domain models |
-| **Event Streaming** | Apache Kafka (KRaft) | Durable event ingestion, partitioning by `{provider}:{symbol}`, consumer fan-out | Not a permanent historical database (retention capped at 24h–72h) |
+| **Event Streaming** | Apache Kafka (KRaft) | Durable event ingestion, partitioning by `{provider}:{symbol}`, consumer fan-out | Not a permanent historical database (configured retention: `7d`/`168h` raw, `30d`/`720h` anomalies/DLQ) |
 | **Hot Cache & State** | Redis 7 | Latest prices, 24h snapshots, top-20 order book, short-TTL query cache, rate limits | **Not a system of record**; never stores historical time-series arrays |
 | **Analytical OLAP DB** | ClickHouse | Sub-second historical candle/trade queries, Materialized Views, Superset serving | Not used for OLTP user accounts, RBAC, or frequent row-level mutations |
-| **Transactional OLTP DB** | PostgreSQL 16 | Users, RBAC, API keys, platform config, watermarks, Airflow & Agent run state | Never stores high-volume market tick or kline streams |
-| **Object Storage** | MinIO (S3 API) | Durable Data Lake storage for Bronze, Silver, and Gold datasets | Never queried synchronously by low-latency FastAPI endpoints |
-| **File & Table Format** | Apache Parquet + Apache Iceberg | ZSTD columnar storage with ACID table snapshots, schema evolution, and compaction | Does not replace ClickHouse as a low-latency query engine |
-| **Batch Processing** | Apache Spark (PySpark) | Bronze $\rightarrow$ Silver deduplication, historical backfills, Iceberg maintenance | Never used on the per-event real-time hot path or synchronous API path |
-| **Data Transformation** | dbt Core | Versioned SQL modeling (Silver $\rightarrow$ Gold and ClickHouse analytical marts) | Not a streaming engine |
-| **Orchestration** | Apache Airflow | Scheduling batch jobs, historical backfills, dbt runs, and GE validations | Never used as a real-time event broker |
-| **Data Quality** | Great Expectations | Automated data contract assertions on Silver/Gold Iceberg and ClickHouse tables | Not a replacement for producer-side Pydantic schema validation |
+| **Transactional OLTP DB** | PostgreSQL 16 | Users, RBAC, API keys, platform config, watermarks, Airflow (`PLANNED`) & Agent run state | Never stores high-volume market tick or kline streams |
+| **Object Storage** | MinIO (S3 API) | Target Data Lake object storage for Bronze, Silver, and Gold datasets (`lakehouse-*` buckets provisioned; v0.1 Lakehouse currently persists locally to `.local_lakehouse`) | Never queried synchronously by low-latency FastAPI endpoints |
+| **File & Table Format** | Apache Parquet + Apache Iceberg | ZSTD columnar storage with ACID table snapshots (`SilverLakehouseMergeEngine` v2 manifests implemented), schema evolution, and compaction | Does not replace ClickHouse as a low-latency query engine |
+| **Batch Processing** | Apache Spark (PySpark) `[PLANNED]` | Distributed Bronze $\rightarrow$ Silver deduplication and historical backfills (v0.1 in-process equivalent implemented in `SilverLakehouseMergeEngine`) | Never used on the per-event real-time hot path or synchronous API path |
+| **Data Transformation** | dbt Core `[PARTIALLY_IMPLEMENTED]` | Versioned SQL modeling (Silver $\rightarrow$ Gold and ClickHouse analytical marts; `dbt` project scaffolded under `src/lakehouse/gold/dbt/`, v0.1 Gold marts computed by `GoldLayerMartEngine`) | Not a streaming engine |
+| **Orchestration** | Apache Airflow `[PLANNED]` | Scheduling batch jobs, historical backfills, dbt runs, and GE validations (DAG specs planned; v0.1 stages orchestrated by `DataPlatformV01Pipeline`) | Never used as a real-time event broker |
+| **Data Quality** | Great Expectations `[PLANNED]` + `DataQualityGateEngine` `[IMPLEMENTED]` | Blocking DQ invariants (`DQ-KLINE-001..005`, `DQ-TRADE-001..003` active in v0.1; Great Expectations suite integration `PLANNED`) | Not a replacement for producer-side Pydantic schema validation |
 | **Backend Framework** | FastAPI | Modular Monolith REST, WebSocket, and SSE API layer | Never executes heavy CPU math or long-running workflows on the event loop |
 | **BI & Visualization** | Apache Superset | Interactive analytical dashboards over ClickHouse read models | Not used for operational service monitoring (handled by Grafana) |
 | **Observability** | Prometheus + Grafana | Metrics scraping, consumer lag tracking, API latency histograms, alerting | Not a business BI tool |
@@ -93,8 +93,8 @@ flowchart TB
 
 ## 4. Architectural Limitations & Non-Negotiable Boundaries Summary
 
-Every architectural pattern in this platform has explicit boundaries documented in detail across Sections `04`–`13` and `ADR-001`–`ADR-006`:
-1. **No Premature Microservices**: The backend is a Modular Monolith (`backend-api`) plus independent workers (`collector-ws`, `collector-rest`, `consumer-*`, `agent-worker`).
+Every architectural pattern in this platform has explicit boundaries documented in detail across Sections `04`–`14` and `ADR-001`–`ADR-008`:
+1. **Modular Monolith Core + Opt-In Domain Microservices (`ADR-004`, `ADR-007`)**: The default `--profile core` deploys the Modular Monolith (`backend-api`), while opt-in `--profile microservices` adds domain services (`svc-*` on ports `8001..8007`) alongside independent workers (`collector-*`, `consumer-*`, `agent-worker`). Note that standalone CLI worker loops (`collector-ws`, `collector-rest`, `consumer-lakehouse-bronze`, `agent-worker`) are currently config-logging stubs (`PROP-APP-002`), whereas the 12-stage executable pipeline runs end-to-end via `DataPlatformV01Pipeline`.
 2. **At-Least-Once + Idempotency (No Distributed 2PC Assumption)**: Kafka producers and consumers assume duplicates can happen and enforce deterministic deduplication at every sink.
 3. **Selective CQRS Without Event Sourcing**: CQRS is applied only to high-volume market/analytics domains; control plane domains use straightforward ACID PostgreSQL repositories.
 4. **Lakehouse Is Not a Low-Latency API Engine**: FastAPI never queries MinIO/Parquet synchronously.
@@ -106,7 +106,10 @@ Every architectural pattern in this platform has explicit boundaries documented 
 
 ## 5. Phased Implementation Roadmap (Phases 0 to 5)
 
-### Phase 0 — Architecture Foundation (Current Task)
+> [!NOTE]
+> **Implementation Status (`AS-IS` vs `TARGET`)**: Core application modules, FastAPI REST/SSE/Observability routes, Data Platform v0.1 Python engines (`src/lakehouse/`), LangGraph 5-node orchestrator + 10 deterministic tools (`src/intelligence/`), and domain microservice wrappers (`svc-*`) are **IMPLEMENTED** (verified by unit/contract tests). Standalone runtime collector/consumer/agent daemon loops (`PROP-APP-002`), distributed Spark/Airflow/GE containers, `/ws/v1/market/stream`, and route-level RBAC guards (`PROP-APP-004`) remain **`PLANNED` / `PARTIALLY_IMPLEMENTED`** roadmap targets.
+
+### Phase 0 — Architecture Foundation (Baseline Completed)
 - **Objective**: Establish complete system/data/backend/agent architecture, ADRs, specifications, diagrams, and initial modular project scaffolding.
 - **Scope**: Repository discovery, requirement analysis, 14 architecture docs, 16 diagrams, 6 ADRs, 5 specifications, Docker Compose profiled blueprint, clean-architecture package skeleton, and automated architectural boundary tests.
 - **Required Components**: Documentation suite (`docs/`), Python project skeleton (`src/`), `docker-compose.yml`, `pyproject.toml`, `.env.example`, and `tests/architecture/`.

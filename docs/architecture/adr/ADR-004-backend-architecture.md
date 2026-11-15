@@ -33,10 +33,10 @@ How do we design the backend architecture so that:
 ### 4.1. Deployment Topology: Modular Monolith + Independent Workers
 1. **FastAPI Modular Monolith (`backend-api`)**:
    - Single deployable API service containing domain modules: `market`, `historical`, `analytics`, `catalog`, `iam` (User & Auth), `platform_config`, `agent_api`, and `reporting`.
-2. **Independently Deployable Workers**:
-   - `collector-ws` & `collector-rest`: Stateful/scheduled ingestion workers.
-   - `consumer-hot-redis`, `consumer-analytics-ch`, `consumer-lakehouse-bronze`: Kafka streaming consumers.
-   - `agent-worker`: Dedicated Intelligence Plane worker executing LangGraph workflows and anomaly investigations.
+2. **Independently Deployable Workers** *(and opt-in `--profile microservices` per `ADR-007`)*:
+   - `collector-ws` & `collector-rest`: Stateful/scheduled ingestion workers *(config-logging CLI stubs in v0.1; see `PROP-APP-002`)*.
+   - `consumer-hot-redis`, `consumer-analytics-ch`, `consumer-lakehouse-bronze`: Kafka streaming consumers *(`consumer-lakehouse-bronze` CLI stub in v0.1)*.
+   - `agent-worker`: Dedicated Intelligence Plane worker executing LangGraph workflows and anomaly investigations *(CLI stub in v0.1; invoked synchronously/async via FastAPI runtime)*.
 
 ### 4.2. Internal Module Pattern: Clean / Hexagonal Architecture
 Every domain module enforces strict inward dependency rules (`Presentation -> Application -> Domain <- Infrastructure`):
@@ -113,5 +113,5 @@ Every domain module enforces strict inward dependency rules (`Presentation -> Ap
 
 ## 12. Conditions That Could Invalidate This Decision
 
-1. If WebSocket broadcast fan-out (`WS /ws/v1/market/stream`) grows to tens of thousands of concurrent client connections, the WebSocket gateway module should be extracted from the REST API monolith into a dedicated horizontally scaled WebSocket edge service backed by Redis Pub/Sub.
+1. If WebSocket broadcast fan-out (`WS /ws/v1/market/stream`, currently `PLANNED` while `/ws/v1/observability/stream` is `IMPLEMENTED`) grows to tens of thousands of concurrent client connections, the WebSocket gateway module should be extracted from the REST API monolith into a dedicated horizontally scaled WebSocket edge service backed by Redis Pub/Sub.
 

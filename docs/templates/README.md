@@ -2,7 +2,7 @@
 
 ## 1. Directory Purpose
 
-`docs/templates/` is the centralized, reusable document template library for `FinancialMarketDataPlatform`. It provides 56 standardized `.template.md` blueprints across 14 engineering categories corresponding to the 15-phase documentation lifecycle (`00-discovery` through `14-governance`).
+`docs/templates/` is the centralized, reusable document template library for `FinancialMarketDataPlatform`. It provides 57 standardized `.template.md` blueprints across 14 engineering categories corresponding to the 15-phase documentation lifecycle (`00-discovery` through `14-governance`).
 
 ## 2. Scope and Boundaries
 
@@ -60,7 +60,7 @@ Serves as the structural blueprint for all documents created in `docs/product/00
 
 ## 10. Quality Gate
 
-All 14 categories and 56 `.template.md` files exist, contain required metadata and placeholders, contain zero invented product requirements, and pass `validate_templates.py`.
+All 14 categories and 57 `.template.md` files exist, contain required metadata and placeholders, contain zero invented product requirements, and pass `validate_templates.py`.
 
 ## 11. Validation Commands
 

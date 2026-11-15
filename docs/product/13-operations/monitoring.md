@@ -81,7 +81,7 @@ Because Kafka consumers (`cg.hot.redis.v1`, `cg.analytics.clickhouse.v1`, `cg.la
 ## 6. Dependencies `[MANDATORY]`
 
 - **Upstream Dependencies**: `models/deployment/deployment.yaml`, `models/api/api.yaml`, `models/ux/ux.yaml`, `.agents/rules/data-platform-observability.md`.
-- **Downstream Consumers**: Operators inspecting `/ui/data-flow`, `/api/v1/observability/*`, and Prometheus `/metrics`.
+- **Downstream Consumers**: Operators inspecting SCR-003 (`/data-flow` in `frontend/` SPA), `/api/v1/observability/*`, and Prometheus `/metrics`.
 
 ---
 

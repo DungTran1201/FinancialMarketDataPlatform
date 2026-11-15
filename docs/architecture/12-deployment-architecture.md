@@ -10,14 +10,18 @@ See also: [Diagram 15: Deployment Architecture](../diagrams/deployment/15-deploy
 
 ## 2. Docker Compose Profile Matrix
 
-| Profile Name | Command to Start | Included Services | Approx. RAM Footprint | Target Use Case |
+| Profile Name | Command to Start | Included Services (`docker-compose.yml`) | Approx. RAM Footprint | Target Use Case |
 |---|---|---|---|---|
-| **`core`** *(Default)* | `docker compose --profile core up -d` | `postgres`, `redis`, `kafka` (KRaft), `clickhouse`, `collector-ws`, `collector-rest`, `consumer-hot-redis`, `consumer-analytics-ch`, `backend-api` | $\sim 4.0 - 5.5\text{ GB}$ | Real-time ingestion, hot cache, ClickHouse OLAP, and FastAPI backend development/testing. |
-| **`intelligence`** | `docker compose --profile core --profile intelligence up -d` | Adds `agent-worker` (LangGraph Orchestrator & Tool Gateway) | $+ 0.5\text{ GB}$ | Developing and testing on-demand and anomaly-triggered AI Agent workflows. |
-| **`lakehouse`** | `docker compose --profile core --profile lakehouse up -d` | Adds `minio`, `consumer-lakehouse-bronze`, `spark-worker`, `dbt-runner`, `great-expectations`, `airflow` | $+ 4.5 - 6.0\text{ GB}$ | Running Bronze–Silver–Gold Lakehouse pipelines, historical backfills, and data quality suites. |
-| **`observability`** | `docker compose --profile core --profile observability up -d` | Adds `prometheus`, `grafana` | $+ 0.6\text{ GB}$ | Monitoring ingestion lag, API P50/P95/P99 latency, and alerting dashboards. |
-| **`bi`** | `docker compose --profile core --profile bi up -d` | Adds `superset` | $+ 1.2\text{ GB}$ | Interactive BI visualization and market surveillance dashboards. |
-| **`microservices`** | `docker compose --profile core --profile microservices up -d` | Adds `svc-market-hot`, `svc-historical-backfill`, `svc-analytics-quant`, `svc-catalog-governance`, `svc-iam-security`, `svc-intelligence-agent`, `svc-data-plane-v01` | $+ 1.2\text{ GB}$ | Running decomposed domain microservices (`ADR-007`) with independent scaling and health probes behind `svc-api-gateway` (`backend-api:8000`). |
+| **`core`** *(Default)* | `docker compose --profile core up -d` | `postgres`, `redis`, `kafka` (KRaft), `clickhouse`, `backend-api` (`8000`), `frontend` (`3001->3000`), `edge-gateway` (`80`/`443`), `collector-ws`, `collector-rest`, `consumer-hot-redis`, `consumer-analytics-ch` | $\sim 4.0 - 5.5\text{ GB}$ | Real-time infrastructure, FastAPI backend, Nginx gateway, and TypeScript/Vite frontend. *(Note: standalone daemon workers `collector-*` run config-logging stubs unless wired; see `PROP-APP-002`.)* |
+| **`intelligence`** | `docker compose --profile core --profile intelligence up -d` | Adds `agent-worker` (also pulls `postgres`, `redis`, `kafka`, `clickhouse` via profile membership) | $+ 0.5\text{ GB}$ | Developing and testing LangGraph AI Agent workflows (`agent-worker` daemon stub in v0.1). |
+| **`lakehouse`** | `docker compose --profile core --profile lakehouse up -d` | Adds `minio` (API `9010->9000`, Console `9001->9001`) and `consumer-lakehouse-bronze` (plus `postgres`, `kafka`, `clickhouse`) | $+ 1.5 - 2.5\text{ GB}$ | Provisioning MinIO S3 buckets (`lakehouse-*`) and Bronze lakehouse ingestion target. |
+| **`observability`** | `docker compose --profile core --profile observability up -d` | Adds `prometheus` (`9090`), `grafana` (`3000`) | $+ 0.6\text{ GB}$ | Scraping `/metrics`, consumer lag tracking, alert rules (`alerts.yml`), and Grafana dashboards. |
+| **`bi`** | `docker compose --profile core --profile bi up -d` | Adds `superset` (`8088`) (plus `postgres`, `clickhouse`) | $+ 1.2\text{ GB}$ | Interactive BI visualization and market surveillance dashboards. |
+| **`microservices`** | `docker compose --profile core --profile microservices up -d` | Adds `svc-market-hot` (`8001`), `svc-historical-backfill` (`8002`), `svc-analytics-quant` (`8003`), `svc-catalog-governance` (`8004`), `svc-iam-security` (`8005`), `svc-intelligence-agent` (`8006`), `svc-data-plane-v01` (`8007`) | $+ 1.2\text{ GB}$ | Running decomposed domain microservices (`ADR-007`) alongside `backend-api:8000`. |
+| **`frontend`** | `docker compose --profile frontend up -d` | Starts `frontend` (`3001->3000`) independently against a locally running `backend-api` | $+ 0.3\text{ GB}$ | Standalone TypeScript/Vite dashboard development. |
+
+> [!NOTE]
+> **Planned Phase 2 Containers (`PLANNED` — Not Yet Defined in `docker-compose.yml`)**: `spark-worker`, `dbt-runner`, `great-expectations`, and `airflow` are architectural Phase 2 targets (`ADR-002`). Currently, Stages 1–12 execute inside `backend-api` and `svc-data-plane-v01` (`DataPlatformV01Pipeline`).
 
 ### Why Apache Kafka Runs in KRaft Mode
 - Running Apache Kafka in **KRaft (Kafka Raft Metadata) mode** eliminates the separate Apache ZooKeeper container, saving $\sim 512\text{ MB}-1\text{ GB}$ of JVM heap and reducing local container startup time by $50\%$.
@@ -26,10 +30,10 @@ See also: [Diagram 15: Deployment Architecture](../diagrams/deployment/15-deploy
 
 ## 3. Network Segmentation & Port Exposure
 
-To enforce Trust Boundaries (`Diagram 16`), containers are attached to three internal bridge networks:
-1. `frontend_net`: Connects externally exposed UI/API containers (`backend-api:8000`, `grafana:3000`, `superset:8088`, `airflow:8080`).
-2. `app_control_net`: Connects `backend-api`, `agent-worker`, `airflow`, `postgres`, and `prometheus`.
-3. `data_plane_net`: Connects `collector-ws`, `collector-rest`, `kafka`, `consumer-*`, `redis`, `clickhouse`, `minio`, and `spark-worker`.
+To enforce Trust Boundaries (`Diagram 16`), containers are attached to three internal bridge networks (`docker-compose.yml`):
+1. `frontend_net`: Connects externally exposed UI/API containers (`backend-api:8000`, `frontend:3001->3000`, `edge-gateway:80/443`, `grafana:3000`, `superset:8088`).
+2. `app_control_net`: Connects `postgres:5432`, `redis:6379`, `clickhouse:8123/9000`, `backend-api`, `collector-ws`, `collector-rest`, `agent-worker`, `prometheus:9090`, `grafana`, `superset`, and `svc-market-hot`..`svc-data-plane-v01` (`8001..8007`).
+3. `data_plane_net`: Connects `redis`, `kafka:9092`, `clickhouse`, `minio:9010/9001`, `backend-api`, `collector-ws`, `collector-rest`, `consumer-hot-redis`, `consumer-analytics-ch`, `consumer-lakehouse-bronze`, `agent-worker`, `prometheus`, and `svc-market-hot`..`svc-data-plane-v01`.
 
 ---
 

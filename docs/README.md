@@ -32,7 +32,7 @@
 | `architecture/` | Preserved architecture specifications (00..14) and ADRs (001..008) | Required | `docs/architecture/README.md` |
 | `contracts/` | Traceability matrix, API contracts, WebSocket/SSE specs, Kafka schemas | Required | `docs/contracts/README.md` |
 | `specifications/` | Preserved baseline data platform and API specifications | Required | `docs/specifications/README.md` |
-| `diagrams/` | Unified technical diagram subsystem (22 Mermaid diagrams) | Required | `docs/diagrams/README.md` |
+| `diagrams/` | Unified technical diagram subsystem (`22` active `DIAG-*` diagrams + `12` diagram templates = `34` files) | Required | `docs/diagrams/README.md` |
 | `operations/` | Production container deployment, SRE runbooks, and Prometheus alerts | Required | `docs/operations/README.md` |
 | `development/` | 5-minute setup, local test execution, and architectural codebase map | Required | `docs/development/README.md` |
 | `product/` | 15-phase Product & Website lifecycle documentation (`00`..`14`) | Required | `docs/product/README.md` |

@@ -15,11 +15,11 @@ Models system context, C4 containers/components (`COMP-###`), SADs, and ADRs (`A
 
 ## 3. Authoritative Inputs
 
-- `models/architecture/architecture.yaml`, `components.yaml`, `docs/architecture/00..13-*.md`, `docs/architecture/adr/ADR-001..006`, `docs/templates/architecture/`.
+- `models/architecture/architecture.yaml`, `components.yaml`, `docs/architecture/00..14-*.md`, `docs/architecture/adr/ADR-001..008`, `docs/templates/architecture/`.
 
 ## 4. Preconditions
 
-1. Target `README.md` read; preserved baseline `ADR-001..006` and Three-Plane boundaries (`.agents/config/data-platform-boundaries.yaml`) verified.
+1. Target `README.md` read; preserved baseline `ADR-001..008` and Three-Plane boundaries (`.agents/config/data-platform-boundaries.yaml`) verified.
 
 ## 5. Execution Procedure
 
@@ -44,7 +44,7 @@ python tools/validators/run_all.py
 
 ## 9. Restrictions
 
-- Never overwrite preserved `docs/architecture/00..13` or `ADR-001..006` without an approved `ARCH` work item; never violate Three-Plane isolation.
+- Never overwrite preserved `docs/architecture/00..13` or `ADR-001..008` without an approved `ARCH` work item; never violate Three-Plane isolation.
 
 ## 10. Related Skills
 

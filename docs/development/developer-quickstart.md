@@ -50,10 +50,10 @@ cd ..
 
 ### Step 3: Run Automated Verification Suite
 ```powershell
-# 1. Run Python test suite (50 tests covering all 3 planes)
+# 1. Run Python test suite (unit, contract, architecture, DQ, integration, E2E, resilience, performance)
 .\.venv\Scripts\pytest.exe tests -v
 
-# 2. Run Documentation Engineering Validators (10 validators)
+# 2. Run Documentation Engineering Validators (run_all.py orchestrates 10 validator modules)
 .\.venv\Scripts\python.exe tools/validators/run_all.py
 
 # 3. Run Frontend unit tests
@@ -92,9 +92,9 @@ npm run dev
 
 | Command | Purpose |
 |---|---|
-| `pytest tests/ -v` | Run all 50 automated tests |
-| `ruff check src tests` | Run Python linter |
-| `python tools/validators/run_all.py` | Run 10 documentation and model validators |
+| `.\.venv\Scripts\pytest.exe tests -v` | Run all Python test suites (`50+` test functions) |
+| `.\.venv\Scripts\ruff.exe check src tests tools` | Run Python linter |
+| `.\.venv\Scripts\python.exe tools/validators/run_all.py` | Run all documentation and model validators |
 | `npm test --prefix frontend` | Run frontend unit tests |
 | `npm run build --prefix frontend` | Build frontend production assets to `frontend/dist/` |
 | `git status` | Verify clean working tree |

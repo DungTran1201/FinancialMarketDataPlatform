@@ -16,7 +16,7 @@ Independently reviews changes to the financial market data platform for event co
 
 ## 2. Core Responsibilities
 
-1. Review code, SQL DDL, and designs against canonical contracts (`EventEnvelopeV1`), ADRs (`ADR-001..006`), canonical YAML models (`models/`), and actual implementation evidence.
+1. Review code, SQL DDL, and designs against canonical contracts (`EventEnvelopeV1`), ADRs (`ADR-001..008`), canonical YAML models (`models/`), and actual implementation evidence.
 2. Verify natural keys (`compute_deterministic_event_id`), partition ordering (`compute_partition_key`), UTC timestamp semantics, exact `Decimal` usage, OHLCV candle invariants, and duplicate handling.
 3. Examine Kafka producer acks, commit-after-write offset windows, retry/DLQ routing (`market.dlq.v1`), backfill idempotency, and watermark advancement.
 4. Review Bronze/Silver/Gold Medallion ownership, dbt semantic consistency, ClickHouse query design, and retention policies.
@@ -39,7 +39,7 @@ Independently reviews changes to the financial market data platform for event co
 ## 5. Authoritative Inputs
 
 - [AGENTS.md](../../AGENTS.md)
-- `docs/architecture/adr/ADR-001..006` and `docs/specifications/`
+- `docs/architecture/adr/ADR-001..008` and `docs/specifications/`
 - `.agents/config/data-platform-boundaries.yaml`
 - `models/`, `src/`, `deploy/`, `docker-compose.yml`, `.github/workflows/ci.yml`, and `tests/`
 

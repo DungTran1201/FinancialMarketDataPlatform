@@ -74,7 +74,8 @@ def main() -> int:
             errors += 1
 
     print(
-        f"[validate_templates] Checked {len(existing_cats)} categories and {len(tpl_files)} templates -> {errors} error(s)."
+        f"[validate_templates] Checked {len(existing_cats)} categories and {len(tpl_files)} templates -> "
+        f"{errors} error(s)."
     )
     return 1 if errors else 0
 

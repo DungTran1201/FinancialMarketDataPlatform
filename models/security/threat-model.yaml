@@ -7,7 +7,7 @@ metadata:
   status: "BASELINED"
   canonical_model: true
   created_at: "2026-11-12"
-  updated_at: "2026-11-12"
+  updated_at: "2026-11-15"
   owner: "security-reviewer"
   source_documents:
     - "docs/architecture/10-security-and-governance.md"
@@ -63,8 +63,10 @@ controls:
     mitigates: ["THR-001"]
     verification_test: "TC-004"
   - id: "CTRL-002"
-    name: "ClickHouse Read-Only Database Role (fmdp_agent_ro, readonly=1)"
+    name: "ClickHouse Read-Only Database Role Target (fmdp_agent_ro, readonly=1)"
     mitigates: ["THR-001"]
+    implementation_status: "PLANNED"
+    implementation_note: "Target DB credential/profile isolation; active Python runtime enforces read-only policies via ControlledToolGateway (CTRL-001)."
     verification_test: "TC-004"
   - id: "CTRL-003"
     name: "BoundedTimeRange Guard & Sliding-Window Rate Limiter"

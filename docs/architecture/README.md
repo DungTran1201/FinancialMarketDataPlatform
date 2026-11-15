@@ -2,7 +2,7 @@
 
 ## 1. Directory Purpose
 
-Holds the baselined Phase 0 system, Data Platform, Modular Monolith Backend, and Agentic Intelligence architecture documents (`00` through `14`) and Architecture Decision Records (`adr/`).
+Holds the baselined Phase 0 system, Data Platform, Modular Monolith Backend, and Agentic Intelligence architecture documents (`00` through `14`) and Architecture Decision Records (`adr/`). Under `DOCS-004`, each document explicitly distinguishes `IMPLEMENTED`, `PARTIALLY_IMPLEMENTED`, and `PLANNED` runtime capabilities.
 
 ## 2. Scope and Boundaries
 
@@ -30,7 +30,7 @@ Owned by `architecture-modeler` and reviewed by `documentation-architect` and `s
 | `04-data-platform-architecture.md` | Plane A Ingestion, Kafka Streaming & Lakehouse Medallion Architecture | Required | `docs/templates/architecture/SAD.template.md` |
 | `05-backend-architecture.md` | Plane B FastAPI Modular Monolith, CQRS & Hexagonal Architecture | Required | `docs/templates/architecture/SAD.template.md` |
 | `06-agentic-intelligence-architecture.md` | Plane C LangGraph Orchestrator, Tool Gateway & Guardrail Architecture | Required | `docs/templates/architecture/SAD.template.md` |
-| `07-data-storage-and-modeling.md` | Polyglot Storage & Schema Design (Iceberg, ClickHouse, PostgreSQL, Redis, Qdrant) | Required | `docs/templates/architecture/SAD.template.md` |
+| `07-data-storage-and-modeling.md` | Polyglot Storage & Schema Design (Iceberg/Parquet, ClickHouse, PostgreSQL, Redis; Qdrant PLANNED target) | Required | `docs/templates/architecture/SAD.template.md` |
 | `08-data-flow-and-event-contracts.md` | End-to-End Hot, Warm, Cold, Backfill & RAG Data Pipelines | Required | `docs/templates/architecture/SAD.template.md` |
 | `09-api-and-integration-architecture.md` | REST, WebSocket, SSE & Kafka Event Integration Contracts | Required | `docs/templates/architecture/SAD.template.md` |
 | `10-security-and-governance.md` | Security Trust Boundaries, Zero-Direct-DB Isolation & Data Governance | Required | `docs/templates/architecture/SAD.template.md` |

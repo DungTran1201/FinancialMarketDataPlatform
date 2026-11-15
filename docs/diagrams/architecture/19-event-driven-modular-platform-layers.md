@@ -21,7 +21,7 @@ Illustrates the restructured **Event-Driven Modular Data Platform** (`ARCH-001` 
 - `src/ingestion/` depends strictly on `EventPublisherPort` (`src/ingestion/domain/ports.py`) and never imports `src/streaming/`, `src/lakehouse/`, `src/serving/`, or `src/intelligence/`.
 - `src/streaming/` owns Kafka broker/topics/consumers and never imports `src/ingestion/`, `src/lakehouse/`, `src/serving/`, or `src/intelligence/`.
 - `src/lakehouse/` isolates `bronze`, `silver`, `gold`, `quality`, and `catalog`, coordinated at runtime solely through `src/lakehouse/orchestration/pipeline.py` (composition root).
-- `src/serving/api/` preserves the 8-module Clean Architecture Modular Monolith alongside thin ASGI wrappers (`services/`) and Edge Gateway (`gateway/`), with zero dependency on `src/intelligence/`.
+- `src/serving/api/` preserves the 8-module Clean Architecture Modular Monolith alongside 7 domain ASGI wrappers (`services/*.py`) and Edge Gateway/Observability (`gateway/{registry,service,observability}.py`), with zero dependency on `src/intelligence/`.
 
 ---
 
@@ -55,7 +55,7 @@ flowchart TB
         subgraph Lakehouse["src/lakehouse/"]
             LH_BRZ["bronze/archiver.py & consumer.py"]
             LH_SLV["silver/merge_engine.py"]
-            LH_GLD["gold/mart_engine.py & dbt/"]
+            LH_GLD["gold/mart_engine.py"]
             LH_DQ["quality/gates.py"]
             LH_CAT["catalog/lineage.py"]
             LH_ORC["orchestration/pipeline.py<br/>(Composition Root)"]
@@ -63,9 +63,9 @@ flowchart TB
     end
 
     subgraph PlaneB["Plane B — Serving & Control Plane (src/serving/)"]
-        SRV_GW["api/gateway/ (registry, service, ui)"]
+        SRV_GW["api/gateway/ (registry, service, observability)"]
         SRV_MOD["api/modules/ (8 Clean Architecture Domains)"]
-        SRV_SVC["api/services/ (8 ASGI Wrappers)"]
+        SRV_SVC["api/services/ (7 Domain ASGI Wrappers)"]
         SRV_APP["api/main.py & infrastructure/runtime.py"]
     end
 

@@ -3,15 +3,21 @@ version: "1.0"
 metadata:
   model_id: "MODEL-API-001"
   name: "Platform REST, WebSocket & SSE API Catalog"
-  description: "Structured representation of baseline platform endpoints."
+  description: "Canonical catalog of all 55 implemented FastAPI monolith routes plus 1 preserved planned route (API-003) and 7 domain microservice entrypoints."
   status: "BASELINED"
   canonical_model: true
   created_at: "2026-11-12"
-  updated_at: "2026-11-12"
+  updated_at: "2026-11-15"
   owner: "api-architect"
   source_documents:
     - "docs/specifications/api-specification.md"
     - "docs/architecture/09-api-and-integration-architecture.md"
+  runtime_notes:
+    monolith_entrypoint: "src/serving/api/main.py"
+    openapi_docs_url: "/api/docs"
+    openapi_schema_url: "/api/openapi.json"
+    rate_limit_middleware: "SlidingWindowRateLimiter (src/shared/security/primitives.py): AUTH=10/min (/api/v1/auth*), AGENT_TRIGGER=5/min (/api/v1/agents/runs*), HEAVY_ANALYTICS=30/min (/api/v1/analytics*), MARKET_READ=120/min (all other paths)."
+    rbac_note: "auth_role expresses the target RBAC policy (UserRole). Runtime JWT/API-key token issuance is active on /api/v1/auth/*, whereas per-route RBAC dependency enforcement on domain routers is PARTIALLY_IMPLEMENTED (tracked in PROP-APP-004)."
 
 endpoints:
   - id: "API-001"
@@ -19,6 +25,8 @@ endpoints:
     path: "/api/v1/market/prices/{symbol}"
     domain: "market"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 1500
     rate_limit_per_min: 120
     backing_store: "redis_with_clickhouse_fallback"
@@ -28,6 +36,8 @@ endpoints:
     path: "/api/v1/market/snapshots/{symbol}"
     domain: "market"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 2000
     rate_limit_per_min: 120
     backing_store: "redis_with_clickhouse_fallback"
@@ -37,13 +47,18 @@ endpoints:
     path: "/ws/v1/market/stream"
     domain: "market"
     auth_role: "viewer"
+    implementation_status: "PLANNED"
+    runtime_rbac_enforced: false
     backing_store: "redis_pubsub"
+    notes: "Preserved planned WebSocket ticker multiplex contract; live observability streaming in v0.1 uses API-055 (/api/v1/observability/stream) and API-056 (/ws/v1/observability/stream)."
     related_requirements: ["FR-04"]
   - id: "API-004"
     method: "GET"
     path: "/api/v1/historical/klines/{symbol}"
     domain: "historical"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 5000
     rate_limit_per_min: 120
     backing_store: "clickhouse"
@@ -53,6 +68,8 @@ endpoints:
     path: "/api/v1/historical/trades/{symbol}"
     domain: "historical"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 5000
     rate_limit_per_min: 120
     backing_store: "clickhouse"
@@ -62,15 +79,21 @@ endpoints:
     path: "/api/v1/historical/backfill-jobs"
     domain: "historical"
     auth_role: "operator"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 3000
-    rate_limit_per_min: 10
-    backing_store: "postgresql_and_airflow"
+    rate_limit_per_min: 120
+    target_rate_limit_per_min: 10
+    backing_store: "postgresql_and_in_process_executor"
+    notes: "HTTP 202 async backfill trigger executed by in-process runtime; standalone Airflow DAG scheduling is PLANNED."
     related_requirements: ["FR-02"]
   - id: "API-007"
     method: "GET"
     path: "/api/v1/analytics/statistics/{symbol}"
     domain: "analytics"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 5000
     rate_limit_per_min: 30
     backing_store: "clickhouse_mv_and_redis_cache"
@@ -80,25 +103,34 @@ endpoints:
     path: "/api/v1/agents/runs"
     domain: "agent_api"
     auth_role: "analyst"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 3000
     rate_limit_per_min: 5
-    backing_store: "postgresql_and_redis_queue"
+    backing_store: "in_process_agent_executor_and_postgresql_target"
     related_requirements: ["FR-09"]
   - id: "API-009"
     method: "GET"
     path: "/api/v1/agents/runs/{run_id}"
     domain: "agent_api"
     auth_role: "analyst"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 2000
-    rate_limit_per_min: 60
-    backing_store: "postgresql"
+    rate_limit_per_min: 120
+    target_rate_limit_per_min: 60
+    backing_store: "in_process_store_and_postgresql_target"
+    notes: "Matched by /api/v1/agents/runs* in SlidingWindowRateLimiter (tier AGENT_TRIGGER = 5 req/min in current middleware)."
     related_requirements: ["FR-09"]
   - id: "API-010"
     method: "GET"
     path: "/api/v1/health/live"
     domain: "platform"
     auth_role: "public"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 1000
+    rate_limit_per_min: 120
     backing_store: "in_process"
     related_requirements: ["FR-10"]
   - id: "API-011"
@@ -106,8 +138,11 @@ endpoints:
     path: "/api/v1/data-platform/v01/run"
     domain: "data_platform"
     auth_role: "operator"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 5000
-    rate_limit_per_min: 30
+    rate_limit_per_min: 120
+    target_rate_limit_per_min: 30
     backing_store: "kafka_lakehouse_redis_clickhouse"
     related_requirements: ["FR-01", "FR-02", "FR-03", "FR-06", "FR-07"]
   - id: "API-012"
@@ -115,6 +150,8 @@ endpoints:
     path: "/api/v1/data-platform/v01/gold/{mart_name}"
     domain: "data_platform"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 2000
     rate_limit_per_min: 120
     backing_store: "lakehouse_gold_parquet"
@@ -124,15 +161,20 @@ endpoints:
     path: "/api/v1/data-platform/v01/compaction"
     domain: "data_platform"
     auth_role: "operator"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 5000
-    rate_limit_per_min: 10
-    backing_store: "iceberg_v2_lakehouse"
+    rate_limit_per_min: 120
+    target_rate_limit_per_min: 10
+    backing_store: "local_lakehouse_iceberg_v2"
     related_requirements: ["FR-06"]
   - id: "API-014"
     method: "GET"
     path: "/api/v1/data-platform/v01/lineage"
     domain: "data_platform"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 1500
     rate_limit_per_min: 120
     backing_store: "governance_lineage_registry"
@@ -142,6 +184,8 @@ endpoints:
     path: "/api/v1/microservices/topology"
     domain: "platform"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 1000
     rate_limit_per_min: 120
     backing_store: "microservice_registry"
@@ -151,6 +195,8 @@ endpoints:
     path: "/api/v1/data-platform/v01/telemetry"
     domain: "data_platform"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 1500
     rate_limit_per_min: 120
     backing_store: "realtime_12_stage_telemetry_engine"
@@ -160,6 +206,8 @@ endpoints:
     path: "/api/v1/observability/overview"
     domain: "data_platform"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 2000
     rate_limit_per_min: 120
     backing_store: "pipeline_trace_registry_and_infra_probe"
@@ -169,6 +217,8 @@ endpoints:
     path: "/api/v1/observability/topology"
     domain: "data_platform"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 2000
     rate_limit_per_min: 120
     backing_store: "parallel_dag_topology_aggregator"
@@ -178,6 +228,8 @@ endpoints:
     path: "/api/v1/observability/kafka"
     domain: "data_platform"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 1500
     rate_limit_per_min: 120
     backing_store: "partitioned_kafka_broker_inspector"
@@ -187,6 +239,8 @@ endpoints:
     path: "/api/v1/observability/storage"
     domain: "data_platform"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 2500
     rate_limit_per_min: 120
     backing_store: "lakehouse_parquet_iceberg_and_clickhouse_redis_inspector"
@@ -196,6 +250,8 @@ endpoints:
     path: "/api/v1/observability/latency"
     domain: "data_platform"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 2000
     rate_limit_per_min: 120
     backing_store: "parallel_branch_percentile_engine"
@@ -205,7 +261,413 @@ endpoints:
     path: "/api/v1/observability/traces"
     domain: "data_platform"
     auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
     timeout_ms: 1500
     rate_limit_per_min: 120
     backing_store: "event_lifecycle_trace_registry"
     related_requirements: ["FR-03", "FR-10"]
+  - id: "API-023"
+    method: "GET"
+    path: "/api/v1/health/ready"
+    domain: "platform"
+    auth_role: "public"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1000
+    rate_limit_per_min: 120
+    backing_store: "in_process_and_encrypted_infra_bindings"
+    related_requirements: ["FR-10"]
+  - id: "API-024"
+    method: "GET"
+    path: "/metrics"
+    domain: "platform"
+    auth_role: "public"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1000
+    rate_limit_per_min: 120
+    backing_store: "prometheus_text_exporter"
+    related_requirements: ["FR-10"]
+  - id: "API-025"
+    method: "GET"
+    path: "/api/v1/platform/config"
+    domain: "platform_config"
+    auth_role: "admin"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1000
+    rate_limit_per_min: 120
+    backing_store: "in_process_platform_config"
+    related_requirements: ["FR-10"]
+  - id: "API-026"
+    method: "POST"
+    path: "/api/v1/auth/token"
+    domain: "iam"
+    auth_role: "public"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: true
+    timeout_ms: 1500
+    rate_limit_per_min: 10
+    backing_store: "in_process_jwt_hs256_and_pbkdf2"
+    related_requirements: ["FR-10"]
+  - id: "API-027"
+    method: "POST"
+    path: "/api/v1/auth/verify"
+    domain: "iam"
+    auth_role: "public"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: true
+    timeout_ms: 1000
+    rate_limit_per_min: 10
+    backing_store: "in_process_jwt_hs256_and_revocation_registry"
+    related_requirements: ["FR-10"]
+  - id: "API-028"
+    method: "POST"
+    path: "/api/v1/auth/revoke"
+    domain: "iam"
+    auth_role: "authenticated"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: true
+    timeout_ms: 1000
+    rate_limit_per_min: 10
+    backing_store: "sha256_token_revocation_registry"
+    related_requirements: ["FR-10"]
+  - id: "API-029"
+    method: "POST"
+    path: "/api/v1/auth/api-keys"
+    domain: "iam"
+    auth_role: "operator"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: true
+    timeout_ms: 1000
+    rate_limit_per_min: 10
+    backing_store: "in_process_api_key_registry"
+    related_requirements: ["FR-10"]
+  - id: "API-030"
+    method: "GET"
+    path: "/api/v1/auth/domains"
+    domain: "iam"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1000
+    rate_limit_per_min: 10
+    backing_store: "https_domain_security_topology"
+    related_requirements: ["FR-10"]
+  - id: "API-031"
+    method: "GET"
+    path: "/api/v1/market/prices"
+    domain: "market"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 2000
+    rate_limit_per_min: 120
+    backing_store: "redis_with_clickhouse_fallback"
+    related_requirements: ["FR-04"]
+  - id: "API-032"
+    method: "GET"
+    path: "/api/v1/market/orderbook/{symbol}"
+    domain: "market"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 2000
+    rate_limit_per_min: 120
+    backing_store: "redis_with_clickhouse_fallback"
+    related_requirements: ["FR-04"]
+  - id: "API-033"
+    method: "POST"
+    path: "/api/v1/market/ingest"
+    domain: "market"
+    auth_role: "operator"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 2000
+    rate_limit_per_min: 120
+    backing_store: "in_process_kafka_broker_and_sinks"
+    related_requirements: ["FR-01", "FR-03"]
+  - id: "API-034"
+    method: "POST"
+    path: "/api/v1/market/evict/{symbol}"
+    domain: "market"
+    auth_role: "operator"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1500
+    rate_limit_per_min: 120
+    backing_store: "redis_hot_state"
+    related_requirements: ["FR-04"]
+  - id: "API-035"
+    method: "GET"
+    path: "/api/v1/historical/backfill-jobs/{job_id}"
+    domain: "historical"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1500
+    rate_limit_per_min: 120
+    backing_store: "postgresql_and_in_process_executor"
+    related_requirements: ["FR-02"]
+  - id: "API-036"
+    method: "GET"
+    path: "/api/v1/analytics/correlations"
+    domain: "analytics"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 5000
+    rate_limit_per_min: 30
+    backing_store: "clickhouse_and_in_memory_analytics"
+    related_requirements: ["FR-05"]
+  - id: "API-037"
+    method: "GET"
+    path: "/api/v1/analytics/anomalies"
+    domain: "analytics"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 3000
+    rate_limit_per_min: 30
+    backing_store: "kafka_anomalies_and_in_memory_store"
+    related_requirements: ["FR-05", "FR-09"]
+  - id: "API-038"
+    method: "POST"
+    path: "/api/v1/analytics/anomalies/evaluate"
+    domain: "analytics"
+    auth_role: "analyst"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 3000
+    rate_limit_per_min: 30
+    backing_store: "zscore_anomaly_detector"
+    related_requirements: ["FR-05"]
+  - id: "API-039"
+    method: "GET"
+    path: "/api/v1/catalog/instruments"
+    domain: "catalog"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1500
+    rate_limit_per_min: 120
+    backing_store: "postgresql_control_metadata"
+    related_requirements: ["FR-10"]
+  - id: "API-040"
+    method: "PUT"
+    path: "/api/v1/catalog/instruments/{symbol}"
+    domain: "catalog"
+    auth_role: "operator"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1500
+    rate_limit_per_min: 120
+    backing_store: "postgresql_control_metadata"
+    related_requirements: ["FR-10"]
+  - id: "API-041"
+    method: "GET"
+    path: "/api/v1/catalog/freshness"
+    domain: "catalog"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1500
+    rate_limit_per_min: 120
+    backing_store: "redis_clickhouse_watermark_store"
+    related_requirements: ["FR-04", "FR-10"]
+  - id: "API-042"
+    method: "POST"
+    path: "/api/v1/catalog/lakehouse/pipeline"
+    domain: "catalog"
+    auth_role: "operator"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 5000
+    rate_limit_per_min: 120
+    backing_store: "lakehouse_bronze_silver_gold_engine"
+    related_requirements: ["FR-06", "FR-07"]
+  - id: "API-043"
+    method: "GET"
+    path: "/api/v1/agents/runs/{run_id}/events"
+    domain: "agent_api"
+    auth_role: "analyst"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 5000
+    rate_limit_per_min: 5
+    backing_store: "in_process_agent_sse_audit_stream"
+    notes: "Matched by /api/v1/agents/runs* in SlidingWindowRateLimiter (AGENT_TRIGGER = 5 req/min)."
+    related_requirements: ["FR-09"]
+  - id: "API-044"
+    method: "GET"
+    path: "/api/v1/reports"
+    domain: "reporting"
+    auth_role: "analyst"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 2000
+    rate_limit_per_min: 120
+    backing_store: "in_process_and_postgresql_report_store"
+    related_requirements: ["FR-09"]
+  - id: "API-045"
+    method: "GET"
+    path: "/api/v1/reports/{run_id}"
+    domain: "reporting"
+    auth_role: "analyst"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 2000
+    rate_limit_per_min: 120
+    backing_store: "in_process_and_postgresql_report_store"
+    related_requirements: ["FR-09"]
+  - id: "API-046"
+    method: "GET"
+    path: "/api/v1/data-platform/v01/status"
+    domain: "data_platform"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1500
+    rate_limit_per_min: 120
+    backing_store: "data_platform_v01_orchestrator"
+    related_requirements: ["FR-06", "FR-10"]
+  - id: "API-047"
+    method: "GET"
+    path: "/api/v1/data-platform/v01/watermarks"
+    domain: "data_platform"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1500
+    rate_limit_per_min: 120
+    backing_store: "ingestion_watermark_store"
+    related_requirements: ["FR-02", "FR-10"]
+  - id: "API-048"
+    method: "GET"
+    path: "/api/v1/data-platform/v01/metrics"
+    domain: "data_platform"
+    auth_role: "public"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1500
+    rate_limit_per_min: 120
+    backing_store: "prometheus_text_exporter"
+    related_requirements: ["FR-10"]
+  - id: "API-049"
+    method: "GET"
+    path: "/api/v1/microservices/health"
+    domain: "platform"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 2000
+    rate_limit_per_min: 120
+    backing_store: "microservice_registry_and_asgi_probes"
+    related_requirements: ["FR-10"]
+  - id: "API-050"
+    method: "POST"
+    path: "/api/v1/microservices/dispatch/{service_id}"
+    domain: "platform"
+    auth_role: "operator"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 3000
+    rate_limit_per_min: 120
+    backing_store: "microservice_registry_asgi_or_httpx_dispatch"
+    related_requirements: ["FR-10"]
+  - id: "API-051"
+    method: "GET"
+    path: "/api/v1/observability/traces/{event_id}"
+    domain: "data_platform"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 1500
+    rate_limit_per_min: 120
+    backing_store: "event_lifecycle_trace_registry"
+    related_requirements: ["FR-03", "FR-10"]
+  - id: "API-052"
+    method: "GET"
+    path: "/api/v1/observability/candles"
+    domain: "data_platform"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 2000
+    rate_limit_per_min: 120
+    backing_store: "clickhouse_and_lakehouse_candles"
+    related_requirements: ["FR-05", "FR-10"]
+  - id: "API-053"
+    method: "POST"
+    path: "/api/v1/observability/live/probe"
+    domain: "data_platform"
+    auth_role: "operator"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 5000
+    rate_limit_per_min: 120
+    backing_store: "live_exchange_probe_harness"
+    related_requirements: ["FR-01", "FR-10"]
+  - id: "API-054"
+    method: "POST"
+    path: "/api/v1/observability/demo/emit"
+    domain: "data_platform"
+    auth_role: "operator"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 2000
+    rate_limit_per_min: 120
+    backing_store: "synthetic_demo_event_emitter"
+    related_requirements: ["FR-03", "FR-10"]
+  - id: "API-055"
+    method: "GET"
+    path: "/api/v1/observability/stream"
+    domain: "data_platform"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    timeout_ms: 30000
+    rate_limit_per_min: 120
+    backing_store: "server_sent_events_stream"
+    related_requirements: ["FR-04", "FR-10"]
+  - id: "API-056"
+    method: "WS"
+    path: "/ws/v1/observability/stream"
+    domain: "data_platform"
+    auth_role: "viewer"
+    implementation_status: "IMPLEMENTED"
+    runtime_rbac_enforced: false
+    rate_limit_per_min: 120
+    backing_store: "websocket_observability_stream"
+    related_requirements: ["FR-04", "FR-10"]
+
+microservice_entrypoints:
+  - service_id: "svc-market-hot"
+    port: 8001
+    factory: "src.serving.api.services.market:create_market_microservice_app"
+    mounted_prefixes: ["/api/v1/health/live", "/api/v1/market"]
+  - service_id: "svc-historical-backfill"
+    port: 8002
+    factory: "src.serving.api.services.historical:create_historical_microservice_app"
+    mounted_prefixes: ["/api/v1/health/live", "/api/v1/historical"]
+  - service_id: "svc-analytics-quant"
+    port: 8003
+    factory: "src.serving.api.services.analytics:create_analytics_microservice_app"
+    mounted_prefixes: ["/api/v1/health/live", "/api/v1/analytics"]
+  - service_id: "svc-catalog-governance"
+    port: 8004
+    factory: "src.serving.api.services.catalog:create_catalog_microservice_app"
+    mounted_prefixes: ["/api/v1/health/live", "/api/v1/catalog", "/api/v1/platform"]
+  - service_id: "svc-iam-security"
+    port: 8005
+    factory: "src.serving.api.services.iam:create_iam_microservice_app"
+    mounted_prefixes: ["/api/v1/health/live", "/api/v1/auth"]
+  - service_id: "svc-intelligence-agent"
+    port: 8006
+    factory: "src.serving.api.services.intelligence:create_intelligence_microservice_app"
+    mounted_prefixes: ["/api/v1/health/live", "/api/v1/agents", "/api/v1/reports"]
+  - service_id: "svc-data-plane-v01"
+    port: 8007
+    factory: "src.serving.api.services.data_plane:create_data_plane_microservice_app"
+    mounted_prefixes: ["/api/v1/health/live", "/api/v1/data-platform/v01"]

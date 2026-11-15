@@ -2,11 +2,11 @@
 
 ## 1. Directory Purpose
 
-Stores the authoritative Architecture Decision Records (`ADR-001` through `ADR-006` and future platform ADRs) governing technology, storage, streaming, backend, caching, and Agent isolation trade-offs.
+Stores the authoritative Architecture Decision Records (`ADR-001` through `ADR-008` and future platform ADRs) governing technology, storage, streaming, backend, caching, Agent isolation, microservices decomposition, and modular data platform architecture.
 
 ## 2. Scope and Boundaries
 
-- **Belongs in this directory**: `ADR-001-overall-architecture.md` through `ADR-006-agent-integration.md` and future `ADR-NNN-*.md` files.
+- **Belongs in this directory**: `ADR-001-overall-architecture.md` through `ADR-008-event-driven-modular-data-platform.md` and future `ADR-NNN-*.md` files.
 - **Does NOT belong in this directory**: Product-specific UI decisions (`docs/product/06-architecture/adr/`) or general prose specs.
 
 ## 3. Agent Role and Responsibilities
@@ -65,5 +65,5 @@ All ADRs contain all mandatory decision sections and match `models/architecture/
 
 ## 12. Agent Restrictions
 
-- Do NOT renumber or delete `ADR-001` through `ADR-006`.
+- Do NOT renumber or delete `ADR-001` through `ADR-008`.
 - Do NOT introduce unapproved technologies without a ratified ADR.

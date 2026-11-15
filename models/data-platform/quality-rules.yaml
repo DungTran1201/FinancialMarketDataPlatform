@@ -14,6 +14,7 @@ metadata:
     - "docs/architecture/14-data-platform-v01-and-microservices-architecture.md"
 
 gate_engine: "src/lakehouse/quality/gates.py"
+implementation_note: "Implemented via custom Python Decimal DataQualityGateEngine; Great Expectations external runtime library is PLANNED."
 
 rules:
   - rule_code: "DQ-KLINE-001"
@@ -25,7 +26,7 @@ rules:
     dataset: "silver.market_klines"
     severity: "CRITICAL"
     blocks_gold_promotion: true
-    invariant: "low_price <= open_price, close_price <= high_price"
+    invariant: "high_price >= open_price AND high_price >= close_price AND low_price <= open_price AND low_price <= close_price"
   - rule_code: "DQ-KLINE-003"
     dataset: "silver.market_klines"
     severity: "CRITICAL"
@@ -47,6 +48,11 @@ rules:
     blocks_gold_promotion: true
     invariant: "price > 0 and quantity > 0"
   - rule_code: "DQ-TRADE-002"
+    dataset: "silver.market_trades"
+    severity: "CRITICAL"
+    blocks_gold_promotion: true
+    invariant: "abs(quote_volume - (price * quantity)) <= Decimal('0.01')"
+  - rule_code: "DQ-TRADE-003"
     dataset: "silver.market_trades"
     severity: "CRITICAL"
     blocks_gold_promotion: true

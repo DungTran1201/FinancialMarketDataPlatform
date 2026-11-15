@@ -42,3 +42,10 @@
 - **Characteristics**: Replaced prototype static backend HTML pages (`ui.py`) with a dedicated, decoupled TypeScript/Vite Single Page Application served via hardened Nginx, accompanied by Server-Sent Events (SSE) and WebSocket streams.
 - **Authoritative Record**: [FEAT-002 Review Record](../../work-items/FEAT-002-frontend-experience-layer/review.md).
 
+---
+
+## 5. Evolution Milestone 5: Repository-Wide Documentation Remediation & Reconciliation (`DOCS-004`)
+- **Period**: 2026-11-15.
+- **Characteristics**: Completed `DOCS-003` remediation, reconciled `AS-IS` implementation status vs `PLANNED` distributed batch/daemon targets across all canonical models (`models/`), architecture specs (`00..14`, `ADR-001..008`), operations/Compose configurations, diagrams, validators, and Governance indexes.
+- **Authoritative Record**: [DOCS-004 Work Item](../../work-items/DOCS-004-full-documentation-remediation/README.md).
+

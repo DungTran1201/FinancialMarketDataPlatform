@@ -1,11 +1,23 @@
-# Diagram 05: Data Ingestion Architecture
+# Diagram 05: Data Ingestion Architecture (`DIAG-DATA-005`)
+
+| Diagram Metadata | Value |
+|---|---|
+| **Diagram ID** | `DIAG-DATA-005` |
+| **Title** | Data Ingestion Architecture |
+| **Diagram Category** | `docs/diagrams/data-platform/` |
+| **Notation / Mermaid Type** | `Mermaid (flowchart TB)` |
+| **Status** | `IMPLEMENTED` / `PARTIALLY_IMPLEMENTED` (REST backfill & normalization active in v0.1 pipeline; standalone worker daemons `[PROP-APP-002]` pending) |
+| **Version** | `1.1.0` |
+| **Authoritative Document Reference** | `docs/architecture/04-data-platform-architecture.md`, `docs/architecture/08-data-flow-and-event-contracts.md` |
+| **Canonical Model Reference** | `models/process/processes.yaml` |
+| **Related Artifact IDs** | `FR-01`, `FR-02`, `FR-03`, `PROC-001`, `PROP-APP-002` |
 
 ## Architectural Explanation
 
-The **Data Ingestion Architecture** details how both real-time WebSocket streams and paginated REST historical endpoints are ingested reliably:
-- **Symbol Subscription Sync**: Collectors load active symbol configurations (`BTCUSDT`, `ETHUSDT`, etc.) from PostgreSQL on startup and refresh periodically.
-- **WebSocket Resilience**: `collector-ws` maintains multiplexed connections, tracks heartbeat pings/pongs, reconnects with exponential backoff + jitter on disconnect, and records any timestamp gap so `collector-rest` can backfill missed klines/trades.
-- **Normalization & Validation Gate**: Raw exchange JSON is mapped through a provider-specific adapter (`BinanceNormalizer`) into the canonical `EventEnvelopeV1` Pydantic contract with a deterministic UUIDv5 `event_id` before publishing to Kafka. Malformed payloads are isolated in `market.dlq.v1`.
+The **Data Ingestion Architecture** details how real-time WebSocket streams and paginated REST historical endpoints are ingested reliably:
+- **Symbol Subscription & Watermark State**: Active configuration/watermark stores use SQLite WAL (`src/ingestion/infrastructure/watermark_store.py`) locally and PostgreSQL control schema in Docker Compose (`monitored_instruments`, `ingestion_watermarks`).
+- **WebSocket & REST Workers**: `WebSocketStreamCollector` tracks sequence gaps via `SequenceAndGapDetector`; `HistoricalRestBackfillWorker` obeys Binance `X-MBX-USED-WEIGHT-1M` headers via `TokenBucketRateLimiter`. Note `[PROP-APP-002]`: standalone Compose CLI entrypoints (`ws_collector.py`, `rest_backfill.py`) are currently stubs while active ingestion runs via `backend-api` / `svc-data-plane-v01`.
+- **Normalization & Validation Gate**: Raw exchange JSON is mapped via `BinancePayloadNormalizer` into `EventEnvelopeV1` with deterministic UUIDv5 `event_id` and published to Kafka (1-node KRaft in Compose; malformed payloads routed to `market.dlq.v1`).
 
 ```mermaid
 flowchart TB
@@ -14,29 +26,29 @@ flowchart TB
         BREST["Binance REST API v3<br/>https://api.binance.com/api/v3"]
     end
 
-    subgraph ControlDB["Configuration & State (PostgreSQL)"]
+    subgraph ControlDB["Configuration & Watermark State (SQLite WAL / PostgreSQL)"]
         InstTable[("monitored_instruments<br/>Active Symbols & Streams")]
         WatermarkTable[("ingestion_watermarks<br/>Last Synced Timestamps")]
     end
 
-    subgraph WSWorker["collector-ws (Real-Time Ingestion Worker)"]
+    subgraph WSWorker["WebSocketStreamCollector (Pipeline / CLI Stub PROP-APP-002)"]
         ConnMgr["WebSocketConnectionManager<br/>(TLS, Ping/Pong, Exponential Backoff)"]
         GapTracker["SequenceAndGapDetector<br/>(Detects Disconnection Windows)"]
-        WSNorm["BinanceStreamNormalizer<br/>(Decimal Conversion & UTC Normalization)"]
+        WSNorm["BinancePayloadNormalizer<br/>(Decimal Conversion & UTC Normalization)"]
     end
 
-    subgraph RESTWorker["collector-rest (Historical & Gap-Fill Worker)"]
-        RateLimiter["TokenBucketRateLimiter<br/>(Respects X-MBX-USED-WEIGHT)"]
+    subgraph RESTWorker["HistoricalRestBackfillWorker (Active HTTP Client & Pipeline)"]
+        RateLimiter["TokenBucketRateLimiter<br/>(Respects X-MBX-USED-WEIGHT-1M)"]
         Paginator["TimeRangePaginator<br/>(1000-Row Chunk Fetcher)"]
-        RESTNorm["BinanceRESTNormalizer<br/>(Canonical Envelope Builder)"]
+        RESTNorm["BinancePayloadNormalizer<br/>(Canonical Envelope Builder)"]
     end
 
     subgraph ValidationGate["Contract Validation & Producer Layer"]
-        Validator["PydanticContractValidator<br/>(EventEnvelopeV1 + Deterministic UUIDv5)"]
-        IdempProducer["IdempotentKafkaProducer<br/>(acks=all,linger.ms=5,compression=lz4)"]
+        Validator["ContractValidator<br/>(EventEnvelopeV1 + Deterministic UUIDv5)"]
+        IdempProducer["PartitionedEventStreamingBroker / Producer<br/>(Key Partitioning + DLQ Routing)"]
     end
 
-    subgraph KafkaCluster["Apache Kafka Topics"]
+    subgraph KafkaCluster["Apache Kafka Topics (1-Node KRaft in Compose)"]
         TTrades[("market.raw.trades.v1")]
         TKlines[("market.raw.klines.v1")]
         TTickers[("market.raw.tickers.v1")]

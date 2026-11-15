@@ -1,23 +1,36 @@
-# Diagram 06: Event Streaming Architecture
+# Diagram 06: Event Streaming Architecture (`DIAG-DATA-006`)
+
+| Diagram Metadata | Value |
+|---|---|
+| **Diagram ID** | `DIAG-DATA-006` |
+| **Title** | Event Streaming Architecture |
+| **Diagram Category** | `docs/diagrams/data-platform/` |
+| **Notation / Mermaid Type** | `Mermaid (flowchart LR)` |
+| **Status** | `IMPLEMENTED` / `PARTIALLY_IMPLEMENTED` (`cg.agent.anomaly.v1` standalone consumer `[PLANNED]`; Compose runs 1-node KRaft) |
+| **Version** | `1.1.0` |
+| **Authoritative Document Reference** | `docs/architecture/08-data-flow-and-event-contracts.md`, `docs/specifications/data-contracts.md` |
+| **Canonical Model Reference** | `models/data-platform/topics.yaml`, `models/data-platform/events.yaml` |
+| **Related Artifact IDs** | `EVT-001`..`EVT-005`, `TOP-001`..`TOP-006`, `AC-004` |
 
 ## Architectural Explanation
 
-The **Event Streaming Architecture** illustrates how Apache Kafka decouples event producers from four independent consumer groups, guaranteeing:
-1. **Partition-Level Ordering**: Every topic uses `{provider}:{symbol}` (or `{provider}:{symbol}:{interval}` for klines) as the partition key, ensuring all events for `binance:BTCUSDT` land in the exact same partition in arrival order.
-2. **Independent Consumer Group Isolation**:
-   - `cg.hot.redis.v1`: Low-latency single-event/pipelined updates to Redis with Lua monotonic timestamp guards.
-   - `cg.analytics.clickhouse.v1`: Micro-batched ($1\text{ s}$ or $5,000$ events) bulk inserts into ClickHouse `ReplacingMergeTree` tables; manual offset commit occurs only after ClickHouse write confirmation.
-   - `cg.lakehouse.bronze.v1`: Buffered Parquet file flushes ($5\text{ m}$ or $64\text{ MB}$) to MinIO Bronze storage.
-   - `cg.anomaly.detector.v1`: Evaluates closed klines and ticker shifts against deterministic statistical thresholds and emits deduplicated alerts to `market.anomalies.v1`.
+The **Event Streaming Architecture** illustrates how Apache Kafka (configured as a **1-node KRaft** broker in `docker-compose.yml` alongside `PartitionedEventStreamingBroker` in runtime; 3-broker HA replication is a `[PLANNED]` production target) decouples producers from independent consumer groups (`AC-004` parallel post-Kafka branches):
+1. **Partition-Level Ordering**: Raw topics partition by `{provider}:{symbol}` (or `{provider}:{symbol}:{interval}` for klines) across `6` partitions (`3` partitions on `market.anomalies.v1` and `market.dlq.v1`).
+2. **Consumer Group Status**:
+   - `cg.hot.redis.v1` (`[IMPLEMENTED]`): Low-latency updates to Redis via Lua monotonic timestamp guard (`HotStateProjector`).
+   - `cg.analytics.clickhouse.v1` (`[IMPLEMENTED]`): Micro-batched inserts into ClickHouse `ReplacingMergeTree` tables (`ClickHouseBatchSink`).
+   - `cg.lakehouse.bronze.v1` (`[IMPLEMENTED]` in v0.1 pipeline; standalone `bronze/consumer.py` CLI is `[PROP-APP-002]` stub): ZSTD Parquet flushes into Bronze storage (`BronzeParquetArchiver`).
+   - `cg.anomaly.detector.v1` (`[IMPLEMENTED]`): Evaluates klines/tickers via `StatisticalAnomalyDetector` and emits breaches to `market.anomalies.v1`.
+   - `cg.agent.anomaly.v1` (`[PLANNED]` standalone consumer loop): Target autonomous investigation trigger consuming `market.anomalies.v1`.
 
 ```mermaid
 flowchart LR
     subgraph Producers["Producers"]
-        WSCol["collector-ws"]
-        RESTCol["collector-rest"]
+        WSCol["WebSocketStreamCollector / API Ingest"]
+        RESTCol["HistoricalRestBackfillWorker"]
     end
 
-    subgraph KafkaBroker["Apache Kafka (Partitioned by provider:symbol)"]
+    subgraph KafkaBroker["Apache Kafka (1-Node KRaft in Compose; 3-Broker Target PLANNED)"]
         direction TB
         subgraph TopicTrades["market.raw.trades.v1 (6 Partitions)"]
             P0["Partition 0 (e.g. binance:BTCUSDT)"]
@@ -31,19 +44,19 @@ flowchart LR
         TopicDLQ["market.dlq.v1 (3 Partitions)"]
     end
 
-    subgraph ConsumerGroups["Independent Kafka Consumer Groups"]
-        CGHot["Consumer Group: cg.hot.redis.v1<br/>(Low-Latency Pipelined Upsert)"]
-        CGCH["Consumer Group: cg.analytics.clickhouse.v1<br/>(1s / 5000-Row Micro-Batch Buffer)"]
-        CGBronze["Consumer Group: cg.lakehouse.bronze.v1<br/>(5m / 64MB Parquet Buffer)"]
-        CGAnomaly["Consumer Group: cg.anomaly.detector.v1<br/>(Statistical Z-Score & Freshness Check)"]
-        CGAgent["Consumer Group: cg.agent.anomaly.v1<br/>(Cooldown-Gated Investigation Worker)"]
+    subgraph ConsumerGroups["Kafka Consumer Groups (Active in Runtime vs PLANNED Standalone)"]
+        CGHot["cg.hot.redis.v1 [IMPLEMENTED]<br/>(HotStateProjector)"]
+        CGCH["cg.analytics.clickhouse.v1 [IMPLEMENTED]<br/>(ClickHouseBatchSink)"]
+        CGBronze["cg.lakehouse.bronze.v1 [IMPLEMENTED in Pipeline]<br/>(BronzeParquetArchiver)"]
+        CGAnomaly["cg.anomaly.detector.v1 [IMPLEMENTED]<br/>(StatisticalAnomalyDetector)"]
+        CGAgent["cg.agent.anomaly.v1 [PLANNED Daemon]<br/>(Cooldown-Gated Investigation Trigger)"]
     end
 
-    subgraph Sinks["Downstream Sinks"]
+    subgraph Sinks["Downstream Parallel Sinks (AC-004)"]
         Redis[("Redis 7 Hot Store")]
         ClickHouse[("ClickHouse OLAP")]
-        MinIO[("MinIO Bronze Lakehouse")]
-        AgentWorker["LangGraph Agent Worker"]
+        MinIO[("MinIO / .local_lakehouse Bronze")]
+        AgentWorker["5-Node MarketIntelligenceGraph"]
     end
 
     WSCol --> TopicTrades & TopicKlines & TopicTickers & TopicBook
@@ -55,10 +68,10 @@ flowchart LR
     TopicTrades & TopicKlines & TopicBook --> CGBronze
     TopicKlines & TopicTickers --> CGAnomaly
 
-    CGHot -->|"Atomic Lua (if event_ts >= stored_ts)"| Redis
-    CGCH -->|"Async Bulk Insert + Commit Offset"| ClickHouse
-    CGBronze -->|"Write ZSTD Parquet + Commit Offset"| MinIO
+    CGHot -->|"Lua Monotonic Guard"| Redis
+    CGCH -->|"Micro-Batch Insert"| ClickHouse
+    CGBronze -->|"ZSTD Parquet Flush"| MinIO
     CGAnomaly -->|"Breach Detected"| TopicAnomaly
-    TopicAnomaly --> CGAgent --> AgentWorker
+    TopicAnomaly -.-> CGAgent -.-> AgentWorker
 ```
 

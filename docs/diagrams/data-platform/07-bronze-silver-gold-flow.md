@@ -1,18 +1,24 @@
-# Diagram 07: Bronze–Silver–Gold Medallion Data Flow
+# Diagram 07: Bronze–Silver–Gold Medallion Data Flow (`DIAG-DATA-007`)
+
+| Diagram Metadata | Value |
+|---|---|
+| **Diagram ID** | `DIAG-DATA-007` |
+| **Title** | Bronze–Silver–Gold Medallion Data Flow |
+| **Diagram Category** | `docs/diagrams/data-platform/` |
+| **Notation / Mermaid Type** | `Mermaid (flowchart LR)` |
+| **Status** | `IMPLEMENTED` (v0.1 Python engines + DQ-KLINE/TRADE) / `PLANNED` (Phase 2 PySpark, Airflow, Great Expectations, dbt Core container) |
+| **Version** | `1.1.0` |
+| **Authoritative Document Reference** | `docs/architecture/04-data-platform-architecture.md`, `docs/architecture/07-data-storage-and-modeling.md` |
+| **Canonical Model Reference** | `models/process/processes.yaml`, `models/data-platform/datasets.yaml` |
+| **Related Artifact IDs** | `FR-04`, `FR-06`, `BR-001`, `BR-004`, `DQ-KLINE-001`..`005`, `DQ-TRADE-001`..`003` |
 
 ## Architectural Explanation
 
-The **Bronze–Silver–Gold Data Flow** defines the exact division of responsibilities across the Lakehouse and OLAP layers so transformation logic is **never duplicated** across Python scripts, PySpark, and dbt Core:
+The **Bronze–Silver–Gold Data Flow** separates the active v0.1 Python Lakehouse implementation from the planned Phase 2 distributed batch stack:
 
-1. **Bronze Layer (Raw Immutable Archive — Owned by `consumer-lakehouse-bronze` & `collector-rest`)**:
-   - Format: ZSTD-compressed Apache Parquet registered in Apache Iceberg catalog (`lakehouse.bronze.*`) on MinIO.
-   - Responsibility: Preserve exact incoming event envelopes (`event_id`, `ingested_at`, `raw_payload`, `exchange_event_time`) partitioned by `(provider, ingestion_date)`. Append-only; never mutated.
-2. **Silver Layer (Cleaned, Deduplicated, Standardized — Owned by `PySpark` Batch Jobs)**:
-   - Format: Apache Iceberg tables (`lakehouse.silver.trades`, `lakehouse.silver.klines`, `lakehouse.silver.order_book_snapshots`).
-   - Responsibility: PySpark reads new Bronze snapshots, enforces strict `Decimal(38,18)` and UTC timestamp types, deduplicates records by natural key `(provider, symbol, trade_id)` or `(provider, symbol, interval, open_time)` using `MERGE INTO`, and runs **Great Expectations** validation suites before committing the Silver snapshot.
-3. **Gold Layer (Business & Analytical Models — Owned by `dbt Core` & ClickHouse Materialized Views)**:
-   - Format: Curated Iceberg tables (`lakehouse.gold.*`) and ClickHouse analytical marts (`analytics.mart_*`).
-   - Responsibility: `dbt Core` executes version-controlled SQL models computing daily/hourly OHLCV rollups, realized volatility surfaces, liquidity/spread metrics, and cross-asset return tables consumed by Apache Superset, the Analytics API, and the Agent Tool Gateway.
+1. **Bronze Layer (`[IMPLEMENTED]` via `BronzeParquetArchiver`)**: Writes append-only ZSTD-compressed Apache Parquet files partitioned by `(provider, ingestion_date)` under `.local_lakehouse/` (with MinIO object storage in Compose).
+2. **Silver Layer (`[IMPLEMENTED]` via `SilverLakehouseMergeEngine`; `PySpark` `[PLANNED — Phase 2]`)**: Enforces `Decimal(38,18)` and UTC alignments, deduplicates natural keys (`(provider, symbol, trade_id)` or `(provider, symbol, interval, open_time)`), compacts files, and emits Apache Iceberg v2 manifests (`v*.metadata.json`). `DataQualityGateEngine` evaluates `DQ-KLINE-001..005` & `DQ-TRADE-001..003` (`can_promote_to_gold` gate) before Gold promotion; `Great Expectations` + `Apache Airflow` remain `[PLANNED — Phase 2]`.
+3. **Gold Layer (`[IMPLEMENTED]` via `GoldMartEngine`; external `dbt Core` runner `[PLANNED — Phase 2]`)**: Materializes `gold.fct_daily_market_summary`, `gold.fct_realized_volatility`, and `gold.fct_orderbook_liquidity` for analytics endpoints, Apache Superset, and Agent Tool Gateway.
 
 ```mermaid
 flowchart LR
@@ -21,29 +27,29 @@ flowchart LR
         RESTBackfill["REST Historical Backfill<br/>(Paginated Batches)"]
     end
 
-    subgraph BronzeLayer["BRONZE LAYER (MinIO + Iceberg Raw)"]
+    subgraph BronzeLayer["BRONZE LAYER (Parquet Raw Archive — v0.1 + MinIO)"]
         BrzTrades[("bronze.raw_trades<br/>Append-Only Parquet")]
         BrzKlines[("bronze.raw_klines<br/>Append-Only Parquet")]
         BrzBook[("bronze.raw_orderbook<br/>Append-Only Parquet")]
     end
 
-    subgraph SilverProcessing["PySpark + Great Expectations (Orchestrated by Airflow)"]
-        SparkJob["PySpark Standardization & Deduplication<br/>(Type Casting, UTC Alignment, Iceberg MERGE INTO)"]
-        GESilver["Great Expectations Suite<br/>(Null Checks, OHLC Invariants: High >= Low, Volume >= 0)"]
+    subgraph SilverProcessing["Silver Merge & Pre-Promotion Quality Gate"]
+        SparkJob["SilverLakehouseMergeEngine (v0.1 Active)<br/>+ PySpark [PLANNED Phase 2]"]
+        GESilver["DataQualityGateEngine (v0.1: DQ-KLINE-001..005, DQ-TRADE-001..003)<br/>+ Great Expectations [PLANNED]"]
     end
 
-    subgraph SilverLayer["SILVER LAYER (MinIO + Iceberg Clean)"]
+    subgraph SilverLayer["SILVER LAYER (Iceberg v2 Clean Tables)"]
         SlvTrades[("silver.market_trades<br/>Deduplicated by provider, symbol, trade_id")]
         SlvKlines[("silver.market_klines<br/>Deduplicated by provider, symbol, interval, open_time")]
         SlvBook[("silver.order_book_snapshots<br/>Validated Depth Arrays")]
     end
 
-    subgraph GoldProcessing["dbt Core SQL Modeling"]
-        DBTModels["dbt Core Incremental Models<br/>(Volatility, Returns, VWAP, Liquidity Factors)"]
-        GEGold["Great Expectations & dbt Tests<br/>(Freshness, Referential & Statistical Bounds)"]
+    subgraph GoldProcessing["Gold Analytical Modeling"]
+        DBTModels["GoldMartEngine (v0.1 Active)<br/>+ dbt Core Incremental Models [PLANNED Phase 2]"]
+        GEGold["Gold Promotion Guard (can_promote_to_gold)<br/>+ dbt Tests [PLANNED]"]
     end
 
-    subgraph GoldLayer["GOLD LAYER (Iceberg + ClickHouse Analytical Marts)"]
+    subgraph GoldLayer["GOLD LAYER (Lakehouse & ClickHouse Analytical Marts)"]
         GldDaily[("gold.fct_daily_market_summary")]
         GldVol[("gold.fct_realized_volatility")]
         GldLiq[("gold.fct_orderbook_liquidity")]

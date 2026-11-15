@@ -23,7 +23,7 @@ The **FinancialMarketDataPlatform** utilizes a purpose-built polyglot technology
 | **Hot State Cache** | Redis | 7.4+ Alpine | Sub-millisecond orderbook L2 snapshots and ticker hot caching |
 | **Time-Series / OLAP** | ClickHouse | 24.8+ LTS | High-concurrency columnar aggregations, VWAP, and tick analytics |
 | **Medallion Lakehouse** | Apache Iceberg v2 / Parquet | ZSTD compressed | Immutable Bronze raw batches and compacted Silver/Gold tables |
-| **Object Storage** | MinIO / S3 API | RELEASE.2024+ | S3-compatible cold object storage for Parquet/Iceberg layers |
+| **Object Storage** | MinIO / S3 API | RELEASE.2024+ | Target S3-compatible cold object storage (`lakehouse-*` buckets provisioned; v0.1 currently writes Parquet locally to `.local_lakehouse`) |
 | **Local Control Store** | SQLite WAL / PostgreSQL | 3.45+ / 16.4+ | Durable ingestion watermarks, sequence gap checkpoints, offset states |
 | **Observability Telemetry** | Prometheus & Grafana | v2.54+ / 11.2+ | OpenMetrics exposition (`fmdp_*` SLIs), alerts, and dashboarding |
 | **Reverse Proxy / Edge** | Nginx | 1.27+ Alpine | Rate limiting, TLS termination, SSE/WebSocket buffering, and routing |
@@ -49,12 +49,16 @@ The **FinancialMarketDataPlatform** utilizes a purpose-built polyglot technology
 
 ## 3. Runtime Composition & Deployment Profiles
 
-The platform supports two deployment profiles configured in `docker-compose.yml`:
+The platform defines **7 Docker Compose profiles** in `docker-compose.yml` (`core`, `lakehouse`, `intelligence`, `observability`, `bi`, `microservices`, `frontend`):
 
-1. **`core` Profile (Single-Process Modular Gateway)**:
-   - Starts infrastructure dependencies (Kafka, Redis, ClickHouse, MinIO, Prometheus) and a unified single FastAPI process (`svc-api-gateway`) dispatching across all modules.
-   - Ideal for local development, fast feedback, and resource-constrained environments.
-2. **`microservices` Profile (8 Isolated Services)**:
-   - Deploys 8 standalone microservice containers (`svc-market-hot`, `svc-historical-backfill`, `svc-analytics-quant`, `svc-catalog-governance`, `svc-iam-security`, `svc-intelligence-agent`, `svc-data-plane-v01`, and `svc-api-gateway`).
-   - Enables independent scaling, healthchecks, and horizontal partitioning in production.
+1. **`core` Profile (Single-Process Modular Gateway — Recommended Dev Baseline)**:
+   - Starts core backing infrastructure (`kafka`, `redis`, `clickhouse`, `postgres`), Nginx `edge-gateway` (`80`/`443`), TypeScript/Vite `frontend` (`3001->3000`), and the unified FastAPI `backend-api` (`8000`) plus core worker definitions.
+2. **`microservices` Profile (`--profile core --profile microservices`)**:
+   - Adds 7 standalone domain microservice containers (`svc-market-hot:8001`, `svc-historical-backfill:8002`, `svc-analytics-quant:8003`, `svc-catalog-governance:8004`, `svc-iam-security:8005`, `svc-intelligence-agent:8006`, `svc-data-plane-v01:8007`) alongside `backend-api:8000`.
+3. **Optional Plane Profiles**:
+   - `--profile lakehouse`: `minio` (`9010`/`9001`) + `consumer-lakehouse-bronze` *(MinIO S3 upload & worker loop `PARTIALLY_IMPLEMENTED`)*.
+   - `--profile intelligence`: `agent-worker` *(CLI stub in v0.1; LangGraph runs in API runtime)*.
+   - `--profile observability`: `prometheus` (`9090`) + `grafana` (`3000`).
+   - `--profile bi`: `superset` (`8088`).
+   - `--profile frontend`: Standalone `frontend` (`3001->3000`).
 

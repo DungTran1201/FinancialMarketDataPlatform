@@ -7,7 +7,7 @@ metadata:
   status: "BASELINED"
   canonical_model: true
   created_at: "2026-11-12"
-  updated_at: "2026-11-12"
+  updated_at: "2026-11-15"
   owner: "api-architect"
   source_documents:
     - "docs/specifications/data-contracts.md"
@@ -17,29 +17,49 @@ kafka_topics:
     contract: "MarketTradeEventV1"
     partition_key: "{provider}:{symbol}"
     partitions: 6
-    retention_hours: 72
+    retention_hours: 168
+    retention_ms: 604800000
   - topic: "market.raw.klines.v1"
     contract: "MarketKlineEventV1"
     partition_key: "{provider}:{symbol}:{interval}"
     partitions: 6
-    retention_hours: 72
+    retention_hours: 168
+    retention_ms: 604800000
   - topic: "market.raw.tickers.v1"
     contract: "MarketTickerEventV1"
     partition_key: "{provider}:{symbol}"
     partitions: 6
-    retention_hours: 24
+    retention_hours: 168
+    retention_ms: 604800000
   - topic: "market.raw.orderbook.v1"
     contract: "OrderBookSnapshotEventV1"
     partition_key: "{provider}:{symbol}"
     partitions: 6
-    retention_hours: 24
+    retention_hours: 168
+    retention_ms: 604800000
   - topic: "market.anomalies.v1"
     contract: "MarketAnomalyEventV1"
     partition_key: "{provider}:{symbol}"
     partitions: 3
-    retention_hours: 168
+    retention_hours: 720
+    retention_ms: 2592000000
   - topic: "market.dlq.v1"
     contract: "DeadLetterEnvelopeV1"
     partition_key: "{source_topic}:{symbol}"
     partitions: 3
-    retention_hours: 336
+    retention_hours: 720
+    retention_ms: 2592000000
+
+external_providers:
+  - id: "EXT-BINANCE-WS"
+    transport: "WSS"
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    note: "BinanceWebSocketClient / normalizer implemented; container collector-ws is a startup stub, while live REST probe feeds real-time observatory probes."
+  - id: "EXT-BINANCE-REST"
+    transport: "HTTPS"
+    implementation_status: "IMPLEMENTED"
+    note: "BinanceRestBackfillClient & LiveExchangeProbeHarness (/api/v1/observability/live/probe) fetch public market REST payloads."
+  - id: "EXT-LLM-API"
+    transport: "HTTPS"
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    note: "Structured synthesis runs via LangGraph-shaped workflow with deterministic offline fallback when no external LLM API key is configured."

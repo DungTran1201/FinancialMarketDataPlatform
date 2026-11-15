@@ -67,7 +67,7 @@ docs/overview/
 ## 10. Quality Gate
 
 - All documents contain valid metadata headers.
-- All technical claims correspond to implemented or planned components documented in `documentation-migration-matrix.md`.
+- All technical claims distinguish `IMPLEMENTED`, `PARTIALLY_IMPLEMENTED`, and `PLANNED` status matching [work-items/DOCS-002-documentation-architecture-reorganization/documentation-migration-matrix.md](../../work-items/DOCS-002-documentation-architecture-reorganization/documentation-migration-matrix.md) and [work-items/DOCS-004-full-documentation-remediation/README.md](../../work-items/DOCS-004-full-documentation-remediation/README.md).
 - Zero broken links.
 
 ## 11. Validation Commands

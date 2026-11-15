@@ -73,3 +73,13 @@ npm run build --prefix frontend
 - Preserved Document Identifiers: 237 unique IDs preserved across 21 namespaces.
 - Preserved Baselines: All 25 baseline files in `docs/architecture/` and `docs/specifications/` verified.
 
+---
+
+## 4. Historical Reconciliation Addendum (`DOCS-004`, 2026-11-15)
+
+> **Preservation Notice**: Sections 1–3 above preserve the original `DOCS-002` validation snapshot (`118` directories / `355` Markdown files at that commit).
+
+Under parent Work Item [`DOCS-004`](../DOCS-004-full-documentation-remediation/final-acceptance-report.md):
+- The baseline validator suite at `DOCS-002` time did not yet verify FastAPI route parity, Mermaid metadata headers (`DIAG-*`), `docker-compose.yml` port collisions, or live vs planned technology disclosures (`IMPLEMENTED` vs `PLANNED`).
+- Upgraded structural & semantic checks (`tools/validators/run_all.py`) and independent verification outputs are recorded in [`work-items/DOCS-004-full-documentation-remediation/final-acceptance-report.md`](../DOCS-004-full-documentation-remediation/final-acceptance-report.md).
+

@@ -26,7 +26,7 @@ Every event published to Kafka and persisted to Bronze/Silver carries standard e
 | `schema_version` | `String` | No | Semantic version of the event contract (e.g., `"1.0.0"`). |
 | `provider` | `LowCardinality(String)` | No | Source provider identifier (e.g., `"binance"`). |
 | `symbol` | `LowCardinality(String)` | No | Canonical normalized instrument symbol (e.g., `"BTCUSDT"`). |
-| `event_type` | `LowCardinality(String)` | No | Canonical type: `trade`, `ticker`, `kline`, `order_book`, `market_stats`. |
+| `event_type` | `LowCardinality(String)` | No | Canonical type (`EventType` enum): `trade`, `kline`, `ticker`, `order_book`, `anomaly`. |
 | `exchange_event_time` | `DateTime64(3, 'UTC')` | No | Timestamp emitted by the source exchange (UTC). |
 | `ingested_at` | `DateTime64(3, 'UTC')` | No | Timestamp when the platform collector received the payload (UTC). |
 | `sequence_id` | `UInt64` | Yes | Exchange-provided monotonic sequence number (`trade_id`, `update_id`, etc.). |
@@ -131,7 +131,7 @@ Represents time-bucketed OHLCV intervals (`1m`, `5m`, `15m`, `1h`, `4h`, `1d`).
 |---|---|---|---|
 | `id` | `UUID` | `PRIMARY KEY` | Unique user ID. |
 | `email` | `VARCHAR(255)` | `UNIQUE NOT NULL` | User login email. |
-| `password_hash` | `VARCHAR(255)` | `NOT NULL` | Argon2id password hash. |
+| `password_hash` | `VARCHAR(255)` | `NOT NULL` | `PBKDF2-HMAC-SHA256` password hash (`210,000` iterations, `pbkdf2_sha256$210000$...`). |
 | `role` | `VARCHAR(32)` | `NOT NULL` | Enum: `admin`, `operator`, `analyst`, `viewer`, `service`. |
 | `is_active` | `BOOLEAN` | `NOT NULL DEFAULT TRUE` | Account status flag. |
 | `created_at` | `TIMESTAMPTZ` | `NOT NULL DEFAULT NOW()` | Creation timestamp. |

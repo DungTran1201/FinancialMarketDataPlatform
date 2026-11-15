@@ -18,9 +18,9 @@ The **FinancialMarketDataPlatform (FMDP)** is an enterprise-grade, event-driven 
 The platform unifies **Real-Time Market Streaming**, **Medallion Data Lakehouse**, **Analytical Serving**, and **Agentic AI Intelligence** into a cohesive 3-plane architecture:
 
 ```text
-                                   =============================================
-                                   EXCHANGE APIS (Binance, CoinGecko, Deterministic)
-                                   =============================================
+                                   ===============================================
+                                   EXCHANGE APIS (Binance Spot / Deterministic ASGI)
+                                   ===============================================
                                                          │
                                                          ▼
     ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -33,49 +33,52 @@ The platform unifies **Real-Time Market Streaming**, **Medallion Data Lakehouse*
     │                                                                                  │     │
     │                                   Silver Compacted Parquet (Iceberg v2) ◄────────┘     │
     │                                        │                                               │
-    │                                        ▼ (Quality Gate DQ-KLINE-001..005)              │
-    │                                   Gold Analytical Marts (DuckDB / ClickHouse)          │
+    │                                        ▼ (Quality Gate DQ-KLINE-001..005, DQ-TRADE)    │
+    │                                   Gold Analytical Marts (Parquet; ClickHouse Target)   │
     └────────────────────────────────────────────────────────────────────────────────────────┘
                                                          │
                                                          ▼
     ┌────────────────────────────────────────────────────────────────────────────────────────┐
     │ PLANE B: SERVING & APPLICATION GATEWAY PLANE (Modular Monolith & Microservices)        │
     │                                                                                        │
-    │  Edge API Gateway (Port 8000) ──► Market Hot (8001) / Historical (8002) / Quant (8003) │
-    │  WebSockets & Server-Sent Events (SSE) ──► Real-Time Stream Clients                    │
-    │  Experience Layer (Port 3000) ──► Modern TypeScript/Vite Single Page Application       │
+    │  Edge API Gateway (Port 8000) ──► Domain Microservices (svc-* Ports 8001..8007)       │
+    │  REST, WebSocket (/ws/v1/observability/stream) & SSE Streams                           │
+    │  Experience Layer (Host Port 3001 -> 3000) ──► TypeScript / Vite Single Page App       │
     └────────────────────────────────────────────────────────────────────────────────────────┘
                                                          │
                                                          ▼
     ┌────────────────────────────────────────────────────────────────────────────────────────┐
     │ PLANE C: AGENTIC INTELLIGENCE PLANE (LangGraph Autonomous Investigation)               │
     │                                                                                        │
-    │  LangGraph 6-Node Investigation Engine ──► Controlled Tool Gateway ──► Verified Report │
+    │  LangGraph 5-Node Investigation Engine ──► Controlled Tool Gateway ──► Verified Report │
     └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+> [!NOTE]
+> **Implementation Status (`AS-IS`)**: The v0.1 in-process data platform (`DataPlatformV01Pipeline`), local ZSTD Parquet / Iceberg v2 Lakehouse (`.local_lakehouse`), `55` FastAPI HTTP/WS/SSE routes, `5`-node LangGraph orchestrator (`10` tools), and `8` ASGI microservices (`svc-*`) are **`IMPLEMENTED`**. Standalone daemon CLI loops (`collector-ws`, `collector-rest`, `consumer-lakehouse-bronze`, `agent-worker`; `PROP-APP-002`), distributed Spark/Airflow/GE batch execution, `WS /ws/v1/market/stream`, and route-level domain RBAC (`PROP-APP-004`) remain **`PARTIALLY_IMPLEMENTED` / `PLANNED`**.
 
 ---
 
 ## 2. The Three Architectural Planes
 
 ### 2.1. Plane A: Data Plane (Event Ingestion, Streaming & Lakehouse)
-- **Ingestion (`src/ingestion/`)**: Production-grade async HTTP REST pagination (`httpx.AsyncClient`) with token-bucket rate limiting (`<= 80%` Binance limit) and real-time WebSocket connection handling with sequence gap detection.
-- **Streaming Backbone (`src/streaming/`)**: Partitioned Kafka broker with at-least-once offset ordering and consumer group dispatch.
+- **Ingestion (`src/ingestion/`)**: Async HTTP REST pagination (`ProductionExchangeHistoricalCollector` with `TokenBucketRateLimiter` `<= 80%` Binance weight) and WebSocket client / gap detection (`SequenceAndGapDetector`). *(Standalone worker CLIs `ws_collector.py` / `rest_backfill.py` are startup stubs; see `PROP-APP-002`.)*
+- **Streaming Backbone (`src/streaming/`)**: Partitioned Kafka broker (`PartitionedEventStreamingBroker` / Confluent Kafka adapter) with at-least-once offset ordering and consumer group dispatch.
 - **Medallion Lakehouse (`src/lakehouse/`)**:
-  - **Bronze**: Immutable ZSTD-compressed Parquet files partitioned by `provider/ingestion_date`.
-  - **Silver**: Deduplicated, compacted time-series data maintained as Apache Iceberg v2 snapshot manifests.
-  - **Gold**: Curated analytical marts (`fct_daily_market_summary`, `fct_realized_volatility`, `fct_orderbook_liquidity`) guarded by blocking financial data quality rules (`DQ-KLINE-001..005`).
+  - **Bronze**: Immutable ZSTD-compressed Parquet files written locally to `.local_lakehouse` (`bronze/{event_type}/provider={p}/ingestion_date={date}`; MinIO `lakehouse-*` buckets provisioned as S3 target).
+  - **Silver**: Deduplicated, compacted time-series Parquet tables with Apache Iceberg v2 snapshot metadata manifests.
+  - **Gold**: Curated analytical marts (`fct_daily_market_summary`, `fct_realized_volatility`, `fct_orderbook_liquidity`) guarded by blocking financial data quality rules (`DQ-KLINE-001..005`, `DQ-TRADE-001..003`).
 
 ### 2.2. Plane B: Serving & Application Plane
-- **API Gateway (`src/serving/api/`)**: Unified edge router providing JWT authentication, HMAC token verification, rate limiting, and reverse proxy routing.
+- **API Gateway & Modular Monolith (`src/serving/api/`)**: Unified FastAPI gateway (`55` HTTP/WS/SSE routes), JWT `HS256` IAM module, sliding-window rate limiting, and Nginx TLS edge proxy (`deploy/nginx/nginx.conf`).
 - **Dual Deployment Modes (`ADR-007`)**:
   - `IN_PROCESS_ASGI`: Single-process Modular Monolith dispatching via `httpx.ASGITransport` for low-overhead local dev and CI.
-  - `REMOTE_HTTP_CONTAINER`: Standalone container processes across 8 domain microservices (`docker compose --profile microservices up`).
-- **Frontend Experience (`frontend/`)**: Modern TypeScript/Vite SPA providing real-time data flow visualization, candlestick charts, latency histograms, and system health metrics.
+  - `REMOTE_HTTP_CONTAINER`: Standalone container processes across domain microservices (`docker compose --profile core --profile microservices up -d`).
+- **Frontend Experience (`frontend/`)**: TypeScript/Vite SPA providing real-time data flow visualization, candlestick charts, latency histograms, and system health views.
 
 ### 2.3. Plane C: Agentic Intelligence Plane
-- **Investigation Orchestrator (`src/intelligence/orchestrator/`)**: 6-node LangGraph state graph for autonomous anomaly investigation, market trend analysis, and root-cause determination.
-- **Controlled Tool Gateway (`src/intelligence/tools/`)**: Sandboxed tool invocation ensuring provenance logging and strict data boundaries.
+- **Investigation Orchestrator (`src/intelligence/orchestrator/`)**: **5-node** LangGraph state graph (`intake_and_guardrail_node` -> `investigation_planner_node` -> `tool_gateway_executor_node` -> `evidence_verifier_node` -> `report_synthesizer_node`).
+- **Controlled Tool Gateway (`src/intelligence/tools/`)**: Sandboxed invocation across `10` deterministic read-only tools ensuring provenance tracking.
 
 ---
 

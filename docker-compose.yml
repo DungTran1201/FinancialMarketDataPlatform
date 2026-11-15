@@ -5,9 +5,13 @@ name: fmdp
 # Profiles:
 #   - core          : Kafka (KRaft), Redis, ClickHouse, PostgreSQL, Collectors,
 #                     Hot/OLAP Consumers, and FastAPI Modular Backend.
+#   - core          : PostgreSQL, Redis, Kafka, ClickHouse, Monolith API, Frontend, Nginx, Core Workers.
+#   - lakehouse     : MinIO Object Storage, Bronze Archiver consumer (Iceberg/Parquet targets).
 #   - intelligence  : LangGraph Agent Worker (isolated from core ingestion).
-#   - lakehouse     : MinIO, Bronze Archiver, Airflow/Spark/dbt batch profile.
 #   - observability : Prometheus and Grafana.
+#   - bi            : Apache Superset.
+#   - microservices : Optional 7 standalone FastAPI domain ASGI services (ports 8001-8007).
+#   - frontend      : Experience Layer Vite/TypeScript SPA container (also in core).
 #   - bi            : Apache Superset.
 # =============================================================================
 
@@ -131,8 +135,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-fmdp_minio_admin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change_me_local_minio_password}
     ports:
-      - "127.0.0.1:9000:9000"
-      - "127.0.0.1:9001:9001"
+      - "127.0.0.1:${MINIO_API_PORT:-9010}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - minio_data:/data
     healthcheck:

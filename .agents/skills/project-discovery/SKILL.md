@@ -15,7 +15,7 @@ Audits repository state, reference architectures, and requirements inputs into e
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md`, target `README.md`, `work-items/<ID>/`, `models/context/context.yaml`, `docs/templates/discovery/`, `src/`, `docker-compose.yml`.
+- `AGENTS.md`, target `README.md`, `work-items/<ID>/`, `models/context/` (when instantiated), `models/architecture/architecture.yaml`, and `models/requirements/requirements.yaml`, `docs/templates/discovery/`, `src/`, `docker-compose.yml`.
 
 ## 4. Preconditions
 
@@ -23,15 +23,15 @@ Audits repository state, reference architectures, and requirements inputs into e
 
 ## 5. Execution Procedure
 
-1. Inspect `models/context/context.yaml`, baseline specs (`docs/architecture/`, `docs/specifications/`), and `src/` implementation state.
-2. Update `models/context/context.yaml` first with stable IDs from `.agents/config/identifier-registry.yaml`.
+1. Inspect `models/context/` (when instantiated), `models/architecture/architecture.yaml`, and `models/requirements/requirements.yaml`, baseline specs (`docs/architecture/`, `docs/specifications/`), and `src/` implementation state.
+2. Update `models/context/` (when instantiated), `models/architecture/architecture.yaml`, and `models/requirements/requirements.yaml` first with stable IDs from `.agents/config/identifier-registry.yaml`.
 3. Author discovery/impact docs in `docs/product/00-discovery/` or `work-items/<ID>/` using `docs/templates/discovery/`.
 4. Tag unverified hypotheses with `[ASSUMPTION — REQUIRES VALIDATION]` and unresolved ambiguities with `[OPEN QUESTION]`.
 5. Run `python tools/validators/run_all.py`.
 
 ## 6. Output Artifacts
 
-- `models/context/context.yaml`, `docs/product/00-discovery/*.md`, `work-items/<ID>/discovery.md`, `impact-analysis.md`.
+- `models/context/` (when instantiated), `models/architecture/architecture.yaml`, and `models/requirements/requirements.yaml`, `docs/product/00-discovery/*.md`, `work-items/<ID>/discovery.md`, `impact-analysis.md`.
 
 ## 7. Validation
 

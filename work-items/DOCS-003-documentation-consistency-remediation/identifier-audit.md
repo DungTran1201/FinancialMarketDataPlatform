@@ -60,3 +60,15 @@ In `docs/contracts/requirements-matrix.md`, historical authoring improperly boun
 - `COMP-017`: `frontend-experience-layer` (`frontend/src/main.ts`)
 
 **Audit Verdict**: 100% namespace integrity preserved. Zero identifier collisions or breakages detected.
+
+---
+
+## 3. Reconciliation Addendum (`DOCS-004`, 2026-11-15)
+
+> **Historical Record Notice**: Sections 1–2 above preserve the original `DOCS-003` snapshot verbatim.
+
+Independent verification under Work Item [`DOCS-004`](../DOCS-004-full-documentation-remediation/final-acceptance-report.md) recorded the following corrections against live canonical YAML models and code:
+1. **`COMP-*` Inventory (`models/architecture/components.yaml`)**: Expanded/verified to `COMP-001`..`COMP-020` (preserving `COMP-007` -> `src/intelligence/main.py`).
+2. **`API-*` Inventory (`models/api/api.yaml`)**: Full baseline covers `API-001`..`API-056` (`55` mounted monolith endpoints + `API-003` `PLANNED`), not `14` instances.
+3. **`TC-*` & `SCR-*` Inventory (`models/testing/testing.yaml`, `models/ux/ux.yaml`)**: Test cases span `TC-001`..`TC-017`; UX screens span `SCR-001` (`DEPRECATED`) and `SCR-002`..`SCR-007` (`6` Vite SPA modules).
+4. **Diagram Prefix Pattern (`.agents/config/identifier-registry.yaml`)**: Updated `DIAG-*` regex to permit `DIAG-COMP-###` alongside `DIAG-C4-###` / `DIAG-SEC-###`, preserving all 22 active diagram IDs + 12 templates (`34` files).

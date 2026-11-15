@@ -6,19 +6,22 @@ A production-oriented **Real-time Financial Market Data Platform** built on an *
 
 ## 1. Architectural Planes Overview
 
+> [!NOTE]
+> **Implementation Status (`AS-IS`)**: The unified FastAPI Modular Monolith (`55` routes), Data Platform v0.1 in-process 12-stage engines (`BronzeParquetArchiver`, `SilverLakehouseMergeEngine`, `GoldLayerMartEngine`, `DataQualityGateEngine`), 5-node LangGraph orchestrator (`10` tools), TypeScript/Vite SPA (`frontend/`), and 8 ASGI domain microservices (`svc-*`) are **`IMPLEMENTED`**. Standalone daemon worker loops (`ws_collector.py`, `rest_backfill.py`, `bronze/consumer.py`, `intelligence/main.py`; `PROP-APP-002`), MinIO S3 upload vs `.local_lakehouse` Parquet default, distributed Spark/Airflow/GE batch execution, `WS /ws/v1/market/stream`, and per-route domain RBAC (`PROP-APP-004`) remain **`PARTIALLY_IMPLEMENTED` / `PLANNED`**.
+
 1. **Plane A — Data Plane (`src/ingestion/`, `src/streaming/`, `src/lakehouse/`)**:
-   - **Ingestion (`src/ingestion/`)**: Provider-isolated async WebSocket (`entrypoints/ws_collector.py`) and paginated REST (`entrypoints/rest_backfill.py`) collectors for Binance Spot (extensible via `domain/ports.py`).
-   - **Event Streaming (`src/streaming/`)**: Apache Kafka (KRaft mode) partitioned by `{provider}:{symbol}` with canonical `EventEnvelopeV1` (`src/shared/contracts/events/`) and dead-letter routing (`market.dlq.v1`).
-   - **Hot Data Path (`src/streaming/consumers/hot_redis.py`)**: `Kafka -> consumer-hot-redis -> Redis 7` using atomic Lua monotonic timestamp checks for sub-15ms latest price, 24h snapshot, and top-20 order book queries.
-   - **Analytics Path (`src/streaming/consumers/analytics_ch.py`)**: `Kafka -> consumer-analytics-ch -> ClickHouse` using 1s / 5,000-row micro-batches into `ReplacingMergeTree` tables and `AggregatingMergeTree` Materialized Views.
-   - **Historical Lakehouse Path (`src/lakehouse/`)**: `Kafka / REST -> MinIO (Parquet + Apache Iceberg) -> Bronze -> Silver -> Gold (dbt Core)` validated by `src/lakehouse/quality/gates.py` and tracked via `src/lakehouse/catalog/lineage.py`.
+   - **Ingestion (`src/ingestion/`)**: Binance REST/WS normalizers, `TokenBucketRateLimiter`, `SequenceAndGapDetector`, and SQLite/PG watermarks (`entrypoints/*.py` CLI daemons are config-logging startup stubs in v0.1).
+   - **Event Streaming (`src/streaming/`)**: Apache Kafka (KRaft) partitioned by `{provider}:{symbol}` with canonical `EventEnvelopeV1` (`src/shared/contracts/events/`) and dead-letter routing (`market.dlq.v1`).
+   - **Hot Data Path (`src/streaming/consumers/hot_redis.py`)**: `HotStateProjector` monotonic timestamp guard (`BR-003`) targeting Redis 7 hot state + ClickHouse fallback.
+   - **Analytics Path (`src/streaming/consumers/analytics_ch.py`)**: `ClickHouseBatchSink` targeting ClickHouse `ReplacingMergeTree` tables and `AggregatingMergeTree` Materialized Views (`deploy/clickhouse/init/`).
+   - **Historical Lakehouse Path (`src/lakehouse/`)**: `BronzeParquetArchiver` -> `SilverLakehouseMergeEngine` -> `GoldLayerMartEngine` (`dbt` model stubs under `src/lakehouse/gold/dbt/`) validated by `DataQualityGateEngine` (`DQ-KLINE-001..005`, `DQ-TRADE-001..003`) and tracked via `DataLineageGovernanceRegistry` (writes locally to `.local_lakehouse`; MinIO `lakehouse-*` buckets provisioned).
 2. **Plane B — Serving & Control Plane (`src/serving/`)**:
-   - **Modular Monolith & Microservices (`src/serving/api/`)**: FastAPI Modular Monolith (`main.py`) organized into 8 domain modules (`market`, `historical`, `analytics`, `catalog`, `iam`, `platform_config`, `agent_api`, `reporting`) plus optional standalone ASGI microservice wrappers (`services/*.py`) and Gateway/UI (`gateway/`).
-   - **Control Store (`deploy/postgres/`)**: PostgreSQL 16 storing users, RBAC, API keys, monitored instruments, ingestion watermarks, and job states.
-   - **BI & Observability (`deploy/observability/`)**: Apache Superset for market dashboards; Prometheus + Grafana + OpenMetrics (`src/shared/observability/metrics.py`) for operational telemetry.
+   - **Modular Monolith & Microservices (`src/serving/api/`)**: FastAPI Modular Monolith (`main.py`, `55` routes) organized into 8 domain modules plus opt-in standalone ASGI microservice wrappers (`services/*.py`), Gateway (`gateway/`), and TypeScript/Vite frontend (`frontend/`, host port `3001`).
+   - **Control Store (`deploy/postgres/`)**: PostgreSQL 16 DDL (`01_schema.sql`) and local SQLite watermark store (`IngestionWatermarkStore`).
+   - **BI & Observability (`deploy/observability/`)**: Apache Superset (`--profile bi`), Prometheus + Grafana (`--profile observability`), and OpenMetrics (`10` `fmdp_*` metrics in `src/shared/observability/metrics.py`).
 3. **Plane C — Intelligence Plane (`src/intelligence/`)**:
-   - **Orchestration (`src/intelligence/orchestrator/`)**: Isolated `agent-worker` (`main.py`) running stateful LangGraph workflows (`MarketIntelligenceGraph`) triggered either on-demand (`POST /api/v1/agents/runs`) or via deduplicated statistical anomalies (`market.anomalies.v1`).
-   - **Controlled Tool Gateway (`src/intelligence/tools/`)**: 10 whitelisted deterministic read-only tools. LLMs never execute raw SQL or perform prompt arithmetic.
+   - **Orchestration (`src/intelligence/orchestrator/`)**: Stateful **5-node** LangGraph workflow (`MarketIntelligenceGraph`) invoked via `/api/v1/agents/runs` (`agent-worker` CLI stub in `main.py`).
+   - **Controlled Tool Gateway (`src/intelligence/tools/`)**: `10` whitelisted deterministic read-only tools (`BR-004`). LLMs never execute raw SQL or perform prompt arithmetic.
 
 ---
 

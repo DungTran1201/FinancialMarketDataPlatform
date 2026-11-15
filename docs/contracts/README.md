@@ -38,9 +38,9 @@
 
 | Artifact | Purpose | Required / Conditional | Template |
 |---|---|---|---|
-| `README.md` | Domain boundaries, inputs, and navigation index | Required | `docs/templates/api/api-specification.template.md` |
+| `README.md` | Domain boundaries, inputs, and navigation index | Required | `docs/templates/api/API-specification.template.md` |
 | `requirements-matrix.md` | Consolidated requirements, business rules, and acceptance criteria | Required | `docs/templates/requirements/srs.template.md` |
-| `api-contracts.md` | Unified REST, WebSocket, and SSE streaming specifications | Required | `docs/templates/api/api-specification.template.md` |
+| `api-contracts.md` | Unified REST, WebSocket, and SSE streaming specifications | Required | `docs/templates/api/API-specification.template.md` |
 
 ## 6. Directory and File Organization
 
@@ -53,7 +53,7 @@ docs/contracts/
 
 ## 7. Document Creation Rules
 
-- Never renumber existing identifiers (`FR-01..10`, `BR-001..003`, `AC-01..04`, `API-001..020`).
+- Never renumber existing identifiers (`FR-01..10`, `BR-001..004`, `AC-001..004`, `API-001..056`).
 - Always cite the upstream canonical YAML model in `models/`.
 
 ## 8. Creation Workflow

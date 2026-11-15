@@ -2,7 +2,7 @@
 
 ## 1. Directory Purpose
 
-`docs/diagrams/` is the single unified diagram root for `FinancialMarketDataPlatform`. It preserves the 16 baselined Phase 0 platform diagrams (`01`..`16`) and provides dedicated, governed subdirectories for all 18 lifecycle diagram categories (`DIAG-CTX-###`, `DIAG-C4-###`, `DIAG-DATA-###`, `DIAG-BPMN-###`, `DIAG-SWIM-###`, `DIAG-UC-###`, `DIAG-SEQ-###`, `DIAG-STATE-###`, `DIAG-DOM-###`, `DIAG-ERD-###`, `DIAG-API-###`, `DIAG-DEP-###`, `DIAG-SEC-###`, `DIAG-UX-###`).
+`docs/diagrams/` is the single unified diagram root for `FinancialMarketDataPlatform`. It preserves all **22 active technical diagrams (`DIAG-*`)** alongside **12 reusable category templates (`*.template.md`)** = **34 total diagram markdown files** across 18 lifecycle diagram subdirectories (`DIAG-CTX-###`, `DIAG-C4-###`, `DIAG-COMP-###`, `DIAG-DATA-###`, `DIAG-BPMN-###`, `DIAG-SWIM-###`, `DIAG-UC-###`, `DIAG-SEQ-###`, `DIAG-STATE-###`, `DIAG-DOM-###`, `DIAG-ERD-###`, `DIAG-API-###`, `DIAG-DEP-###`, `DIAG-SEC-###`, `DIAG-UX-###`).
 
 ## 2. Scope and Boundaries
 
@@ -45,7 +45,7 @@ Authored by `architecture-modeler`, `process-modeler`, `domain-modeler`, `api-ar
 
 ## 6. Directory and File Organization
 
-18 category directories under `docs/diagrams/` (including `process/bpmn/` and `process/swimlane/`), preserving all 16 existing diagrams.
+18 category directories under `docs/diagrams/` (including `process/bpmn/` and `process/swimlane/`), maintaining 22 active diagrams + 12 templates (`34` non-`README` diagram files total).
 
 ## 7. Document Creation Rules
 
@@ -67,7 +67,7 @@ Visualizes canonical models in `models/` and is embedded/linked from `docs/archi
 
 ## 10. Quality Gate
 
-All diagram directories have a 12-section `README.md`, all 16 existing diagrams are preserved, and all Mermaid blocks pass `validate_diagrams.py`.
+All diagram directories have a 12-section `README.md`, all 22 active diagrams + 12 templates preserve registered `DIAG-*` IDs and metadata, and all Mermaid blocks pass `validate_diagrams.py`.
 
 ## 11. Validation Commands
 
@@ -81,4 +81,4 @@ All diagram directories have a 12-section `README.md`, all 16 existing diagrams 
 
 - Do NOT create a second top-level `/diagrams/` root outside `docs/diagrams/`.
 - Do NOT introduce undocumented components, endpoints, or state transitions inside a diagram that do not exist in `models/` and `docs/`.
-- Do NOT delete or overwrite the 16 existing Phase 0 platform diagrams.
+- Do NOT delete or overwrite existing baselined `DIAG-*` platform diagrams without updating `docs/product/14-governance/` and running `validate_diagrams.py`.

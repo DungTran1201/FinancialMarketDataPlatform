@@ -15,7 +15,7 @@ Models trust boundaries, STRIDE threats (`THR-###`), and mitigating controls (`C
 
 ## 3. Authoritative Inputs
 
-- `models/security/security.yaml`, `threats.yaml`, `docs/architecture/10-security-and-governance.md`, `src/shared/security/primitives.py`, `src/intelligence/tools/gateway.py`, `docs/templates/security/`.
+- `models/security/threat-model.yaml`, `threats.yaml`, `docs/architecture/10-security-and-governance.md`, `src/shared/security/primitives.py`, `src/intelligence/tools/gateway.py`, `docs/templates/security/`.
 
 ## 4. Preconditions
 
@@ -23,7 +23,7 @@ Models trust boundaries, STRIDE threats (`THR-###`), and mitigating controls (`C
 
 ## 5. Execution Procedure
 
-1. Update `models/security/security.yaml` and `threats.yaml` first with `THR-###` and `CTRL-###` IDs mapped to components (`COMP-###`) and test cases (`TC-###`).
+1. Update `models/security/threat-model.yaml` first with `THR-###` and `CTRL-###` IDs mapped to components (`COMP-###`) and test cases (`TC-###`).
 2. Verify Zero-Direct-DB access for `Plane C` (`ControlledToolGateway` whitelist) and secret isolation (`RULE-009`, `DATA-RULE-011`).
 3. Synchronize `docs/product/10-security/` from `docs/templates/security/` and `docs/diagrams/security/`.
 4. Run `python tools/validators/run_all.py`.

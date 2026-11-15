@@ -100,4 +100,4 @@ Applies to all Python packages under `src/`, infrastructure manifests under `dep
 
 | Reviewer Role | Reviewer Name / Agent | Review Decision | Date | Evidence / Notes |
 |---|---|---|---|---|
-| `documentation-architect` | `data-platform-architect` / `system-architect` | `APPROVED` (`BASELINED`) | `2026-11-15` | `pytest` (47 tests), `ruff`, `unittest discover`, `dbt parse`, and `run_all.py` passed. |
+| `documentation-architect` | `data-platform-architect` / `system-architect` | `APPROVED` (`BASELINED`) | `2026-11-15` | `pytest` (47 tests at `ARCH-001` baseline sign-off; expanded to 50+ Python tests under `DOCS-004`), `ruff`, `unittest discover`, `dbt parse`, and `run_all.py` passed. |

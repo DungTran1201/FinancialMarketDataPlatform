@@ -15,6 +15,7 @@ metadata:
 
 contract_module: "src/streaming/contracts/topics.py"
 bootstrap_script: "deploy/kafka/topics-init.sh"
+implementation_note: "Both topics.py and deploy/kafka/topics-init.sh define 7-day (604800000 ms) retention on market.raw.*.v1 and 30-day (2592000000 ms) retention on market.anomalies.v1 and market.dlq.v1. Local Docker Compose deploys 1 KRaft broker (replication_factor=1); Brokers 2 & 3 remain PLANNED."
 
 topics:
   - name: "market.raw.trades.v1"
@@ -22,46 +23,64 @@ topics:
     replication_factor: 1
     retention_ms: 604800000
     cleanup_policy: "delete"
+    implementation_status: "IMPLEMENTED"
   - name: "market.raw.klines.v1"
     partitions: 6
     replication_factor: 1
     retention_ms: 604800000
     cleanup_policy: "delete"
+    implementation_status: "IMPLEMENTED"
   - name: "market.raw.tickers.v1"
     partitions: 6
     replication_factor: 1
     retention_ms: 604800000
     cleanup_policy: "delete"
+    implementation_status: "IMPLEMENTED"
   - name: "market.raw.orderbook.v1"
     partitions: 6
     replication_factor: 1
     retention_ms: 604800000
     cleanup_policy: "delete"
+    implementation_status: "IMPLEMENTED"
   - name: "market.anomalies.v1"
     partitions: 3
     replication_factor: 1
     retention_ms: 2592000000
     cleanup_policy: "delete"
+    implementation_status: "IMPLEMENTED"
   - name: "market.dlq.v1"
     partitions: 3
     replication_factor: 1
     retention_ms: 2592000000
     cleanup_policy: "delete"
+    implementation_status: "IMPLEMENTED"
 
 consumer_groups:
   - group_id: "cg.hot.redis.v1"
     target_sink: "src/streaming/consumers/hot_redis.py"
     commit_mode: "manual_after_redis_lua_upsert"
+    implementation_status: "IMPLEMENTED"
   - group_id: "cg.analytics.clickhouse.v1"
     target_sink: "src/streaming/consumers/analytics_ch.py"
     commit_mode: "manual_after_clickhouse_flush"
+    implementation_status: "IMPLEMENTED"
   - group_id: "cg.lakehouse.bronze.v1"
     target_sink: "src/lakehouse/bronze/consumer.py"
     commit_mode: "manual_after_parquet_write"
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    implementation_note: "Archiver (src/lakehouse/bronze/archiver.py) runs in-process; standalone container CLI src/lakehouse/bronze/consumer.py is a startup logging stub."
   - group_id: "cg.anomaly.detector.v1"
     target_sink: "src/streaming/consumers/anomaly_detector.py"
     commit_mode: "manual_after_evaluation"
+    implementation_status: "IMPLEMENTED"
   - group_id: "cg.agent.anomaly.v1"
     target_sink: "src/intelligence/main.py"
     commit_mode: "manual_after_investigation"
+    implementation_status: "PLANNED"
+    implementation_note: "Target autonomous consumer group; src/intelligence/main.py is currently an entrypoint logging stub without an active Kafka consumer loop."
+  - group_id: "cg.dlq.inspector.v1"
+    target_sink: "src/serving/infrastructure/runtime.py"
+    commit_mode: "trace_ack_label_only"
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    implementation_note: "Emitted as consumer_groups_acked trace metadata when DeadLetterEnvelopeV1 is routed to market.dlq.v1 in kafka_broker.py/runtime.py; no standalone daemon consumer loop exists yet."
 

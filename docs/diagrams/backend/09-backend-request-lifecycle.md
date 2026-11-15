@@ -1,61 +1,65 @@
-# Diagram 09: Backend Request Lifecycle (Synchronous Hot/OLAP Read vs. Asynchronous Job)
+# Diagram 09: Backend Request Lifecycle (Synchronous Hot/OLAP Read vs. Asynchronous Job) (`DIAG-SEQ-009`)
+
+| Diagram Metadata | Value |
+|---|---|
+| **Diagram ID** | `DIAG-SEQ-009` |
+| **Title** | Backend Request Lifecycle Sequence Diagram |
+| **Diagram Category** | `docs/diagrams/backend/` |
+| **Notation / Mermaid Type** | `Mermaid (sequenceDiagram)` |
+| **Status** | `IMPLEMENTED` / `PARTIALLY_IMPLEMENTED` (route RBAC `PROP-APP-004` & external Redis agent worker queue `[PLANNED]`) |
+| **Version** | `1.1.0` |
+| **Authoritative Document Reference** | `docs/architecture/05-backend-architecture.md`, `docs/architecture/09-api-and-integration-architecture.md` |
+| **Canonical Model Reference** | `models/interaction/interactions.yaml` |
+| **Related Artifact IDs** | `API-001`, `API-008`, `AC-002`, `PROP-APP-004` |
 
 ## Architectural Explanation
 
-The **Backend Request Lifecycle Sequence Diagram** contrasts two fundamental execution paths in the FastAPI backend:
-1. **Path A — Low-Latency Synchronous Read (`GET /api/v1/market/prices/BTCUSDT`)**:
-   - Passes through Correlation ID middleware, JWT/API-Key authentication, and Redis sliding-window rate limiting.
-   - `MarketQueryHandler` queries `RedisMarketHotAdapter` ($<5\text{ ms}$).
-   - If Redis misses or is unreachable, transparently falls back to `ClickHouseMarketAdapter` with circuit-breaker protection, computes staleness metadata (`is_stale`), and returns `200 OK`.
-2. **Path B — Long-Running Asynchronous Job (`POST /api/v1/agents/runs` or Heavy Backfill)**:
-   - Validates request schema and `Idempotency-Key`, persists a `QUEUED` run record in PostgreSQL, notifies the background worker queue, and immediately returns `202 Accepted` with `run_id` and status polling / SSE URLs so the FastAPI event loop is never blocked.
+The **Backend Request Lifecycle Sequence Diagram** contrasts two core execution paths in the FastAPI backend (`src/serving/api/main.py`):
+1. **Path A — Low-Latency Synchronous Read (`GET /api/v1/market/prices/BTCUSDT`, `API-001`)**:
+   - Passes through IAM defense middleware (`SlidingWindowRateLimiter` in-memory `120 req/min` default tier; note `[PROP-APP-004]`: route-level JWT/RBAC `Depends(...)` on non-IAM domain routers is `[PLANNED]`).
+   - `GetLatestPriceHandler` queries `HotStateProjector` (Redis/in-memory hot state) and transparently falls back to `ClickHouseBatchSink` (`AC-002`) with staleness metadata (`is_stale`), returning `200 OK`.
+2. **Path B — Agent Investigation Run (`POST /api/v1/agents/runs`, `API-008`)**:
+   - Executes `runtime.execute_agent_investigation(...)` (`5-node MarketIntelligenceGraph` + `10-tool ControlledToolGateway`) and returns `202 Accepted` with `run_id`. Note: standalone Redis `LPUSH` job queue decoupling to an external `agent-worker` process is `[PARTIALLY_IMPLEMENTED / PLANNED]`.
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Client as API Client
     participant API as FastAPI Router & Middleware
-    participant Auth as Auth & RateLimiter (Redis)
+    participant Auth as SlidingWindowRateLimiter (In-Memory; RBAC PROP-APP-004 PLANNED)
     participant Handler as Application Query/Command Handler
-    participant Redis as Redis Hot Store
-    participant CH as ClickHouse OLAP
-    participant PG as PostgreSQL Control DB
-    participant Worker as Async Agent / Batch Worker
+    participant Redis as Redis / HotStateProjector
+    participant CH as ClickHouse / OLAP Adapter
+    participant Runtime as PlatformRuntimeContainer / State Store
 
     rect rgb(235, 248, 255)
-        Note over Client,CH: Path A: Synchronous Low-Latency Market Read (GET /api/v1/market/prices/BTCUSDT)
-        Client->>API: GET /api/v1/market/prices/BTCUSDT (Bearer JWT)
-        API->>Auth: Validate JWT & Check Rate Limit (120 req/min)
-        Auth-->>API: Authorized (role=viewer)
+        Note over Client,CH: Path A: Synchronous Market Read (GET /api/v1/market/prices/BTCUSDT)
+        Client->>API: GET /api/v1/market/prices/BTCUSDT
+        API->>Auth: Check Tier Rate Limit (120 req/min default; JWT guard PROP-APP-004 PLANNED)
+        Auth-->>API: Allowed
         API->>Handler: Execute GetLatestPriceQuery(provider="binance", symbol="BTCUSDT")
-        Handler->>Redis: HGETALL market:v1:price:binance:BTCUSDT
+        Handler->>Redis: Lookup hot price (market:v1:price:binance:BTCUSDT)
         alt Cache Hit & Fresh
-            Redis-->>Handler: {last_price, exchange_event_time_ms}
+            Redis-->>Handler: {last_price, exchange_event_time}
             Handler-->>API: PriceDTO(source="redis_hot_cache", is_stale=false)
-        else Cache Miss or Redis Down
-            Redis-->>Handler: Miss / ConnectionError
-            Handler->>CH: SELECT argMax(last_price, exchange_event_time) FROM market_tickers WHERE symbol='BTCUSDT'
+        else Cache Miss or Redis Unavailable
+            Redis-->>Handler: Miss / Unavailable
+            Handler->>CH: Fallback OLAP query (market_tickers / sink)
             CH-->>Handler: Fallback Price Row
             Handler-->>API: PriceDTO(source="clickhouse_fallback", is_stale=...)
         end
-        API-->>Client: 200 OK (Standard JSON Envelope + Request-ID)
+        API-->>Client: 200 OK (Standard JSON Envelope {data, meta})
     end
 
     rect rgb(255, 245, 235)
-        Note over Client,Worker: Path B: Asynchronous Expensive Workflow (POST /api/v1/agents/runs)
-        Client->>API: POST /api/v1/agents/runs (Idempotency-Key, Prompt/Symbol)
-        API->>Auth: Validate JWT (role>=analyst) & Rate Limit (5 req/min)
-        Auth-->>API: Authorized
-        API->>Handler: Execute CreateAgentRunCommand
-        Handler->>PG: INSERT INTO agent_runs (run_id, status='QUEUED', ...)
-        PG-->>Handler: Committed run_id
-        Handler->>Redis: LPUSH / PUBLISH agent:jobs:queue {run_id}
-        Handler-->>API: RunAcceptedDTO(run_id, status="QUEUED")
-        API-->>Client: 202 Accepted (Location: /api/v1/agents/runs/{run_id})
-        Redis->>Worker: Dequeue {run_id}
-        Worker->>PG: UPDATE agent_runs SET status='RUNNING'
-        Worker->>CH: Execute Deterministic Quant Tools
-        Worker->>PG: UPDATE agent_runs SET status='COMPLETED', structured_report=...
+        Note over Client,Runtime: Path B: Agent Investigation (POST /api/v1/agents/runs)
+        Client->>API: POST /api/v1/agents/runs (Idempotency-Key, symbol, prompt_summary)
+        API->>Auth: Check Analytics/Agent Rate Limit Tier (5 req/min)
+        Auth-->>API: Allowed
+        API->>Runtime: execute_agent_investigation(...) [In-Process; External PG/Redis Queue PLANNED]
+        Runtime->>CH: Execute 5-Node Graph & 10 Deterministic Quant Tools
+        Runtime-->>API: Ticket + MarketIntelligenceState (evidence_trail, status)
+        API-->>Client: 202 Accepted ({data: {run_id, status, tool_calls_executed}, meta})
     end
 ```
 

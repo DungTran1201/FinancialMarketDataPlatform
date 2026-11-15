@@ -46,3 +46,13 @@ The Documentation Architecture Reorganization fulfills all non-negotiable constr
 - **Audited by**: `documentation-auditor`
 - **Approved by**: `documentation-architect`
 
+---
+
+## 4. Historical Follow-Up & Reconciliation Addendum (`DOCS-004`, 2026-11-15)
+
+> **Preservation Notice**: Sections 1–3 above are retained intact as the historical record of `DOCS-002`.
+
+Subsequent cross-repository verification conducted under Work Item `DOCS-004` identified follow-up semantic and structural gaps beyond the structural migration scope of `DOCS-002`:
+- `docs/product/14-governance/readme-coverage-matrix.md` and `documentation-baseline.md` required updates after the growth to `120` managed directories and additional work items (`DATA-001`, `ARCH-001`, `DOCS-003`, `DOCS-004`, `FEAT-001`, `FEAT-002`).
+- Technical claim reconciliation (`IMPLEMENTED` vs `PLANNED`), FastAPI route/event schema parity (`API-001..056`, `EventEnvelopeV1`, `DeadLetterEnvelopeV1`), Docker Compose port/profile fixes, and documentation validator upgrades were completed under parent Work Item [`work-items/DOCS-004-full-documentation-remediation/`](../DOCS-004-full-documentation-remediation/final-acceptance-report.md).
+

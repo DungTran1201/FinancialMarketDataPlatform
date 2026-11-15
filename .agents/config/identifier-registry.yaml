@@ -65,7 +65,7 @@ namespaces:
     pattern: "^(WEB-)?ADR-[0-9]{3}$"
     artifact_type: "Architecture Decision Record"
     canonical_location: "docs/architecture/adr/"
-    preserved_existing: ["ADR-001", "ADR-002", "ADR-003", "ADR-004", "ADR-005", "ADR-006"]
+    preserved_existing: ["ADR-001", "ADR-002", "ADR-003", "ADR-004", "ADR-005", "ADR-006", "ADR-007", "ADR-008"]
   API:
     prefix: "API"
     pattern: "^(WEB-)?API-[0-9]{3}$"
@@ -113,7 +113,7 @@ namespaces:
     canonical_location: "models/deployment/deployment.yaml"
   DIAG:
     prefix: "DIAG"
-    pattern: "^DIAG-(CTX|C4|DATA|BPMN|SWIM|UC|SEQ|STATE|ERD|DOM|API|DEP|SEC|UX)-[0-9]{3}$"
+    pattern: "^DIAG-(CTX|C4|COMP|DATA|BPMN|SWIM|UC|SEQ|STATE|ERD|DOM|API|DEP|SEC|UX)-[0-9]{3}$"
     artifact_type: "Technical Diagram"
     canonical_location: "docs/diagrams/"
 

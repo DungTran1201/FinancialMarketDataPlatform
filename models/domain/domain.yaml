@@ -7,11 +7,12 @@ metadata:
   status: "BASELINED"
   canonical_model: true
   created_at: "2026-11-12"
-  updated_at: "2026-11-12"
+  updated_at: "2026-11-15"
   owner: "domain-modeler"
   source_documents:
     - "docs/architecture/05-backend-architecture.md"
     - "docs/specifications/data-dictionary.md"
+  gateway_extensions_note: "Beyond the 8 domain modules under src/serving/api/modules/, src/serving/api/gateway/ (observability, registry, service) and src/serving/api/services/ (7 microservice factories) extend the FastAPI gateway."
 
 bounded_contexts:
   - id: "DOM-001"

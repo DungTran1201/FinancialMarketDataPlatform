@@ -116,7 +116,7 @@ On branch `arch/microservices`, while the 8 Clean Architecture module packages i
 4. `svc-analytics-quant` (`:8003`) — Quantitative statistics, Pearson correlations & Z-score anomalies (`analytics`).
 5. `svc-catalog-governance` (`:8004`) — Instrument catalog, freshness SLIs & platform configuration (`catalog`, `platform_config`).
 6. `svc-iam-security` (`:8005`) — JWT HS256 IP-bound authentication, revocation & endpoint cipher (`iam`).
-7. `svc-intelligence-agent` (`:8006`) — LangGraph 6-node workflow & verified provenance reporting (`agent_api`, `reporting`).
+7. `svc-intelligence-agent` (`:8006`) — LangGraph 5-node workflow & verified provenance reporting (`agent_api`, `reporting`).
 8. `svc-data-plane-v01` (`:8007`) — End-to-End Data Platform v0.1 orchestrator, Gold marts, Iceberg compaction, lineage & Prometheus metrics.
 
 See [ADR-007](adr/ADR-007-microservices-and-data-platform-v01.md) and [Diagram 17: Microservices Decomposition Topology](../diagrams/architecture/17-microservices-decomposition-topology.md).

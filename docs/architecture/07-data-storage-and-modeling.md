@@ -7,9 +7,9 @@ The platform operates four distinct storage engines, each engineered for a speci
 | Storage Engine | Workload Class | Canonical Entities Owned | Retention Policy | Backup / Rebuild Strategy |
 |---|---|---|---|---|
 | **Redis 7** | Hot Ephemeral Key-Value & Pub/Sub | `market:v1:price:*`, `market:v1:snapshot:*`, `market:v1:orderbook:*`, `cache:v1:analytics:*`, `ratelimit:*` | Sliding TTL (`15s`–`300s`); `volatile-lru` eviction at `256MB` | Ephemeral; rebuilt live from Kafka or bypassed via ClickHouse fallback. |
-| **ClickHouse** | Real-Time & Historical Columnar OLAP | `market_trades`, `market_klines`, `market_tickers`, `order_book_snapshots`, `mv_*`, `mart_*` | Raw ticks/depth: `90 days` TTL; Klines & Marts: `5+ years` | Rebuilt from MinIO/Iceberg Silver tables via PySpark or ClickHouse native S3 backup. |
-| **MinIO + Parquet + Iceberg** | Medallion Lakehouse (Bronze / Silver / Gold) | `bronze.raw_*`, `silver.market_*`, `gold.fct_*` | Permanent archive (Bronze/Silver/Gold) with Iceberg snapshot expiration (7 days) | S3 bucket replication / MinIO erasure coding. |
-| **PostgreSQL 16** | Transactional Control Plane & Agent State | `users`, `api_keys`, `monitored_instruments`, `ingestion_watermarks`, `backfill_jobs`, `agent_runs`, `agent_tool_invocations`, `audit_logs` | Permanent transactional history | Daily `pg_dump` / WAL archive to MinIO backup bucket. |
+| **ClickHouse** | Real-Time & Historical Columnar OLAP | `market_trades`, `market_klines`, `market_tickers`, `order_book_snapshots`, `mv_*`, `mart_*` | `market_trades` & `market_tickers`: `90 DAY` TTL (`01_schema.sql`); `market_klines`, `order_book_snapshots` & Marts: no DDL TTL (`5+ years` target) | Rebuilt from Iceberg Silver tables (`PLANNED` Airflow/Spark job) or ClickHouse native backup. |
+| **MinIO + Parquet + Iceberg** | Medallion Lakehouse (Bronze / Silver / Gold) | `bronze.raw_*`, `silver.market_*`, `gold.fct_*` | Permanent archive (Bronze/Silver/Gold) with Iceberg snapshot expiration (`7 days` target); active v0.1 writes ZSTD Parquet + Iceberg v2 manifests to `.local_lakehouse` (MinIO buckets `lakehouse-*` provisioned) | S3 bucket replication / MinIO erasure coding (`PLANNED` multi-node target). |
+| **PostgreSQL 16** | Transactional Control Plane & Agent State | `users`, `api_keys`, `monitored_instruments`, `ingestion_watermarks`, `backfill_jobs`, `agent_runs`, `agent_tool_invocations`, `audit_logs` | Permanent transactional history | Daily `pg_dump` / WAL archive to MinIO backup bucket (`PLANNED` automated cron). |
 
 ---
 
@@ -99,15 +99,14 @@ ORDER BY (provider, symbol, hour_bucket);
 
 ### 3.1. Partitioning & File Sizing Rules
 - **Bronze (`lakehouse.bronze.raw_*`)**:
-  - Partitioned by `(provider, ingestion_date)` (`days(ingested_at)`).
-  - Target Parquet file size: $64\text{ MB} - 128\text{ MB}$ using `ZSTD(3)` compression.
-- **Silver (`lakehouse.silver.market_trades`, `lakehouse.silver.market_klines`)**:
-  - Uses Apache Iceberg **hidden partitioning**: `months(trade_time)` / `months(open_time)` and `bucket(16, symbol)`.
-  - Deduplicated via PySpark `MERGE INTO silver.market_klines t USING incremental_bronze s ON t.provider = s.provider AND t.symbol = s.symbol AND t.interval = s.interval AND t.open_time = s.open_time WHEN MATCHED AND s.exchange_event_time > t.exchange_event_time THEN UPDATE * WHEN NOT MATCHED THEN INSERT *`.
-- **Gold (`lakehouse.gold.*` & dbt Marts)**:
-  - `gold.fct_daily_market_summary`: Daily OHLCV, VWAP, dollar volume, taker buy ratio, and intraday max drawdown per symbol.
-  - `gold.fct_realized_volatility`: Rolling 24h, 7d, and 30d close-to-close and Parkinson high-low realized volatility.
-  - `gold.fct_cross_asset_correlations`: Daily updated 30-day and 90-day correlation matrix across monitored instruments.
+  - Active v0.1 writes immutable ZSTD-compressed Apache Parquet files partitioned by `bronze/{event_type}/provider={p}/ingestion_date={YYYY-MM-DD}` (`BronzeParquetArchiver` in `src/lakehouse/bronze/archiver.py`). Target MinIO object storage buckets (`lakehouse-bronze`, `lakehouse-silver`, `lakehouse-gold`, `lakehouse-checkpoints`) are provisioned via `deploy/object-storage/init-buckets.sh`.
+- **Silver (`silver.market_trades`, `silver.market_klines`, `silver.order_book_snapshots`)**:
+  - Active v0.1 executes natural-key deduplication and ZSTD Parquet + Iceberg v2 snapshot manifest generation via `SilverLakehouseMergeEngine` (`src/lakehouse/silver/merge_engine.py`). PySpark `MERGE INTO` against hidden-partitioned MinIO Iceberg tables is the `PLANNED` distributed batch target (`deploy/iceberg/catalog-config.yaml`).
+- **Gold (`gold.*` Parquet Active; dbt Marts `PLANNED`)**:
+  - `gold.fct_daily_market_summary` (`IMPLEMENTED` in `GoldLayerMartEngine`): Daily OHLCV, VWAP, dollar volume, and taker buy volume per symbol.
+  - `gold.fct_realized_volatility` (`IMPLEMENTED` in `GoldLayerMartEngine`): Close-to-close realized volatility per symbol/interval.
+  - `gold.fct_orderbook_liquidity` (`IMPLEMENTED` in `GoldLayerMartEngine`): Top-N bid/ask spread, mid-price, and cumulative depth summary.
+  - `gold.fct_cross_asset_correlations` (`PLANNED` target mart; correlation calculation is currently served on-demand by `/api/v1/analytics/correlations` and `calculate_correlation`).
 
 ---
 

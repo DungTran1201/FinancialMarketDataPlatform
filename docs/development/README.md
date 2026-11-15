@@ -37,7 +37,7 @@
 |---|---|---|---|
 | `README.md` | Domain scope, inputs, and navigation index | Required | `docs/templates/architecture/architecture-overview.template.md` |
 | `developer-quickstart.md` | 5-minute setup, local venv, npm commands, test cheat-sheet | Required | `docs/templates/architecture/architecture-overview.template.md` |
-| `codebase-map.md` | Structural directory map and responsibility breakdown | Required | `docs/templates/architecture/component-specification.template.md` |
+| `codebase-map.md` | Structural directory map and responsibility breakdown | Required | `docs/templates/architecture/C4-component.template.md` |
 
 ## 6. Directory and File Organization
 

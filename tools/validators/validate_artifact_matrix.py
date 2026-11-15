@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -42,7 +43,8 @@ def main() -> int:
                 errors += 1
 
     print(
-        f"[validate_artifact_matrix] Checked {len(matrix_types)} change types and 15 phase mappings -> {errors} error(s)."
+        f"[validate_artifact_matrix] Checked {len(matrix_types)} change types and 15 phase mappings -> "
+        f"{errors} error(s)."
     )
     return 1 if errors else 0
 

@@ -1,0 +1,71 @@
+version: "1.0"
+work_item_id: "DOCS-004"
+program_name: "FinancialMarketDataPlatform — Repository-Wide Documentation Remediation, Architecture Reconciliation & Quality Acceptance"
+branch: "docs/DOCS-003-consistency-remediation"
+baseline_commit: "c954d32f33dcc6b4200804662b4bdae2b3a3ddbd"
+acceptance_date: "2026-11-15"
+verdict: "ACCEPTED_WITH_DISCLOSED_RUNTIME_PROPOSALS"
+gate_status: "G6_RELEASE"
+state_status: "DONE"
+
+workstreams:
+  workstream_a_docs_003_completion: "COMPLETE"
+  workstream_b_architecture_reconciliation: "COMPLETE"
+  workstream_c_operations_verification: "COMPLETE"
+  workstream_d_governance_consolidation: "COMPLETE"
+
+constraints_verified:
+  runtime_src_business_logic_unmodified: true
+  frontend_src_business_logic_unmodified: true
+  all_existing_identifiers_preserved: true
+  historical_work_items_preserved_non_destructively: true
+  configuration_fixes_minimal_and_regression_tested:
+    - "docker-compose.yml: MINIO_API_PORT:-9010 host mapping resolves ClickHouse vs MinIO port 9000 collision"
+    - ".env.example: synchronized MINIO_API_PORT, FRONTEND_PORT, GRAFANA_PORT, PROMETHEUS_PORT, SUPERSET_PORT, CORS_ORIGINS"
+    - "deploy/observability/prometheus/prometheus.yml: added svc-data-plane-v01:8007 scrape target"
+
+verification_checks:
+  VER-01_documentation_validators:
+    command: ".\\.venv\\Scripts\\python.exe tools/validators/run_all.py"
+    status: "PASS"
+    details: "10/10 validators passed with 0 errors including semantic runtime route/EventType parity, Compose port/Prometheus checks, diagram checks, and link/path resolution"
+  VER-02_python_pytest_suite:
+    command: ".\\.venv\\Scripts\\pytest.exe tests -v"
+    status: "PASS"
+    details: "58 passed, 0 failed across architecture, contract, data_quality, e2e, integration, performance, resilience, and unit suites (including TC-017 validator negative tests)"
+  VER-02b_python_unittest_discovery:
+    command: ".\\.venv\\Scripts\\python.exe -m unittest discover -s tests -v"
+    status: "PASS"
+    details: "55 tests ran, OK"
+  VER-03_ruff_lint:
+    command: ".\\.venv\\Scripts\\ruff.exe check src tests tools"
+    status: "PASS"
+    details: "0 lint errors across src/, tests/, and tools/"
+  VER-04_frontend_tests:
+    command: "npm test --prefix frontend"
+    status: "PASS"
+    details: "3/3 tests passed via node --test tests/**/*.test.js (formatters.test.js, router.test.js)"
+  VER-05_frontend_build:
+    command: "npm run build --prefix frontend"
+    status: "PASS"
+    details: "tsc && vite build succeeded (34 modules transformed)"
+  VER-06_docker_compose_all_profiles_config:
+    command: "docker compose --profile core --profile lakehouse --profile intelligence --profile observability --profile bi --profile microservices --profile frontend config --quiet"
+    status: "PASS"
+    details: "Exit code 0 with zero host port collisions"
+  VER-07_ci_workflow_yaml:
+    command: ".\\.venv\\Scripts\\python.exe -c \"import yaml; yaml.safe_load(open('.github/workflows/ci.yml', encoding='utf-8'))\""
+    status: "PASS"
+    details: "CI workflow YAML parsed cleanly"
+  VER-08_live_multi_container_and_cluster_load:
+    command: "docker compose --profile core up -d"
+    status: "NOT_RUN"
+    details: "Live multi-container startup and production latency benchmarks (NFR-001, NFR-002) remain UNVERIFIED_UNDER_PRODUCTION_LOAD outside static remediation scope"
+
+out_of_scope_runtime_proposals:
+  - "PROP-APP-001: Align frontend/src/services/ endpoints with active backend /api/v1/ routes"
+  - "PROP-APP-002: Wire standalone collector/consumer/agent CLI worker entrypoints into continuous Kafka/WS loops"
+  - "PROP-APP-003: Consolidate legacy LAKEHOUSE_BUCKET=market-data env var with lakehouse-{bronze,silver,gold,checkpoints}"
+  - "PROP-APP-004: Attach route-level FastAPI JWT/RBAC Depends(...) guards across non-IAM domain routers"
+  - "PROP-APP-005: Decide 5- vs 6-node Agent graph parity, wire cg.agent.anomaly.v1 consumer, and implement or retire WS /ws/v1/market/stream"
+

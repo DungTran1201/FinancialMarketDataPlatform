@@ -64,11 +64,12 @@ change_types:
         - "models/security/threat-model.yaml"
         - "docs/diagrams/security/"
   DATA:
-    description: "Ingestion, Kafka schema, ClickHouse OLAP, Iceberg Lakehouse, Spark, or dbt change"
+    description: "Ingestion, Kafka schema, ClickHouse OLAP, Iceberg Lakehouse, or data quality change (Python gates active; Spark/dbt/GE planned)"
     baseline_artifacts:
       - "docs/specifications/data-contracts.md"
       - "docs/specifications/data-dictionary.md"
       - "models/domain/entities.yaml"
+      - "models/data-platform/"
       - "models/testing/testing.yaml"
     conditional_by_signal:
       api:

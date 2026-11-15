@@ -37,7 +37,7 @@ Enforce strict workload and system-of-record boundaries across the four storage 
 | **PostgreSQL** | Transactional OLTP Database | Users, RBAC, API keys, platform config, ingestion watermarks, job states, Agent runs & tool audit logs. | Storing high-frequency market ticks, klines, or order book snapshots. |
 | **Redis** | Hot Data Cache & Pub/Sub Fanout | **None** (Ephemeral derived projection only). Holds latest price, 24h snapshot, top-20 order book, rate-limit counters, and short-TTL query cache. | Acting as a durable system of record or storing historical time-series arrays. |
 | **ClickHouse** | Real-Time & Historical OLAP Database | Serving analytical time-series queries (`market_trades`, `market_klines`, `market_tickers`, `order_book_snapshots`) and Materialized Views for API and Superset BI. | Storing user credentials, RBAC transactions, or executing frequent single-row `UPDATE`/`DELETE` mutations. |
-| **MinIO + Parquet + Iceberg** | Lakehouse Storage (Bronze / Silver / Gold) | Durable, immutable raw event archive (**Bronze**) and canonical deduplicated historical datasets (**Silver** / **Gold**). | Serving synchronous low-latency REST API requests directly. |
+| **MinIO + Parquet + Iceberg** | Lakehouse Storage (Bronze / Silver / Gold) | Durable, immutable raw event archive (**Bronze**) and canonical deduplicated historical datasets (**Silver** / **Gold**). *(v0.1 defaults locally to `.local_lakehouse` ZSTD Parquet + Iceberg v2 manifests; MinIO buckets `lakehouse-*` provisioned as S3 target.)* | Serving synchronous low-latency REST API requests directly. |
 
 ---
 

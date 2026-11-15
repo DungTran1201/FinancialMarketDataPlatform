@@ -1,29 +1,40 @@
-# Diagram 12: Agentic Intelligence Architecture
+# Diagram 12: Agentic Intelligence Architecture (`DIAG-C4-012`)
+
+| Diagram Metadata | Value |
+|---|---|
+| **Diagram ID** | `DIAG-C4-012` (legacy `DOCS-002` alias: `DIAG-COMP-012`) |
+| **Title** | Agentic Intelligence Architecture (5-Node LangGraph + 10-Tool Gateway) |
+| **Diagram Category** | `docs/diagrams/agent/` |
+| **Notation / Mermaid Type** | `Mermaid (flowchart TB)` |
+| **Status** | `IMPLEMENTED` / `PARTIALLY_IMPLEMENTED` (5-node graph & 10-tool gateway implemented in `src/intelligence/`; standalone `agent-worker` daemon loop `PROP-APP-002`, Kafka anomaly consumer & `fmdp_agent_ro` SQL user `[PLANNED]`) |
+| **Version** | `1.1.0` |
+| **Authoritative Document Reference** | `docs/architecture/06-agentic-intelligence-architecture.md` |
+| **Canonical Model Reference** | `models/architecture/components.yaml`, `models/interaction/interactions.yaml` |
+| **Related Artifact IDs** | `COMP-005`, `COMP-019`, `API-008`, `API-009`, `PROP-APP-002` |
 
 ## Architectural Explanation
 
-The **Agentic Intelligence Architecture** illustrates how the **Intelligence Plane** operates as an isolated service (`agent-worker` + `agent_api` module) powered by **LangGraph**:
-- **Dual Trigger Entrypoints**:
-  1. **On-Demand Analysis**: Triggered via `POST /api/v1/agents/runs` by an authenticated analyst.
-  2. **Event-Triggered Investigation**: Triggered when the deterministic `StatisticalAnomalyDetector` publishes a breach event to `market.anomalies.v1` and passes the deduplication cooldown filter (e.g., 15-minute window per symbol/detector).
-- **Stateful LangGraph Orchestrator (`MarketIntelligenceGraph`)**:
-  - Executes explicit state nodes (`Intake & Scope Validation` $\rightarrow$ `Tool Planning` $\rightarrow$ `Controlled Tool Gateway Execution` $\rightarrow$ `Evidence Verification` $\rightarrow$ `Structured Report Synthesis`).
-  - Persists state checkpoints, tool invocation trails, token usage, and final reports to **PostgreSQL**.
-- **Strict Isolation**: The Intelligence Plane accesses market data exclusively in **read-only** mode through the **Deterministic Tool Gateway** and can fail completely without affecting the Data Plane.
+The **Agentic Intelligence Architecture** illustrates how the **Intelligence Plane** (`src/intelligence/`, plus `agent-worker` container definition) executes **MarketIntelligenceGraph**:
+- **Trigger Entrypoints**:
+  1. **On-Demand Analysis (`[IMPLEMENTED]`)**: Triggered via `POST /api/v1/agents/runs` (`API-008`) executing `MarketIntelligenceGraph` + `ControlledToolGateway`.
+  2. **Event-Triggered Investigation (`[PLANNED]` Daemon Consumer)**: Target integration consuming `market.anomalies.v1` through a deduplication cooldown filter.
+- **Stateful 5-Node Orchestrator (`MarketIntelligenceGraph`)**:
+  - `Intake & Guardrail Validator` $\rightarrow$ `Investigation Planner` $\rightarrow$ `Tool Gateway Executor` $\rightarrow$ `Evidence Verifier` $\rightarrow$ `Structured Report Synthesizer`.
+  - Standalone `agent-worker` CLI loop (`src/intelligence/main.py`) is currently a stub (`PROP-APP-002`); active runs store evidence trails in `PlatformRuntimeContainer.agent_runs` (with PostgreSQL persistent worker checkpointing & `fmdp_agent_ro` ClickHouse SQL user `[PLANNED]`).
 
 ```mermaid
 flowchart TB
     subgraph Triggers["1. Agent Triggering Modes"]
-        UserTrigger["On-Demand Request<br/>POST /api/v1/agents/runs"]
-        AnomalyStream["Event-Triggered Anomaly<br/>Kafka: market.anomalies.v1"]
-        CooldownFilter["Deterministic Deduplication & Cooldown Gate<br/>(Redis Key: agent:cooldown:{symbol}:{detector})"]
+        UserTrigger["On-Demand Request [IMPLEMENTED]<br/>POST /api/v1/agents/runs"]
+        AnomalyStream["Event-Triggered Anomaly [PLANNED Consumer]<br/>Kafka: market.anomalies.v1"]
+        CooldownFilter["Cooldown Gate [PLANNED Daemon]<br/>(agent:cooldown:{symbol}:{detector})"]
     end
 
-    subgraph AgentService["2. Intelligence Plane: LangGraph Agent Service"]
-        subgraph LangGraphWorkflow["LangGraph Stateful Workflow (MarketIntelligenceGraph)"]
+    subgraph AgentService["2. Intelligence Plane: 5-Node Orchestrator (src/intelligence/)"]
+        subgraph LangGraphWorkflow["MarketIntelligenceGraph (5-Node State Graph)"]
             N1["Node 1: Intake & Guardrail Validator<br/>(Verify Scope, Time Window, Token Budget)"]
             N2["Node 2: Investigation Planner<br/>(Select Deterministic Tools)"]
-            N3["Node 3: Tool Gateway Executor<br/>(Run Quant & Data Tools in Parallel/Sequence)"]
+            N3["Node 3: Tool Gateway Executor<br/>(Run Quant & Data Tools)"]
             N4["Node 4: Evidence Verifier<br/>(Check Provenance, Completeness & Bounds)"]
             N5["Node 5: Structured Report Synthesizer<br/>(Generate JSON Report with Citations)"]
 
@@ -32,11 +43,11 @@ flowchart TB
             N4 -->|"Sufficient Deterministic Evidence"| N5
         end
 
-        LLMAdapter["LLM Provider Adapter<br/>(Timeout, Retry, Token Meter, Circuit Breaker)"]
-        ToolGW["Controlled Tool Gateway<br/>(RBAC, Schema Validation, Query Cap, Provenance Tagger)"]
+        LLMAdapter["LLM Adapter / Deterministic Fallback<br/>(External LLM Optional; Zero-Fake Fallback Active)"]
+        ToolGW["ControlledToolGateway<br/>(10 Whitelisted Tools, Schema & Bounds, Provenance)"]
     end
 
-    subgraph DeterministicTools["3. Deterministic Analytical & Data Tools (Python / SQL)"]
+    subgraph DeterministicTools["3. 10 Whitelisted Deterministic Tools (contracts.py)"]
         TPrice["get_latest_price / get_market_snapshot"]
         THist["get_historical_candles / get_market_statistics"]
         TQuant["calculate_returns / calculate_volatility / calculate_correlation"]
@@ -45,25 +56,23 @@ flowchart TB
     end
 
     subgraph DataAndState["4. Persistence & Read-Only Data Sources"]
-        PGState[("PostgreSQL (agent_rw)<br/>agent_runs & agent_tool_invocations")]
-        RedisRO[("Redis (Read-Only)<br/>Hot Market State")]
-        CHRO[("ClickHouse (agent_ro)<br/>Bounded Analytical Queries")]
-        LLMCloud["External LLM API"]
+        PGState[("Runtime State / PostgreSQL [PLANNED Worker PG]<br/>agent_runs & tool_invocations")]
+        RedisRO[("Redis / HotStateProjector<br/>Hot Market State")]
+        CHRO[("ClickHouse / OLAP Adapter<br/>(Dedicated fmdp_agent_ro PLANNED)")]
+        LLMCloud["External LLM API (Optional)"]
     end
 
-    UserTrigger -->|"Enqueue Run"| PGState
-    AnomalyStream --> CooldownFilter
-    CooldownFilter -->|"Passed Cooldown"| N1
-    PGState -->|"Dequeue Run"| N1
+    UserTrigger -->|"Invoke Execution"| N1
+    AnomalyStream -.-> CooldownFilter -.->|"Passed Cooldown [PLANNED]"| N1
 
-    N2 & N5 <-->|"Structured Prompt / Schema"| LLMAdapter
-    LLMAdapter <-->|"HTTPS"| LLMCloud
+    N2 & N5 <-->|"Structured Prompt / Fallback"| LLMAdapter
+    LLMAdapter <-.->|"HTTPS (When Configured)"| LLMCloud
 
     N3 --> ToolGW
     ToolGW --> TPrice & THist & TQuant & TAnom & TRep
     TPrice --> RedisRO
     THist & TQuant & TAnom --> CHRO
 
-    N1 & N3 & N5 -->|"Checkpoint State & Audit Trail"| PGState
+    N1 & N3 & N5 -->|"Audit Trail & Result"| PGState
 ```
 

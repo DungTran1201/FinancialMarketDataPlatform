@@ -5,33 +5,33 @@
 This document defines the measurable Non-Functional Requirements (NFRs) across Performance, Scalability, Reliability, Availability, Consistency, Security, Observability, Maintainability, Testability, and Cost Efficiency.
 
 In accordance with architectural governance rules:
-- **No fabricated production SLOs**: Where exact production traffic profiles are not yet empirically measured, this specification explicitly states the **Unknown**, proposes a **Measurable Baseline Target** for the Docker Compose reference environment, defines the **Required Benchmark**, records **Assumptions**, and specifies the **Finalization Protocol**.
+- **No fabricated production SLOs**: All numerical latency, throughput, and scalability values in this document are **architectural design targets** (`UNVERIFIED_UNDER_PRODUCTION_LOAD` in live multi-container cluster benchmarks). In-process tests (`TC-010`, `TC-011`, `TC-015`) verify deterministic execution logic and graceful fallback behavior locally.
 - All latency targets are expressed using **P50**, **P95**, and **P99** percentiles.
 
 ---
 
 ## 2. Performance Requirements
 
-### 2.1. Latency Baseline Targets (Tier-1 Local / Single-Host Reference Profile)
+### 2.1. Latency Baseline Targets (Design Targets — `UNVERIFIED_UNDER_PRODUCTION_LOAD`)
 
-| Workload / Query Category | Storage Engine | P50 Baseline | P95 Baseline | P99 Baseline | Hard API Timeout |
+| Workload / Query Category | Storage Engine | P50 Baseline Target | P95 Baseline Target | P99 Baseline Target | Hard API Timeout Target |
 |---|---|---|---|---|---|
 | **Hot Latest Price (`GET /market/prices/{symbol}`)** | Redis | $\le 5\text{ ms}$ | $\le 15\text{ ms}$ | $\le 30\text{ ms}$ | $1,500\text{ ms}$ |
 | **Hot Market Snapshot (`GET /market/snapshots/{symbol}`)** | Redis | $\le 8\text{ ms}$ | $\le 20\text{ ms}$ | $\le 45\text{ ms}$ | $2,000\text{ ms}$ |
-| **Historical Candles (`GET /historical/klines`, $\le 1000$ rows)** | ClickHouse | $\le 25\text{ ms}$ | $\le 80\text{ ms}$ | $\le 200\text{ ms}$ | $5,000\text{ ms}$ |
-| **Historical Trades (`GET /historical/trades`, $\le 500$ rows)** | ClickHouse | $\le 35\text{ ms}$ | $\le 120\text{ ms}$ | $\le 300\text{ ms}$ | $5,000\text{ ms}$ |
+| **Historical Candles (`GET /historical/klines/{symbol}`, $\le 1000$ rows)** | ClickHouse | $\le 25\text{ ms}$ | $\le 80\text{ ms}$ | $\le 200\text{ ms}$ | $5,000\text{ ms}$ |
+| **Historical Trades (`GET /historical/trades/{symbol}`, $\le 500$ rows)** | ClickHouse | $\le 35\text{ ms}$ | $\le 120\text{ ms}$ | $\le 300\text{ ms}$ | $5,000\text{ ms}$ |
 | **Aggregated Market Statistics (Materialized View)** | ClickHouse MV / Redis | $\le 20\text{ ms}$ | $\le 75\text{ ms}$ | $\le 180\text{ ms}$ | $5,000\text{ ms}$ |
 | **Multi-Symbol Correlation Matrix (30d, 1h candles, 10 pairs)** | ClickHouse | $\le 80\text{ ms}$ | $\le 250\text{ ms}$ | $\le 600\text{ ms}$ | $8,000\text{ ms}$ |
-| **Control Plane CRUD (Users, Config, Agent Run Status)** | PostgreSQL | $\le 10\text{ ms}$ | $\le 30\text{ ms}$ | $\le 75\text{ ms}$ | $3,000\text{ ms}$ |
+| **Control Plane CRUD (IAM, Config, Agent Run Status)** | PostgreSQL | $\le 10\text{ ms}$ | $\le 30\text{ ms}$ | $\le 75\text{ ms}$ | $3,000\text{ ms}$ |
 | **Agent Workflow Submission (`POST /agents/runs`)** | PostgreSQL + Queue | $\le 20\text{ ms}$ | $\le 50\text{ ms}$ | $\le 120\text{ ms}$ | $3,000\text{ ms}$ |
-| **End-to-End Agent Workflow Completion (Async)** | LangGraph + LLM + Tools | $4\text{ s}$ | $15\text{ s}$ | $35\text{ s}$ | $90\text{ s}$ (Worker timeout) |
+| **End-to-End Agent Workflow Completion (`5`-node Graph)** | LangGraph + LLM + Tools | $4\text{ s}$ | $15\text{ s}$ | $35\text{ s}$ | $90\text{ s}$ (Worker timeout) |
 
-### 2.2. Ingestion & Streaming Throughput Baseline
+### 2.2. Ingestion & Streaming Throughput Baseline (`UNVERIFIED_UNDER_PRODUCTION_LOAD`)
 
-| Metric | Baseline Target (Tier-1: 10–25 Pairs) | Scale Target (Tier-2: 200 Pairs) | Verification Benchmark |
+| Metric | Baseline Target (Tier-1: 10–25 Pairs) | Scale Target (Tier-2: 200 Pairs) | Verification / Telemetry Mechanism |
 |---|---|---|---|
-| **Sustained Event Ingestion Rate** | $1,000\text{ events/sec}$ | $15,000\text{ events/sec}$ | Synthetic Kafka producer replay benchmark (`locust` / `pytest-benchmark` + custom replay script). |
-| **Hot Path End-to-End Lag (Collector $\rightarrow$ Redis)** | P50 $\le 50\text{ ms}$, P95 $\le 150\text{ ms}$, P99 $\le 400\text{ ms}$ | P99 $\le 750\text{ ms}$ | Measured via `ingested_at` vs. Redis update timestamp histogram (`market_hot_path_lag_ms`). |
+| **Sustained Event Ingestion Rate** | $1,000\text{ events/sec}$ | $15,000\text{ events/sec}$ | Synthetic load benchmark (`TC-010` in-process 100-bot swarm; live Kafka replay `NOT_RUN`). |
+| **Hot Path End-to-End Lag (Collector $\rightarrow$ Redis)** | P50 $\le 50\text{ ms}$, P95 $\le 150\text{ ms}$, P99 $\le 400\text{ ms}$ | P99 $\le 750\text{ ms}$ | Tracked via `fmdp_end_to_end_latency_ms` (`DataObservabilityMetricsCollector`); `market_hot_path_lag_ms` `PLANNED`. |
 | **Analytics Path End-to-End Lag (Collector $\rightarrow$ ClickHouse)** | P50 $\le 1.5\text{ s}$, P95 $\le 3.0\text{ s}$, P99 $\le 5.0\text{ s}$ | P99 $\le 8.0\text{ s}$ | Governed by consumer micro-batch flush interval (`1.0s` or `5,000` events). |
 
 ---
@@ -46,7 +46,7 @@ In accordance with architectural governance rules:
 3. **Storage Growth Management**:
    - **Redis**: Bounded memory (`maxmemory 256mb` locally, `allkeys-lru` eviction on cache namespace, explicit TTLs on all keys).
    - **ClickHouse**: Partitioned monthly (`toYYYYMM(open_time)` / `toYYYYMM(trade_time)`) with ZSTD(3) compression and automated TTL rules to drop or tier raw tick data older than 90 days while retaining 1m/1h/1d candles long-term.
-   - **MinIO / Iceberg**: Compaction and snapshot expiration scheduled weekly via Airflow to prevent small-file metadata explosion.
+   - **MinIO / Iceberg**: Compaction and Iceberg v2 snapshots implemented in `SilverLakehouseMergeEngine`; scheduled Airflow maintenance is `PLANNED`.
 
 ---
 
@@ -67,21 +67,21 @@ In accordance with architectural governance rules:
 |---|---|---|---|
 | **LLM Provider / Agent Service Down** | **Zero impact** | Market, Historical, and Analytics APIs remain 100% operational; only `/api/v1/agents/*` returns `503` or queues jobs. | Circuit breaker around LLM adapter; strict plane isolation. |
 | **Redis Unavailable** | Collectors & ClickHouse ingestion continue unaffected. | Hot API endpoints transparently fall back to ClickHouse latest-row queries with circuit-breaker rate protection. | Readiness metric flags degraded cache mode; auto-reconnects when Redis recovers. |
-| **ClickHouse Unavailable** | Kafka buffers incoming events up to retention window (72h). | Hot endpoints (`/market/prices`, `/market/snapshots`) continue serving from Redis; historical/analytical endpoints return `503`. | Kafka consumer pauses/retries with exponential backoff without losing events. |
-| **MinIO / Spark / Airflow Unavailable** | Real-time Kafka, Redis, and ClickHouse paths continue 100% unaffected. | Real-time and ClickHouse historical queries remain 100% operational. | Lakehouse ingestion resumes from committed Kafka offsets / REST watermarks upon recovery. |
+| **ClickHouse Unavailable** | Kafka buffers incoming events up to retention window (`168h` / `7 days` raw). | Hot endpoints (`/market/prices`, `/market/snapshots`) continue serving from Redis; historical/analytical endpoints return `503`. | Kafka consumer pauses/retries with exponential backoff without losing events. |
+| **MinIO / (`Spark/Airflow PLANNED`) Unavailable** | Real-time Kafka, Redis, and ClickHouse paths continue 100% unaffected. | Real-time and ClickHouse historical queries remain 100% operational. | Lakehouse ingestion resumes from committed Kafka offsets / REST watermarks upon recovery. |
 | **Binance WebSocket Disconnect** | Temporary gap during reconnect ($1-5\text{ s}$). | Redis serves last known price flagged with `is_stale: true` if age exceeds freshness threshold ($15\text{ s}$). | Collector reconnects with jitter and enqueues a targeted REST gap-fill for missed klines/trades. |
 
 ---
 
 ## 5. Security, Observability, Maintainability, Testability & Cost
 
-| Category | Measurable Requirement | Architectural Mechanism |
+| Category | Measurable Requirement | Architectural Mechanism & Current Status |
 |---|---|---|
-| **Security** | Zero hardcoded secrets in repo; 100% authenticated write/agent endpoints; read-only DB credentials for Agent tools. | `.env` injection, separate PostgreSQL/ClickHouse users (`app_rw`, `analytics_ro`, `agent_ro`), query row/time-range caps. |
-| **Observability** | 100% of services expose Prometheus `/metrics` and structured JSON logs with correlation IDs (`request_id`, `run_id`). | Prometheus scraping collectors, consumers, FastAPI, and Agent workers; Grafana dashboards for lag, latency, and errors. |
-| **Maintainability** | Strict Clean/Hexagonal dependency direction: Domain layer has zero imports from FastAPI, SQLAlchemy, Redis, or ClickHouse SDKs. | Enforced by automated architectural boundary tests in `tests/architecture/`. |
+| **Security** | Zero hardcoded secrets in repo; authenticated write/agent endpoints; read-only DB credentials for Agent tools. | `.env` injection, IAM JWT/API-key endpoints (`IMPLEMENTED`), `ControlledToolGateway` (`IMPLEMENTED`); per-route domain RBAC `Depends` (`PROP-APP-004` `PARTIALLY_IMPLEMENTED`) and separate DB roles (`fmdp_agent_ro` `CTRL-002`) `PLANNED`. |
+| **Observability** | FastAPI & v0.1 services expose Prometheus `/metrics` (`10` `fmdp_*` metrics) and structured logs. | `DataObservabilityMetricsCollector` (`IMPLEMENTED` on `backend-api:8000` & `svc-data-plane-v01:8007`); standalone collector/consumer daemon metrics `PLANNED`. |
+| **Maintainability** | Strict Clean/Hexagonal dependency direction: Domain layer has zero imports from FastAPI, SQLAlchemy, Redis, or ClickHouse SDKs. | Enforced by automated architectural boundary tests in `tests/architecture/test_clean_architecture_boundaries.py`. |
 | **Testability** | Independent execution of unit, architecture, contract, and integration tests via `pytest`. | Port/Adapter interfaces allow in-memory testing of use cases and agent tools without live external exchanges. |
-| **Cost & Resource Efficiency** | Entire core stack runs on a single developer workstation ($16\text{ GB}$ RAM) via Docker Compose profiles (`core`, `lakehouse`, `observability`, `intelligence`). | Profiled Docker Compose deployment prevents running Spark/Airflow/Superset when only testing core streaming or API modules. |
+| **Cost & Resource Efficiency** | Core stack runs locally via Docker Compose profiles (`core`, `lakehouse`, `observability`, `intelligence`, `bi`, `microservices`, `frontend`). | Profiled Docker Compose keeps optional BI, Lakehouse, and Microservices containers stopped when only testing `core`. |
 
 ---
 

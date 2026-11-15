@@ -37,9 +37,7 @@ How do we ingest, distribute, and process real-time and historical market events
    - Consumers commit offsets manually **only after** target storage acknowledgement and implement deterministic deduplication (`event_id` / `exchange_event_time`).
 3. **Strict Processing Engine Separation**:
    - **Lightweight Python Async Consumers**: Handle low-latency `Kafka -> Redis` (Hot Path) and micro-batched `Kafka -> ClickHouse` (Analytics Path).
-   - **Apache Spark (PySpark)**: Restricted to batch/micro-batch Lakehouse operations: `Bronze -> Silver` deduplication, schema enforcement, historical backfill merging, and Iceberg table compaction. Never invoked per streaming event or per synchronous API request.
-   - **dbt Core**: Owns SQL-based analytical transformations (`Silver -> Gold` business models and ClickHouse analytical marts).
-   - **Apache Airflow**: Orchestrates scheduled batch pipelines (REST historical backfills, PySpark Bronze-to-Silver jobs, dbt runs, Great Expectations suites, and Iceberg maintenance). Never used to process individual streaming events.
+   - **Apache Spark (PySpark)** `[PLANNED]` / **dbt Core** `[PARTIALLY_IMPLEMENTED]` / **Apache Airflow** `[PLANNED]`: Target distributed batch stack (`PySpark` `MERGE INTO`, `dbt` SQL models, `Great Expectations`, `Airflow` DAGs). Active v0.1 executes deterministic equivalents via `SilverLakehouseMergeEngine`, `GoldLayerMartEngine`, `DataQualityGateEngine`, and `DataPlatformV01Pipeline` (`src/lakehouse/`).
 
 ---
 
@@ -75,7 +73,7 @@ Each engine is used strictly where its architecture excels:
   - Normalization happens once in Collectors (`Raw Exchange -> Canonical Envelope`).
   - Deduplication/Standardization happens once in Silver (`PySpark` for Lakehouse; `ReplacingMergeTree` for ClickHouse).
   - Business aggregations happen in SQL (`ClickHouse Materialized Views` for real-time; `dbt` for curated Gold marts).
-- **Replay & Recovery**: Kafka retention (24h–72h) and Bronze Lakehouse archives allow rebuilding Redis or ClickHouse projections from scratch without re-querying Binance APIs.
+- **Replay & Recovery**: Kafka retention (`168h` / `7 days` raw, `720h` / `30 days` anomalies/DLQ) and Bronze Lakehouse archives allow rebuilding Redis or ClickHouse projections from scratch without re-querying Binance APIs.
 
 ---
 

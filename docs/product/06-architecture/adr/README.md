@@ -7,7 +7,7 @@ Stores product-specific and frontend-specific Architecture Decision Records (`WE
 ## 2. Scope and Boundaries
 
 - **Belongs in this directory**: `WEB-ADR-<NNN>-<slug>.md` files governing product/frontend architectural trade-offs.
-- **Does NOT belong in this directory**: Core Data Platform, Backend, Storage, Caching, or Agent Plane ADRs (which live in `docs/architecture/adr/ADR-001..006`).
+- **Does NOT belong in this directory**: Core Data Platform, Backend, Storage, Caching, or Agent Plane ADRs (which live in `docs/architecture/adr/ADR-001..008`).
 
 ## 3. Agent Role and Responsibilities
 
@@ -15,7 +15,7 @@ Authored by `architecture-modeler` and `ux-modeler`; audited by `documentation-a
 
 ## 4. Authoritative Inputs
 
-1. `docs/architecture/adr/README.md` — Shared platform ADRs (`ADR-001..006`).
+1. `docs/architecture/adr/README.md` — Shared platform ADRs (`ADR-001..008`).
 2. `docs/templates/architecture/ADR.template.md` — Standard ADR template.
 
 ## 5. Required Artifacts
@@ -30,12 +30,12 @@ Flat directory `docs/product/06-architecture/adr/` with files named `WEB-ADR-<NN
 
 ## 7. Document Creation Rules
 
-Use `WEB-ADR-###` prefix to prevent ID collisions with `ADR-001..006` in `docs/architecture/adr/`.
+Use `WEB-ADR-###` prefix to prevent ID collisions with `ADR-001..008` in `docs/architecture/adr/`.
 
 ## 8. Creation Workflow
 
 1. Read `docs/product/06-architecture/adr/README.md` and `docs/architecture/adr/README.md`.
-2. Verify the decision is not already governed by `ADR-001..006`.
+2. Verify the decision is not already governed by `ADR-001..008`.
 3. Instantiate `docs/templates/architecture/ADR.template.md` with ID `WEB-ADR-<NNN>`.
 4. Register the decision in `models/architecture/architecture.yaml`.
 5. Run `tools/validators/run_all.py`.
@@ -46,7 +46,7 @@ Complements `docs/architecture/adr/` for Website/Product layer decisions.
 
 ## 10. Quality Gate
 
-All `WEB-ADR-###` files follow `ADR.template.md` and do not contradict `ADR-001..006`.
+All `WEB-ADR-###` files follow `ADR.template.md` and do not contradict `ADR-001..008`.
 
 ## 11. Validation Commands
 

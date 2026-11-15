@@ -93,7 +93,7 @@ Separating the platform into three planes aligns physical and logical boundaries
 
 ## 10. Operational Implications
 
-- Services are grouped into Docker Compose profiles (`core`, `lakehouse`, `observability`, `intelligence`, `bi`) so engineers can run the essential real-time path (`core`) with minimal memory ($<6\text{ GB}$ RAM) and activate heavy batch/BI components on demand.
+- Services are grouped into Docker Compose profiles (`core`, `lakehouse`, `observability`, `intelligence`, `bi`, `microservices`, `frontend`) so engineers can run the essential real-time path (`core`) with minimal memory ($<6\text{ GB}$ RAM) and activate optional batch/BI/microservices profiles on demand. *(Note: `PySpark`, `dbt Core` runner, `Great Expectations`, and `Apache Airflow` are `PLANNED` Phase 2 distributed containers; v0.1 lakehouse engines execute in-process via `src/lakehouse/`.)*
 - Health checks and Prometheus metrics must monitor inter-plane boundaries (Kafka consumer lag, Redis freshness, ClickHouse insert batch latency, Agent queue depth).
 
 ---
