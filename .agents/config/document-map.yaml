@@ -2,7 +2,7 @@ version: "1.0"
 metadata:
   name: "FinancialMarketDataPlatform Documentation Map"
   description: "Maps lifecycle phases, shared platform architecture, canonical models, diagrams, and templates."
-  updated_at: "2026-11-12"
+  updated_at: "2026-11-15"
 
 shared_platform_baselines:
   architecture:

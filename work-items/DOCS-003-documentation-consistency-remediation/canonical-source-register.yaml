@@ -1,0 +1,63 @@
+version: "1.0"
+metadata:
+  register_id: "REG-CANONICAL-SOURCES-001"
+  title: "Canonical Technical Source of Truth Register"
+  updated_at: "2026-11-15"
+  governing_rule: ".agents/rules/source-of-truth.md"
+
+domains:
+  requirements:
+    canonical_model: "models/requirements/requirements.yaml"
+    canonical_spec: "docs/specifications/data-requirements.md"
+    consumer_portal: "docs/contracts/requirements-matrix.md"
+    authority_hierarchy: ["models/requirements/requirements.yaml", "docs/specifications/data-requirements.md"]
+
+  business_rules:
+    canonical_model: "models/requirements/business-rules.yaml"
+    canonical_spec: "docs/specifications/data-requirements.md"
+    consumer_portal: "docs/contracts/requirements-matrix.md"
+    authority_hierarchy: ["models/requirements/business-rules.yaml", "src/shared/domain/quant.py"]
+
+  acceptance_criteria:
+    canonical_model: "models/requirements/acceptance-criteria.yaml"
+    canonical_spec: "docs/specifications/non-functional-requirements.md"
+    consumer_portal: "docs/contracts/requirements-matrix.md"
+    authority_hierarchy: ["models/requirements/acceptance-criteria.yaml"]
+
+  components_and_containers:
+    canonical_model: "models/architecture/components.yaml"
+    canonical_spec: "docs/architecture/02-system-container-architecture.md"
+    deployment_spec: "docker-compose.yml"
+    consumer_portal: "docs/operations/deployment-guide.md"
+    authority_hierarchy: ["models/architecture/components.yaml", "docker-compose.yml", "src/"]
+
+  kafka_streaming_topics:
+    canonical_model: "models/data-platform/topics.yaml"
+    canonical_code: "src/streaming/contracts/topics.py"
+    canonical_script: "deploy/kafka/topics-init.sh"
+    diagram_ref: "docs/diagrams/data-platform/06-event-streaming.md"
+    authority_hierarchy: ["models/data-platform/topics.yaml", "src/streaming/contracts/topics.py"]
+
+  event_envelopes:
+    canonical_model: "models/data-platform/events.yaml"
+    canonical_code: "src/shared/contracts/events/market_events.py"
+    consumer_portal: "docs/contracts/api-contracts.md"
+    authority_hierarchy: ["src/shared/contracts/events/market_events.py", "models/data-platform/events.yaml"]
+
+  lakehouse_orchestration_pipeline:
+    canonical_code: "src/lakehouse/orchestration/pipeline.py"
+    canonical_spec: "docs/architecture/14-data-platform-v01-and-microservices-architecture.md"
+    diagram_ref: "docs/diagrams/data-platform/08-end-to-end-data-platform-v01-pipeline.md"
+    authority_hierarchy: ["src/lakehouse/orchestration/pipeline.py", "docs/architecture/14-data-platform-v01-and-microservices-architecture.md"]
+
+  api_and_serving_endpoints:
+    canonical_model: "models/api/api.yaml"
+    canonical_spec: "docs/specifications/api-specification.md"
+    canonical_code: "src/serving/api/main.py"
+    consumer_portal: "docs/contracts/api-contracts.md"
+    authority_hierarchy: ["models/api/api.yaml", "src/serving/api/main.py"]
+
+  deployment_topology:
+    canonical_compose: "docker-compose.yml"
+    consumer_portal: "docs/operations/deployment-guide.md"
+    authority_hierarchy: ["docker-compose.yml", "deploy/"]

@@ -2,11 +2,11 @@
 
 ## 1. Directory Purpose
 
-Holds the baselined Phase 0 system, Data Platform, Modular Monolith Backend, and Agentic Intelligence architecture documents (`00` through `13`) and Architecture Decision Records (`adr/`).
+Holds the baselined Phase 0 system, Data Platform, Modular Monolith Backend, and Agentic Intelligence architecture documents (`00` through `14`) and Architecture Decision Records (`adr/`).
 
 ## 2. Scope and Boundaries
 
-- **Belongs in this directory**: `00-architecture-overview.md` through `13-performance-and-scalability.md` and `adr/`.
+- **Belongs in this directory**: `00-architecture-overview.md` through `14-data-platform-v01-and-microservices-architecture.md` and `adr/`.
 - **Does NOT belong in this directory**: Website-only UX screen specs (`docs/product/11-ux/`) or raw YAML models (`models/architecture/`).
 
 ## 3. Agent Role and Responsibilities
@@ -37,15 +37,16 @@ Owned by `architecture-modeler` and reviewed by `documentation-architect` and `s
 | `11-reliability-and-observability.md` | Fault Tolerance, Replayability, SLIs/SLOs & OpenTelemetry Observability | Required | `docs/templates/architecture/SAD.template.md` |
 | `12-deployment-architecture.md` | Docker Compose Profiles, Local Developer Topology & Runtime Dependencies | Required | `docs/templates/architecture/SAD.template.md` |
 | `13-performance-and-scalability.md` | Latency Budgets, Throughput Targets, Partitioning & Scaling Strategy | Required | `docs/templates/architecture/SAD.template.md` |
-| `adr/` | Architecture Decision Records (`ADR-001`..`ADR-006`) | Required | `docs/architecture/adr/README.md` |
+| `14-data-platform-v01-and-microservices-architecture.md` | Zero-Mock Data Platform v0.1 & Domain Microservices Architecture | Required | `docs/templates/architecture/SAD.template.md` |
+| `adr/` | Architecture Decision Records (`ADR-001`..`ADR-008`) | Required | `docs/architecture/adr/README.md` |
 
 ## 6. Directory and File Organization
 
-Contains 14 numbered architecture documents (`00`..`13`) and the `adr/` subdirectory.
+Contains 15 numbered architecture documents (`00`..`14`) and the `adr/` subdirectory.
 
 ## 7. Document Creation Rules
 
-All existing `00`..`13` files are `BASELINED`. Any modification requires an active `ARCH` work item, updated `models/architecture/`, and a new or updated ADR.
+All existing `00`..`14` files are `BASELINED`. Any modification requires an active `ARCH` work item, updated `models/architecture/`, and a new or updated ADR.
 
 ## 8. Creation Workflow
 
@@ -61,7 +62,7 @@ Provides the foundational platform constraints for `docs/product/06-architecture
 
 ## 10. Quality Gate
 
-All 14 architecture documents and 6 ADRs are preserved intact and pass `validate_docs.py` and `validate_traceability.py`.
+All 15 architecture documents and 8 ADRs are preserved intact and pass `validate_docs.py` and `validate_traceability.py`.
 
 ## 11. Validation Commands
 
@@ -73,5 +74,5 @@ All 14 architecture documents and 6 ADRs are preserved intact and pass `validate
 
 ## 12. Agent Restrictions
 
-- Do NOT overwrite or delete existing `00`..`13` architecture files without an approved `ARCH` work item.
+- Do NOT overwrite or delete existing `00`..`14` architecture files without an approved `ARCH` work item.
 - Do NOT duplicate these platform architecture documents inside `docs/product/06-architecture/`.

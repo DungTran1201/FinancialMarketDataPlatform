@@ -86,11 +86,11 @@ Every developer and stakeholder can navigate directly to their point of interest
 
 | Role / Persona | Reader Question | Target Destination | Authoritative Source |
 |---|---|---|---|
-| **New Developer** | *"How do I understand the system, clone the repo, and start running code in 5 minutes?"* | [docs/overview/](file:///c:/Users/PC/Project/FinancialMarketDataPlatform/docs/overview/) & [docs/development/](file:///c:/Users/PC/Project/FinancialMarketDataPlatform/docs/development/) | `developer-quickstart.md`, `codebase-map.md` |
-| **System Architect** | *"What are the core architectural boundaries, design decisions, and system decomposition?"* | [docs/architecture/](file:///c:/Users/PC/Project/FinancialMarketDataPlatform/docs/architecture/) & [ADRs](file:///c:/Users/PC/Project/FinancialMarketDataPlatform/docs/architecture/adr/) | `00-architecture-overview.md`, `ADR-001..008` |
-| **Data Engineer** | *"What are the Kafka topics, lakehouse partitioning, quality gates, and lineage paths?"* | [docs/contracts/](file:///c:/Users/PC/Project/FinancialMarketDataPlatform/docs/contracts/) & [docs/diagrams/data-platform/](file:///c:/Users/PC/Project/FinancialMarketDataPlatform/docs/diagrams/data-platform/) | `data-contracts.md`, `datasets.yaml`, `topics.yaml` |
-| **API / Frontend Dev** | *"What endpoints, schemas, WebSocket channels, and SSE feeds are available?"* | [docs/contracts/api-contracts.md](file:///c:/Users/PC/Project/FinancialMarketDataPlatform/docs/contracts/api-contracts.md) | `api-specification.md`, `models/api/api.yaml` |
-| **Site Reliability / DevOps** | *"How do I deploy microservices, monitor SLIs, inspect Prometheus alerts, and run recovery?"* | [docs/operations/](file:///c:/Users/PC/Project/FinancialMarketDataPlatform/docs/operations/) | `deployment-guide.md`, `monitoring.md`, `runbooks.md` |
+| **New Developer** | *"How do I understand the system, clone the repo, and start running code in 5 minutes?"* | [docs/overview/](../../docs/overview/) & [docs/development/](../../docs/development/) | `developer-quickstart.md`, `codebase-map.md` |
+| **System Architect** | *"What are the core architectural boundaries, design decisions, and system decomposition?"* | [docs/architecture/](../../docs/architecture/) & [ADRs](../../docs/architecture/adr/) | `00-architecture-overview.md`, `ADR-001..008` |
+| **Data Engineer** | *"What are the Kafka topics, lakehouse partitioning, quality gates, and lineage paths?"* | [docs/contracts/](../../docs/contracts/) & [docs/diagrams/data-platform/](../../docs/diagrams/data-platform/) | `data-contracts.md`, `datasets.yaml`, `topics.yaml` |
+| **API / Frontend Dev** | *"What endpoints, schemas, WebSocket channels, and SSE feeds are available?"* | [docs/contracts/api-contracts.md](../../docs/contracts/api-contracts.md) | `api-specification.md`, `models/api/api.yaml` |
+| **Site Reliability / DevOps** | *"How do I deploy microservices, monitor SLIs, inspect Prometheus alerts, and run recovery?"* | [docs/operations/](../../docs/operations/) | `deployment-guide.md`, `monitoring.md`, `runbooks.md` |
 | **AI Agent / Auditor** | *"What are the canonical rules, model contracts, and validation requirements for this task?"* | `AGENTS.md`, `.agents/`, `tools/validators/` | `document-map.yaml`, `identifier-registry.yaml` |
 
 ---

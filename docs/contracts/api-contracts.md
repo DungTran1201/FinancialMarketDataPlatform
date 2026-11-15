@@ -79,24 +79,43 @@ data: {"stage": "LakehouseArchiver", "p95_latency_ms": 12.4, "status": "HEALTHY"
 
 ## 3. Kafka Event Envelope Specification (`models/data-platform/events.yaml`)
 
-Every message published to Kafka follows the versioned canonical envelope:
+Every message published to Kafka follows the canonical `EventEnvelopeV1` contract (`src/shared/contracts/events/market_events.py`), ensuring deterministic idempotency via UUIDv5 and partition-level ordering (`provider:symbol`):
+
 ```json
 {
-  "schema_version": "1.0",
-  "event_id": "evt-84729103-91284",
-  "event_type": "MARKET_KLINE",
-  "source_provider": "binance",
+  "schema_version": "1.0.0",
+  "event_id": "b82fa76d-88b1-5f0e-a4b5-68051a37c024",
+  "provider": "binance",
   "symbol": "BTCUSDT",
-  "occurred_at": "2026-11-15T09:00:00.000Z",
-  "ingested_at": "2026-11-15T09:00:00.045Z",
+  "event_type": "kline",
+  "exchange_event_time": "2026-11-15T09:00:00Z",
+  "ingested_at": "2026-11-15T09:00:00.045000Z",
   "payload": {
+    "interval": "1m",
     "open": "92100.00",
     "high": "92550.00",
     "low": "92050.00",
     "close": "92450.50",
-    "volume": "142.845",
-    "trades_count": 3412
-  }
+    "volume": "142.84500000",
+    "trades_count": 3412,
+    "is_closed": true
+  },
+  "sequence_id": null
+}
+```
+
+### 3.1. Dead Letter Queue Envelope (`market.dlq.v1`)
+
+When payload validation or schema deserialization fails, the unparsed raw message is routed to `market.dlq.v1` as `DeadLetterEnvelopeV1`:
+```json
+{
+  "dlq_id": "dlq-7c81a9f0-32b4-5d9e-bc41-89012a45d678",
+  "original_topic": "market.raw.klines.v1",
+  "provider": "binance",
+  "symbol": "BTCUSDT",
+  "failed_at": "2026-11-15T09:00:00.052000Z",
+  "error_reason": "DECIMAL_PARSE_FAILURE: Invalid non-numeric price string",
+  "raw_payload": "{\"e\":\"kline\",\"E\":1763197200000,\"s\":\"BTCUSDT\",\"k\":{\"c\":\"invalid_price\"}}"
 }
 ```
 

@@ -25,7 +25,7 @@ flowchart LR
             PN["Partition 2..5 (Other Symbols)"]
         end
         TopicKlines["market.raw.klines.v1 (6 Partitions)"]
-        TopicTickers["market.raw.tickers.v1 (6 Partitions, Compact+Delete)"]
+        TopicTickers["market.raw.tickers.v1 (6 Partitions)"]
         TopicBook["market.raw.orderbook.v1 (6 Partitions)"]
         TopicAnomaly["market.anomalies.v1 (3 Partitions)"]
         TopicDLQ["market.dlq.v1 (3 Partitions)"]

@@ -15,18 +15,18 @@
 
 All 10 Functional Requirements are baselined in `models/requirements/requirements.yaml` and verified by `tools/validators/validate_traceability.py`:
 
-| ID | Title | Description | Architectural Component | Verified Test Case |
+| ID | Title | Description | Architectural Component(s) | Verified Test Case(s) |
 |---|---|---|---|---|
-| `FR-01` | Market Data Ingestion | Real-time WebSocket and HTTP REST ingestion from external exchanges | `COMP-001` (Ingestion Engine) | `TC-001` |
-| `FR-02` | Event Streaming Backbone | At-least-once partitioned Kafka messaging with ordering guarantees | `COMP-002` (Event Streaming Broker) | `TC-002` |
-| `FR-03` | Medallion Lakehouse Storage | Multi-layer lakehouse (Bronze, Silver, Gold) with ZSTD Parquet | `COMP-003` (Lakehouse Storage Engine) | `TC-003` |
-| `FR-04` | Market Data Serving APIs | Low-latency REST, WebSocket, and SSE endpoints for market data | `COMP-004` (Serving API Gateway) | `TC-004` |
-| `FR-05` | Real-time Anomaly Detection | Continuous Z-score and volume anomaly detection on streaming data | `COMP-005` (Anomaly Detection Engine) | `TC-005` |
-| `FR-06` | Clean Architecture Boundaries | Strict isolation between Domain, Application, and Infrastructure layers | `COMP-006` (Clean Architecture Guard) | `TC-006` |
-| `FR-07` | Agentic Autonomous Investigation | Multi-turn agent investigation workflow powered by LangGraph | `COMP-007` (Agentic Intelligence Engine) | `TC-007` |
-| `FR-08` | Polyglot Storage Tiering | Automated routing to Redis, ClickHouse, and MinIO based on temperature | `COMP-008` (Storage Routing Engine) | `TC-008` |
-| `FR-09` | Security Defense-in-Depth | JWT, IP-HMAC binding, NIST AES-256-GCM masking, and role access control | `COMP-009` (Security Defense Subsystem) | `TC-009` |
-| `FR-10` | Observability & Telemetry | Prometheus metrics exposition, healthchecks, and structured audit logs | `COMP-010` (Observability Subsystem) | `TC-010` |
+| `FR-01` | Streaming WebSocket Ingestion | Collect real-time market events (Ticker, Trade, Kline, Order Book) from Binance WebSocket API | `COMP-001` (`collector-ws`), `COMP-009` (`DataPlatformV01Pipeline`) | `TC-009`, `TC-010` |
+| `FR-02` | Historical REST Synchronization & Backfill | Collect and synchronize historical market data from Binance REST API with deterministic watermarks | `COMP-002` (`collector-rest`), `COMP-009` (`DataPlatformV01Pipeline`) | `TC-009`, `TC-011` |
+| `FR-03` | Multi-Provider Canonical Normalization | Normalize incoming provider payloads into canonical `EventEnvelopeV1` contracts | `COMP-001` (`collector-ws`), `COMP-002` (`collector-rest`), `COMP-009` (`DataPlatformV01Pipeline`) | `TC-001`, `TC-009` |
+| `FR-04` | Low-Latency Hot Data Serving | Serve latest prices and snapshots from Redis with automatic ClickHouse fallback | `COMP-003` (`consumer-hot-redis`), `COMP-013` (`svc-market-hot`) | `TC-003`, `TC-009` |
+| `FR-05` | Historical & Analytical OLAP Serving | Support bounded time-series queries over historical candles, trades, and statistics in ClickHouse | `COMP-004` (`consumer-analytics-ch`), `COMP-015` (`svc-analytics-quant`) | `TC-005`, `TC-009` |
+| `FR-06` | Lakehouse Medallion Storage | Persist Bronze, Silver, and Gold datasets in Apache Iceberg + Parquet over MinIO | `COMP-005` (`consumer-lakehouse-bronze`), `COMP-010` (`GoldLayerMartEngine`) | `TC-009`, `TC-012` |
+| `FR-07` | Data Quality & Lineage Enforcement | Enforce schema validation at ingestion, deterministic deduplication, and Great Expectations assertions | `COMP-009` (`DataPlatformV01Pipeline`), `COMP-011` (`DataLineageGovernanceRegistry`) | `TC-002`, `TC-009`, `TC-014` |
+| `FR-08` | BI & Visualization Integration | Expose curated analytical datasets in ClickHouse to Apache Superset | `COMP-004` (`consumer-analytics-ch`), `COMP-015` (`svc-analytics-quant`) | `TC-009` |
+| `FR-09` | Isolated Agentic Intelligence | Provide an isolated LangGraph service accessing data solely through the Controlled Tool Gateway | `COMP-007` (`agent-worker`), `COMP-008` (`ControlledToolGateway`) | `TC-004`, `TC-006`, `TC-009` |
+| `FR-10` | Platform Control & Governance | Manage users, RBAC roles, monitored instruments, watermarks, and audit logs in PostgreSQL | `COMP-006` (`backend-api`), `COMP-012` (`svc-api-gateway`), `COMP-016` (`svc-data-plane-v01`) | `TC-007`, `TC-008`, `TC-009` |
 
 ---
 
@@ -37,7 +37,7 @@ Authoritative source: `models/requirements/business-rules.yaml`.
 | Rule ID | Name | Constraint & Invariant Description | Enforcement Point |
 |---|---|---|---|
 | `BR-001` | Exact Financial Precision | All monetary values, quantities, spreads, and VWAPs must be computed using fixed-point `Decimal` arithmetic (`0.00000001`). Floating-point arithmetic is strictly prohibited. | `src/shared/domain/quant.py`, Lakehouse engines |
-| `BR-002` | Ingestion Rate Limiting | Outbound HTTP requests to exchanges must not exceed 80% of published IP rate limits (e.g. `<= 960 weight/min` on Binance). | `src/ingestion/infrastructure/rate_limiter.py` |
+| `BR-002` | Ingestion Rate Limiting | Outbound HTTP requests to exchanges must not exceed 80% of published IP rate limits (e.g. `<= 960 weight/min` on Binance). | `src/ingestion/application/rate_limiter.py` |
 | `BR-003` | Mandatory DQ Promotion Gate | Lakehouse batches with failing critical data quality rules (`DQ-KLINE-001..005`) must be blocked from Gold layer promotion and routed to DLQ. | `src/lakehouse/quality/` |
 
 ---

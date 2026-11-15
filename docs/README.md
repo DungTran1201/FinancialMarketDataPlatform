@@ -22,7 +22,7 @@
 
 1. [AGENTS.md](../AGENTS.md) — Root Agent operating system contract.
 2. [.agents/config/document-map.yaml](../.agents/config/document-map.yaml) — Master directory and phase mapping.
-3. [models/](../../models/) — Canonical structured YAML models (38 files).
+3. [models/](../models/) — Canonical structured YAML models (38 files).
 
 ## 5. Required Artifacts
 

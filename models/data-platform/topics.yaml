@@ -61,4 +61,7 @@ consumer_groups:
   - group_id: "cg.anomaly.detector.v1"
     target_sink: "src/streaming/consumers/anomaly_detector.py"
     commit_mode: "manual_after_evaluation"
+  - group_id: "cg.agent.anomaly.v1"
+    target_sink: "src/intelligence/main.py"
+    commit_mode: "manual_after_investigation"
 
