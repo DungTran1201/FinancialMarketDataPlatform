@@ -229,3 +229,13 @@ src/lakehouse/gold/dbt/.user.yml
 src/lakehouse/gold/dbt/logs/
 src/lakehouse/gold/dbt/target/
 
+# Frontend artifacts
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+
