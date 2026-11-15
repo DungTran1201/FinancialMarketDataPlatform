@@ -83,3 +83,4 @@ FinancialMarketDataPlatform/
   - `administration/`: System configuration and audit logs.
 - `services/`: API client (`client.ts`), WebSocket client (`ws-client.ts`), and Server-Sent Events (`sse.ts`).
 - `stores/`: Reactive state management (`app.store.ts`, `market.store.ts`, `observability.store.ts`).
+

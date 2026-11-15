@@ -99,3 +99,4 @@ Every message published to Kafka follows the versioned canonical envelope:
   }
 }
 ```
+

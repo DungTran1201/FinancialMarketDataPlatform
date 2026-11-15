@@ -57,3 +57,4 @@ The platform supports two deployment profiles configured in `docker-compose.yml`
 2. **`microservices` Profile (8 Isolated Services)**:
    - Deploys 8 standalone microservice containers (`svc-market-hot`, `svc-historical-backfill`, `svc-analytics-quant`, `svc-catalog-governance`, `svc-iam-security`, `svc-intelligence-agent`, `svc-data-plane-v01`, and `svc-api-gateway`).
    - Enables independent scaling, healthchecks, and horizontal partitioning in production.
+

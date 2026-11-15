@@ -46,3 +46,4 @@ The reorganized documentation architecture must achieve:
 3. **Preserve Canonical Models**: `models/` remains an independent layer of machine-readable YAML models.
 4. **Preserve Agent Infrastructure**: All agent roles, rules, skills, configs, and hooks remain fully functional.
 5. **No Destructive Migration**: Git history preserved; no deletions of working documents.
+

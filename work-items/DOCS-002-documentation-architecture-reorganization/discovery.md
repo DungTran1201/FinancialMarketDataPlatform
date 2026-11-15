@@ -48,3 +48,4 @@ In accordance with Section 4 of `AGENTS.md` and Rule `RULE-001`, all discovery f
 ### 1.4. Open Questions (`OPEN QUESTION`)
 
 - `OPEN QUESTION-001`: Should `docs/product/00` through `docs/product/10` be populated with full specification files in future feature cycles, or maintained as phase-gate audit markers? *(Recommendation: Maintain as phase-gate markers linking to canonical specifications in `docs/specifications/` and `models/` to avoid double-entry maintenance).*
+

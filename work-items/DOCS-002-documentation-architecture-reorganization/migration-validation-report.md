@@ -72,3 +72,4 @@ npm run build --prefix frontend
 - Broken links: 0 (0.0%).
 - Preserved Document Identifiers: 237 unique IDs preserved across 21 namespaces.
 - Preserved Baselines: All 25 baseline files in `docs/architecture/` and `docs/specifications/` verified.
+

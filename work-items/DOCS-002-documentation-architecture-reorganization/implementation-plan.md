@@ -50,3 +50,4 @@
 - Execute `pytest tests/ -v` (all 50 tests pass).
 - Execute `npm test --prefix frontend` (3/3 tests pass).
 - Record final audit sign-off in `review.md` and `migration-validation-report.md`.
+

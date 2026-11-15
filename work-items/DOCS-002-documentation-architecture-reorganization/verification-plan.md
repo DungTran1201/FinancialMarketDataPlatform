@@ -61,3 +61,4 @@ npm run build --prefix frontend
 - Required broken links: Exactly 0.
 - Preserved identifier count: Exactly 237 unique IDs preserved across 21 namespaces.
 - Zero renumbering of `ADR-001..008` and `FR-01..10`.
+

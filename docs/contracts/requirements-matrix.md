@@ -52,3 +52,4 @@ Authoritative source: `models/requirements/acceptance-criteria.yaml`.
 | `AC-02` | `FR-03`, `BR-001` | Lakehouse Silver merge deduplicates events by natural key with zero floating-point precision loss. | `pytest tests/data_quality/` |
 | `AC-03` | `FR-04`, `FR-09` | Edge API Gateway rejects unauthorized requests with HTTP 401/403 and limits anomalous IP burst rates. | `pytest tests/unit/test_security_and_defense.py` |
 | `AC-04` | `FR-10` | Prometheus `/metrics` endpoint exposes `fmdp_*` counters, histograms, and consumer lag gauges. | `pytest tests/integration/` |
+

@@ -91,3 +91,4 @@ The platform unifies **Real-Time Market Streaming**, **Medallion Data Lakehouse*
 | [ADR-006](../architecture/adr/ADR-006-agent-integration.md) | Agentic Intelligence Integration | LangGraph autonomous investigation with tool guardrails |
 | [ADR-007](../architecture/adr/ADR-007-microservices-and-data-platform-v01.md) | Zero-Mock E2E Data Platform v0.1 | 12-stage production data lifecycle & microservice profiles |
 | [ADR-008](../architecture/adr/ADR-008-event-driven-modular-data-platform.md) | Modular Restructuring & Domain Alignment | Source tree organized by functional architecture |
+

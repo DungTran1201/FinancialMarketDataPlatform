@@ -74,3 +74,4 @@ Key configuration parameters:
 - `MINIO_ROOT_USER`: `minioadmin`
 - `MINIO_ROOT_PASSWORD`: `minioadmin`
 - `JWT_SECRET`: Secure random HS256 secret key
+

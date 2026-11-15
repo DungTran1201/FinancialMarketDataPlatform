@@ -41,3 +41,4 @@
 ## 3. Rollback & Contingency Plan
 
 Because the migration is executed on a dedicated Git branch (`docs/documentation-architecture-reorganization`), any regression can be reverted cleanly via standard Git operations without affecting `main`.
+

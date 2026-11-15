@@ -70,3 +70,4 @@ The following 8 core diagrams provide complete cognitive coverage of the entire 
 - All 22 diagrams passed `tools/validators/validate_diagrams.py`.
 - No orphan diagrams: Every diagram is referenced from architecture documents, models, and reader journey portals.
 - Single Canonical Source: No duplicate inline Mermaid implementations exist in architecture prose; architecture documents link directly to these canonical diagram definitions.
+

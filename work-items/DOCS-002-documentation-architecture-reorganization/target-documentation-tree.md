@@ -101,3 +101,4 @@ Every developer and stakeholder can navigate directly to their point of interest
 2. **100% Validator Compliance**: Every new directory contains a complete 12-section `README.md` satisfying `tools/validators/validate_readmes.py`.
 3. **Preserved Baselined Files**: All 25 baseline files required by `tools/validators/validate_docs.py` remain intact at their designated paths.
 4. **Stable Identifiers**: All identifiers (`ADR-*`, `FR-*`, `DIAG-*`, `COMP-*`, etc.) remain unaltered.
+
