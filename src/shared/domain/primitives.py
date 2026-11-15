@@ -68,4 +68,3 @@ class DecimalPrice:
             raise DomainError("Price must be a finite Decimal instance")
         if self.value < Decimal("0"):
             raise DomainError("Price cannot be negative")
-

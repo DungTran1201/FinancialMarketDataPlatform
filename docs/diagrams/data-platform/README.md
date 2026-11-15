@@ -28,6 +28,8 @@ Primary authoring role: `architecture-modeler`; audited by `documentation-audito
 | `05-data-ingestion.md` | Baselined platform diagram (`DIAG-DATA`) | Required (Baselined) | `docs/diagrams/data-platform/05-data-ingestion.md` |
 | `06-event-streaming.md` | Baselined platform diagram (`DIAG-DATA`) | Required (Baselined) | `docs/diagrams/data-platform/06-event-streaming.md` |
 | `07-bronze-silver-gold-flow.md` | Baselined platform diagram (`DIAG-DATA`) | Required (Baselined) | `docs/diagrams/data-platform/07-bronze-silver-gold-flow.md` |
+| `08-end-to-end-data-platform-v01-pipeline.md` | Complete 12-stage zero-mock Data Platform v0.1 pipeline (`DIAG-DATA-008`) | Required (Baselined) | `docs/diagrams/data-platform/08-end-to-end-data-platform-v01-pipeline.md` |
+| `09-watermark-backfill-and-compaction-lifecycle.md` | Gap detection, rate-limited REST backfill, watermark checkpointing & Iceberg compaction (`DIAG-DATA-009`) | Required (Baselined) | `docs/diagrams/data-platform/09-watermark-backfill-and-compaction-lifecycle.md` |
 
 ## 6. Directory and File Organization
 

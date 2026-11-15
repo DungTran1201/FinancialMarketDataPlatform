@@ -7,7 +7,7 @@ description: ClickHouse OLAP schemas, ReplacingMergeTree views, and dbt Gold mar
 
 ## 1. Description
 
-Design ClickHouse analytical schemas (`ReplacingMergeTree`, `AggregatingMergeTree`) and dbt Gold models (`src/transformation/dbt/`) with explicit grain, metric semantics, incremental correctness, tests, and bounded query performance.
+Design ClickHouse analytical schemas (`ReplacingMergeTree`, `AggregatingMergeTree`) and dbt Gold models (`src/lakehouse/gold/dbt/`) with explicit grain, metric semantics, incremental correctness, tests, and bounded query performance.
 
 ## 2. Trigger Conditions
 
@@ -15,7 +15,7 @@ Design ClickHouse analytical schemas (`ReplacingMergeTree`, `AggregatingMergeTre
 
 ## 3. Authoritative Inputs
 
-- `AGENTS.md`, target `README.md`, `docs/specifications/data-dictionary.md`, `data-requirements.md`, `ADR-003`, `ADR-005`, `deploy/clickhouse/init/01_schema.sql`, `src/transformation/dbt/dbt_project.yml`, `models/domain/`.
+- `AGENTS.md`, target `README.md`, `docs/specifications/data-dictionary.md`, `data-requirements.md`, `ADR-003`, `ADR-005`, `deploy/clickhouse/init/01_schema.sql`, `src/lakehouse/gold/dbt/dbt_project.yml`, `models/domain/`.
 
 ## 4. Preconditions
 
@@ -26,7 +26,7 @@ Design ClickHouse analytical schemas (`ReplacingMergeTree`, `AggregatingMergeTre
 1. Identify primary query predicates and data volume; choose ClickHouse `PARTITION BY` and `ORDER BY` keys accordingly.
 2. Select engine/version columns (`ReplacingMergeTree` / `AggregatingMergeTree`) and deduplication read strategy (`FINAL` or `argMax`); explicitly account for asynchronous background merges.
 3. Keep raw high-volume facts, rollups, and marts separate; design TTL policies from business and replay/retention requirements.
-4. In dbt (`src/transformation/dbt/`), declare sources, staging/intermediate/mart layers, materializations, incremental unique keys, and schema documentation.
+4. In dbt (`src/lakehouse/gold/dbt/`), declare sources, staging/intermediate/mart layers, materializations, incremental unique keys, and schema documentation.
 5. Keep Gold business logic in dbt Core per `.agents/config/data-platform-boundaries.yaml`; use PySpark only for Bronze-to-Silver standardization/backfill.
 6. Add dbt data tests for uniqueness, non-null, relationships, accepted values, and custom financial invariants.
 7. Validate incremental runs against full-refresh outputs on representative time windows.
@@ -35,7 +35,7 @@ Design ClickHouse analytical schemas (`ReplacingMergeTree`, `AggregatingMergeTre
 
 ## 6. Output Artifacts
 
-- ClickHouse DDL updates (`deploy/clickhouse/`), dbt source/model/schema/test files (`src/transformation/dbt/`), semantic definitions, benchmarks, and updated canonical models in `models/domain/`.
+- ClickHouse DDL updates (`deploy/clickhouse/`), dbt source/model/schema/test files (`src/lakehouse/gold/dbt/`), semantic definitions, benchmarks, and updated canonical models in `models/domain/`.
 
 ## 7. Validation
 

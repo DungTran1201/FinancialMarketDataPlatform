@@ -1,0 +1,19 @@
+{
+  "root_domain": "fmdp.local",
+  "san_domains": [
+    "fmdp.local",
+    "*.fmdp.local",
+    "api.fmdp.local",
+    "bi.fmdp.local",
+    "monitor.fmdp.local",
+    "console.s3.fmdp.local",
+    "localhost"
+  ],
+  "tls_protocols": [
+    "TLSv1.2",
+    "TLSv1.3"
+  ],
+  "generator": "cryptography-x509-rsa2048",
+  "certificate_path": "deploy/tls/certs/fmdp.crt",
+  "private_key_path": "deploy/tls/certs/fmdp.key"
+}

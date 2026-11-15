@@ -15,7 +15,7 @@ Models trust boundaries, STRIDE threats (`THR-###`), and mitigating controls (`C
 
 ## 3. Authoritative Inputs
 
-- `models/security/security.yaml`, `threats.yaml`, `docs/architecture/10-security-and-governance.md`, `src/agent/tools/gateway.py`, `docs/templates/security/`.
+- `models/security/security.yaml`, `threats.yaml`, `docs/architecture/10-security-and-governance.md`, `src/shared/security/primitives.py`, `src/intelligence/tools/gateway.py`, `docs/templates/security/`.
 
 ## 4. Preconditions
 

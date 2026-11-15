@@ -6,19 +6,19 @@ A production-oriented **Real-time Financial Market Data Platform** built on an *
 
 ## 1. Architectural Planes Overview
 
-1. **Plane A — Data Plane**:
-   - **Ingestion**: Python async WebSocket (`collector-ws`) and paginated REST (`collector-rest`) collectors for Binance Spot (extensible to additional providers).
-   - **Event Streaming**: Apache Kafka (KRaft mode) partitioned by `{provider}:{symbol}` with canonical `EventEnvelopeV1` contracts and dead-letter routing (`market.dlq.v1`).
-   - **Hot Data Path**: `Kafka -> consumer-hot-redis -> Redis 7` using atomic Lua monotonic timestamp checks for sub-15ms latest price, 24h snapshot, and top-20 order book queries.
-   - **Analytics Path**: `Kafka -> consumer-analytics-ch -> ClickHouse` using 1s / 5,000-row micro-batches into `ReplacingMergeTree` tables and `AggregatingMergeTree` Materialized Views.
-   - **Historical Lakehouse Path**: `Kafka / REST -> MinIO (Parquet + Apache Iceberg) -> PySpark (Bronze to Silver) -> dbt Core (Silver to Gold)` orchestrated by Apache Airflow and validated by Great Expectations.
-2. **Plane B — Application & Control Plane**:
-   - **Backend**: FastAPI Modular Monolith (`src/backend/`) organized into 8 domain modules (`market`, `historical`, `analytics`, `catalog`, `iam`, `platform_config`, `agent_api`, `reporting`).
-   - **Control Store**: PostgreSQL 16 storing users, RBAC, API keys, monitored instruments, ingestion watermarks, and job states.
-   - **BI & Observability**: Apache Superset for market dashboards; Prometheus + Grafana for operational metrics.
-3. **Plane C — Intelligence Plane**:
-   - **Orchestration**: Isolated `agent-worker` running stateful LangGraph workflows (`MarketIntelligenceGraph`) triggered either on-demand (`POST /api/v1/agents/runs`) or via deduplicated statistical anomalies (`market.anomalies.v1`).
-   - **Controlled Tool Gateway**: 10 whitelisted deterministic read-only tools (`src/agent/tools/`). LLMs never execute raw SQL or perform prompt arithmetic.
+1. **Plane A — Data Plane (`src/ingestion/`, `src/streaming/`, `src/lakehouse/`)**:
+   - **Ingestion (`src/ingestion/`)**: Provider-isolated async WebSocket (`entrypoints/ws_collector.py`) and paginated REST (`entrypoints/rest_backfill.py`) collectors for Binance Spot (extensible via `domain/ports.py`).
+   - **Event Streaming (`src/streaming/`)**: Apache Kafka (KRaft mode) partitioned by `{provider}:{symbol}` with canonical `EventEnvelopeV1` (`src/shared/contracts/events/`) and dead-letter routing (`market.dlq.v1`).
+   - **Hot Data Path (`src/streaming/consumers/hot_redis.py`)**: `Kafka -> consumer-hot-redis -> Redis 7` using atomic Lua monotonic timestamp checks for sub-15ms latest price, 24h snapshot, and top-20 order book queries.
+   - **Analytics Path (`src/streaming/consumers/analytics_ch.py`)**: `Kafka -> consumer-analytics-ch -> ClickHouse` using 1s / 5,000-row micro-batches into `ReplacingMergeTree` tables and `AggregatingMergeTree` Materialized Views.
+   - **Historical Lakehouse Path (`src/lakehouse/`)**: `Kafka / REST -> MinIO (Parquet + Apache Iceberg) -> Bronze -> Silver -> Gold (dbt Core)` validated by `src/lakehouse/quality/gates.py` and tracked via `src/lakehouse/catalog/lineage.py`.
+2. **Plane B — Serving & Control Plane (`src/serving/`)**:
+   - **Modular Monolith & Microservices (`src/serving/api/`)**: FastAPI Modular Monolith (`main.py`) organized into 8 domain modules (`market`, `historical`, `analytics`, `catalog`, `iam`, `platform_config`, `agent_api`, `reporting`) plus optional standalone ASGI microservice wrappers (`services/*.py`) and Gateway/UI (`gateway/`).
+   - **Control Store (`deploy/postgres/`)**: PostgreSQL 16 storing users, RBAC, API keys, monitored instruments, ingestion watermarks, and job states.
+   - **BI & Observability (`deploy/observability/`)**: Apache Superset for market dashboards; Prometheus + Grafana + OpenMetrics (`src/shared/observability/metrics.py`) for operational telemetry.
+3. **Plane C — Intelligence Plane (`src/intelligence/`)**:
+   - **Orchestration (`src/intelligence/orchestrator/`)**: Isolated `agent-worker` (`main.py`) running stateful LangGraph workflows (`MarketIntelligenceGraph`) triggered either on-demand (`POST /api/v1/agents/runs`) or via deduplicated statistical anomalies (`market.anomalies.v1`).
+   - **Controlled Tool Gateway (`src/intelligence/tools/`)**: 10 whitelisted deterministic read-only tools. LLMs never execute raw SQL or perform prompt arithmetic.
 
 ---
 
@@ -39,6 +39,7 @@ A production-oriented **Real-time Financial Market Data Platform** built on an *
 - [11 — Reliability and Observability Architecture](docs/architecture/11-reliability-and-observability.md)
 - [12 — Deployment Architecture (Docker Compose Profiles)](docs/architecture/12-deployment-architecture.md)
 - [13 — Performance and Scalability Architecture](docs/architecture/13-performance-and-scalability.md)
+- [14 — Data Platform v0.1 & Domain Microservices Architecture](docs/architecture/14-data-platform-v01-and-microservices-architecture.md)
 
 ### Architecture Decision Records (`docs/architecture/adr/`)
 - [ADR-001 — Overall Three-Plane Architecture](docs/architecture/adr/ADR-001-overall-architecture.md)
@@ -47,6 +48,8 @@ A production-oriented **Real-time Financial Market Data Platform** built on an *
 - [ADR-004 — Modular Monolith Backend with Clean/Hexagonal Architecture & Selective CQRS](docs/architecture/adr/ADR-004-backend-architecture.md)
 - [ADR-005 — High-Performance Query Routing & Tiered Caching Strategy](docs/architecture/adr/ADR-005-query-and-caching-strategy.md)
 - [ADR-006 — Isolated Agentic Intelligence Plane & Deterministic Tool Gateway](docs/architecture/adr/ADR-006-agent-integration.md)
+- [ADR-007 — Zero-Mock Data Platform v0.1 & Domain Microservices Decomposition](docs/architecture/adr/ADR-007-microservices-and-data-platform-v01.md)
+- [ADR-008 — Event-Driven Modular Data Platform Restructure](docs/architecture/adr/ADR-008-event-driven-modular-data-platform.md)
 
 ### Specifications (`docs/specifications/`)
 - [Data Requirements Specification](docs/specifications/data-requirements.md)
@@ -55,15 +58,18 @@ A production-oriented **Real-time Financial Market Data Platform** built on an *
 - [API Specification](docs/specifications/api-specification.md)
 - [Non-Functional Requirements (NFR) Specification](docs/specifications/non-functional-requirements.md)
 
-### Documentation Engineering Framework (`DOCS-001`)
+### Subsystem & Governance Indexes
+- [src/ — Modular Data Platform Source Layout](src/README.md)
+- [deploy/ — Infrastructure, Schema, Bucket & Observability Configs](deploy/README.md)
+- [tests/ — Multi-Discipline Automated Verification Suites](tests/README.md)
 - [AGENTS.md — Primary Agent Operating Manual](AGENTS.md)
 - [.agents/ — Agent Governance OS (Roles, Rules, Skills, Registries, Hooks)](.agents/README.md)
-- [docs/README.md — Master Documentation System Index](docs/README.md)
+- [docs/ — Master Documentation System Index](docs/README.md)
 - [docs/product/ — 15-Phase Product Documentation Lifecycle (`00-discovery` .. `14-governance`)](docs/product/README.md)
 - [docs/templates/ — 57 Reusable Document Templates across 14 Categories](docs/templates/README.md)
 - [docs/features/ — Reusable Feature Package Engineering Pattern](docs/features/README.md)
 - [docs/diagrams/ — Unified 18-Category Diagram Engineering Subsystem](docs/diagrams/README.md)
-- [models/ — Canonical Machine-Readable YAML Model Layer (12 Domains)](models/README.md)
+- [models/ — Canonical Machine-Readable YAML Model Layer (13 Domains)](models/README.md)
 - [work-items/ — Work-Item Lifecycle Control Subsystem (`DOCS-001`)](work-items/README.md)
 - [tools/ — Automated Validation Suite & Hook Scripts](tools/README.md)
 
@@ -72,9 +78,15 @@ A production-oriented **Real-time Financial Market Data Platform** built on an *
 ## 3. Running Architectural & Documentation Verification Suites
 
 ```powershell
-# Run Clean Architecture & Contract Unit Tests
+# Run All Test Suites via Pytest (Unit, Contract, Architecture, Data Quality, Integration, E2E, Resilience, Performance)
+.\.venv\Scripts\python.exe -m pytest -v
+
+# Run Clean Architecture & Platform Unit Tests via unittest
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 
-# Run 10-Validator Documentation Engineering Suite
+# Run Automated Documentation & Traceability Validation Suite
 .\.venv\Scripts\python.exe tools/validators/run_all.py
+
+# Lint Source Code & Tests
+.\.venv\Scripts\ruff.exe check src tests
 ```

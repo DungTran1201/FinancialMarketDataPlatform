@@ -1,2 +1,0 @@
-"""Market application layer package."""
-

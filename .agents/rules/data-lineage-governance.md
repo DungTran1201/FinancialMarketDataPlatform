@@ -30,5 +30,5 @@ Establishes end-to-end dataset ownership, data dictionary completeness, source-t
 
 ## 4. Verification Mechanism
 
-- Data dictionary and `models/domain/` inspection, provenance unit tests (`tests/unit/test_contracts_and_guardrails.py`), and `tools/validators/run_all.py`.
+- Data dictionary, `models/data-platform/lineage.yaml`, and `models/domain/` inspection, provenance contract tests (`tests/contract/test_contracts_and_guardrails.py`), and `tools/validators/run_all.py`.
 

@@ -17,10 +17,10 @@ Governs canonical event contracts (`EventEnvelopeV1`), deterministic UUIDv5 even
 
 ## 2. Mandatory Directives
 
-1. **Canonical Envelope & Topics**: Use `EventEnvelopeV1` (`src/shared/contracts/events.py`) and approved versioned topic names (`market.raw.*.v1`, `market.anomalies.v1`, `market.dlq.v1`).
+1. **Canonical Envelope & Topics**: Use `EventEnvelopeV1` (`src/shared/contracts/events/market_events.py`) and approved versioned topic names (`market.raw.*.v1`, `market.anomalies.v1`, `market.dlq.v1`).
 2. **Contract Completeness**: Document `schema_version`, required/optional fields, defaults, units, precision, enum values, natural key, and partition key (`{provider}:{symbol}` or `{provider}:{symbol}:{interval}`).
 3. **Compatibility Evaluation**: Evaluate backward/forward compatibility and mixed-version rollout before any schema change.
-4. **Synchronized Updates**: Update `src/shared/contracts/events.py`, `docs/specifications/data-contracts.md`, `models/api/`, and contract tests together.
+4. **Synchronized Updates**: Update `src/shared/contracts/events/market_events.py`, `src/streaming/contracts/topics.py`, `docs/specifications/data-contracts.md`, `models/data-platform/`, `models/api/`, and contract tests together.
 
 ## 3. Prohibited Actions
 
@@ -30,5 +30,5 @@ Governs canonical event contracts (`EventEnvelopeV1`), deterministic UUIDv5 even
 
 ## 4. Verification Mechanism
 
-- Schema and serialization contract tests (`tests/unit/test_contracts_and_guardrails.py`) and `tools/validators/run_all.py`.
+- Schema and serialization contract tests (`tests/contract/test_contracts_and_guardrails.py`, `tests/contract/test_topic_and_dataset_contracts.py`) and `tools/validators/run_all.py`.
 

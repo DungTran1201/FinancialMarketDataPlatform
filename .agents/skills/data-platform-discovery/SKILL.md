@@ -23,7 +23,7 @@ Evidence-led discovery of current (`AS-IS/FACT`) vs. target (`DOCUMENTED TARGET`
 
 ## 5. Execution Procedure
 
-1. Inventory services, packages (`src/collectors/`, `src/consumers/`, `src/processing/`, `src/quality/`, `src/transformation/`, `src/backend/`, `src/agent/`), SQL schemas (`deploy/`), Compose profiles, and CI workflows.
+1. Inventory services, packages (`src/shared/`, `src/ingestion/`, `src/streaming/`, `src/lakehouse/`, `src/serving/`, `src/intelligence/`), SQL schemas (`deploy/`), Compose profiles, and CI workflows.
 2. Trace source-to-sink paths and identify Kafka topic, Redis key, ClickHouse table, and Iceberg/dbt model boundaries.
 3. Inspect implementations and tests alongside architecture documents; classify each capability as `AS-IS/FACT`, partial scaffold, `DOCUMENTED TARGET`, `PROPOSED`, `ASSUMPTION`, or `OPEN QUESTION`.
 4. Identify contract gaps, owner gaps, reliability risks, quality coverage, and operational visibility.

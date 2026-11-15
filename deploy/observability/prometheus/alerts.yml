@@ -1,0 +1,22 @@
+# Prometheus Alerting Rules aligned with src/shared/observability/metrics.py (Stage 11)
+groups:
+  - name: fmdp_data_platform_slis
+    rules:
+      - alert: FMDPDeadLetterQueueSpike
+        expr: increase(fmdp_dlq_events_total[5m]) > 10
+        for: 1m
+        labels:
+          severity: warning
+          plane: PLANE-A
+        annotations:
+          summary: "Elevated DLQ ingestion rejections detected"
+
+      - alert: FMDPConsumerLagHigh
+        expr: fmdp_consumer_lag_records > 5000
+        for: 2m
+        labels:
+          severity: critical
+          plane: PLANE-A
+        annotations:
+          summary: "Streaming consumer group lag exceeded threshold"
+

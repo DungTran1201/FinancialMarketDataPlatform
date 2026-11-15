@@ -25,6 +25,7 @@ Primary authoring role: `architecture-modeler`; audited by `documentation-audito
 | Artifact | Purpose | Required / Conditional | Template |
 |---|---|---|---|
 | `15-deployment-architecture.md` | Baselined platform diagram (`DIAG-DEP`) | Required (Baselined) | `docs/diagrams/deployment/15-deployment-architecture.md` |
+| `18-microservices-container-deployment.md` | Docker Compose `microservices` profile (`DEP-006`) container & network topology (`DIAG-DEP-018`) | Required (Baselined) | `docs/diagrams/deployment/18-microservices-container-deployment.md` |
 
 ## 6. Directory and File Organization
 

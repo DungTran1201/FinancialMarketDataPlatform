@@ -16,7 +16,7 @@ Owns real-time exchange ingestion (`collector-ws`, `collector-rest`) and Kafka e
 
 ## 2. Core Responsibilities
 
-1. Implement REST and WebSocket source adapters (`src/collectors/`), reconnect logic, provider rate-limit handling, and gap detection.
+1. Implement REST and WebSocket source adapters (`src/ingestion/`), reconnect logic, provider rate-limit handling, and gap detection.
 2. Govern Kafka topic names (`KafkaTopic`), partition keys (`compute_partition_key`), schema versions, producer durability settings, and consumer groups.
 3. Implement bounded buffering, durable sink writes, commit-after-write offset management, exponential backoff retries, and DLQ routing.
 4. Define and test delivery semantics per sink (`consumer-hot-redis`, `consumer-analytics-ch`, `consumer-lakehouse-bronze`) and measure consumer lag and event freshness.
@@ -24,15 +24,16 @@ Owns real-time exchange ingestion (`collector-ws`, `collector-rest`) and Kafka e
 
 ## 3. Allowed Directories
 
-- `src/collectors/`
+- `src/ingestion/`
 - `src/shared/contracts/`
-- `src/consumers/`
+- `src/streaming/`
 - `deploy/` (Kafka-related configurations)
 - `notebooks/` (for prototype comparison only)
 - `tests/`
 - `docs/specifications/`
 - `models/api/`
 - `models/domain/`
+- `models/data-platform/`
 - `work-items/`
 
 ## 4. Prohibited Actions
@@ -45,7 +46,7 @@ Owns real-time exchange ingestion (`collector-ws`, `collector-rest`) and Kafka e
 ## 5. Authoritative Inputs
 
 - [AGENTS.md](../../AGENTS.md)
-- `src/shared/contracts/events.py` and `src/collectors/ports.py`
+- `src/shared/contracts/events/market_events.py`, `src/ingestion/domain/ports.py`, and `src/streaming/contracts/topics.py`
 - `docs/architecture/08-data-flow-and-event-contracts.md` and `docs/architecture/adr/ADR-002-event-driven-data-platform.md`
 - `docker-compose.yml` and `.env.example`
 

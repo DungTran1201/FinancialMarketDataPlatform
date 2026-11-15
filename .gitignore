@@ -218,3 +218,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# FMDP local runtime artifacts
+.local_lakehouse/
+.local_storage/
+logs/
+deploy/tls/certs/*.key
+deploy/tls/certs/*.crt
+src/lakehouse/gold/dbt/.user.yml
+src/lakehouse/gold/dbt/logs/
+src/lakehouse/gold/dbt/target/
+

@@ -18,15 +18,17 @@ Makes data quality, data contracts, metadata, ownership, lineage, and lifecycle 
 
 1. Define dataset owners, descriptions, grain, key constraints, units, `Decimal` precision, and UTC timestamp semantics in `docs/specifications/data-dictionary.md` and `models/domain/`.
 2. Convert quality requirements into executable checks (`QualityExpectationRule`, Great Expectations suites, dbt data tests) with explicit severity (`CRITICAL` vs. `WARNING`), thresholds, and failure actions.
-3. Coordinate Great Expectations (`src/quality/expectations/`) and dbt data tests (`src/transformation/dbt/`) without duplicating assertions unnecessarily.
-4. Govern schema compatibility, deprecation, end-to-end lineage, provenance (`ToolProvenanceMetadata`), and retention metadata.
+3. Coordinate Great Expectations / Python quality gates (`src/lakehouse/quality/`) and dbt data tests (`src/lakehouse/gold/dbt/`) without duplicating assertions unnecessarily.
+4. Govern schema compatibility, deprecation, end-to-end lineage (`src/lakehouse/catalog/`), provenance (`ToolProvenanceMetadata`), and retention metadata.
 5. Ensure `CRITICAL` quality failures block unsafe downstream promotion or serving.
 
 ## 3. Allowed Directories
 
-- `src/quality/`
+- `src/lakehouse/quality/`
+- `src/lakehouse/catalog/`
 - `docs/specifications/`
 - `models/domain/`
+- `models/data-platform/`
 - `models/testing/`
 - `models/security/`
 - `tests/`
@@ -45,7 +47,7 @@ Makes data quality, data contracts, metadata, ownership, lineage, and lifecycle 
 
 - [AGENTS.md](../../AGENTS.md)
 - `docs/specifications/data-requirements.md`, `data-contracts.md`, and `data-dictionary.md`
-- `src/quality/expectations/suite_definitions.py` and `src/transformation/dbt/dbt_project.yml`
+- `src/lakehouse/quality/gates.py`, `src/lakehouse/catalog/lineage.py`, and `src/lakehouse/gold/dbt/dbt_project.yml`
 - `models/domain/`, `models/testing/`, and `models/security/`
 
 ## 6. Expected Outputs

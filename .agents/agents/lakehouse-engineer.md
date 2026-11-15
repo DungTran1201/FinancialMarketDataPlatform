@@ -17,18 +17,21 @@ Builds and operates the historical lakehouse using MinIO/S3-compatible object st
 ## 2. Core Responsibilities
 
 1. Define Apache Iceberg namespaces, table schemas, partition transforms, sort orders, and snapshot retention policies.
-2. Implement immutable Bronze writes (`src/consumers/lakehouse_bronze/`) with source lineage, deterministic file identity, and recoverable commit/offset handling.
+2. Implement immutable Bronze writes (`src/lakehouse/bronze/`) with source lineage, deterministic file identity, and recoverable commit/offset handling.
 3. Implement Silver typing, `Decimal`/UTC normalization, and deduplication by natural key and version column (`SilverMergeJobSpec`).
-4. Implement PySpark `MERGE INTO` (`src/processing/spark/bronze_to_silver.py`), incremental processing, bounded backfills, file compaction, and snapshot maintenance.
+4. Implement PySpark `MERGE INTO` (`src/lakehouse/silver/merge_engine.py`), incremental processing, bounded backfills, file compaction, and snapshot maintenance.
 5. Integrate data quality gates before promoting Silver tables and support replay from raw Bronze archives.
 
 ## 3. Allowed Directories
 
-- `src/consumers/lakehouse_bronze/`
-- `src/processing/spark/`
+- `src/lakehouse/bronze/`
+- `src/lakehouse/silver/`
+- `src/lakehouse/catalog/`
+- `src/lakehouse/orchestration/`
 - `deploy/`
 - `tests/`
 - `models/domain/`
+- `models/data-platform/`
 - `models/testing/`
 - `docs/architecture/`
 - `docs/specifications/`
@@ -46,7 +49,7 @@ Builds and operates the historical lakehouse using MinIO/S3-compatible object st
 - [AGENTS.md](../../AGENTS.md)
 - `docs/architecture/adr/ADR-002-event-driven-data-platform.md` and `ADR-003-storage-strategy.md`
 - `docs/architecture/04-data-platform-architecture.md`, `07-data-storage-and-modeling.md`, and `08-data-flow-and-event-contracts.md`
-- `src/processing/spark/bronze_to_silver.py`
+- `src/lakehouse/silver/merge_engine.py`
 
 ## 6. Expected Outputs
 

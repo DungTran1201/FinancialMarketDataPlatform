@@ -1,2 +1,0 @@
-"""Hot Redis consumer package."""
-

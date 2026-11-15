@@ -17,7 +17,7 @@ Primary owning Agent role: `analytics-engineer` (`.agents/agents/analytics-engin
 
 1. `AGENTS.md` — Root Agent operating protocol.
 2. `.agents/agents/analytics-engineer.md` — Owning role definition.
-3. `deploy/clickhouse/` and `src/transformation/dbt/` — Associated schema and transformation locations.
+3. `deploy/clickhouse/` and `src/lakehouse/gold/dbt/` — Associated schema and transformation locations.
 
 ## 5. Required Artifacts
 

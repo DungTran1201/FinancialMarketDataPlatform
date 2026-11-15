@@ -11,32 +11,40 @@ metadata:
   owner: "qa-reviewer"
   source_documents:
     - "tests/architecture/test_clean_architecture_boundaries.py"
-    - "tests/unit/test_contracts_and_guardrails.py"
+    - "tests/contract/test_contracts_and_guardrails.py"
+    - "tests/contract/test_topic_and_dataset_contracts.py"
+    - "tests/data_quality/test_medallion_quality_gates.py"
+    - "tests/unit/test_domain_and_quant.py"
+    - "tests/unit/test_security_and_defense.py"
+    - "tests/integration/test_three_planes_framework.py"
+    - "tests/resilience/test_gap_recovery_and_dlq.py"
+    - "tests/performance/test_100_bots_data_plane_swarm.py"
+    - "tests/e2e/test_data_platform_v01_e2e.py"
 
 test_cases:
   - id: "TC-001"
     title: "Deterministic UUIDv5 Event ID & Partition Key Ordering"
-    test_type: "unit"
+    test_type: "contract"
     priority: "P0"
     requirement_refs: ["FR-03"]
     acceptance_criteria_refs: ["AC-001"]
-    test_path: "tests/unit/test_contracts_and_guardrails.py"
+    test_path: "tests/contract/test_contracts_and_guardrails.py"
     status: "BASELINED"
   - id: "TC-002"
     title: "Kline & Trade Financial Invariant Validation"
-    test_type: "unit"
+    test_type: "contract"
     priority: "P0"
     requirement_refs: ["FR-07", "BR-001", "BR-002"]
     acceptance_criteria_refs: ["AC-001"]
-    test_path: "tests/unit/test_contracts_and_guardrails.py"
+    test_path: "tests/contract/test_contracts_and_guardrails.py"
     status: "BASELINED"
   - id: "TC-003"
     title: "Hot Redis Read & Transparent ClickHouse Fallback"
-    test_type: "unit"
+    test_type: "contract"
     priority: "P0"
     requirement_refs: ["FR-04", "NFR-003"]
     acceptance_criteria_refs: ["AC-002"]
-    test_path: "tests/unit/test_contracts_and_guardrails.py"
+    test_path: "tests/contract/test_contracts_and_guardrails.py"
     status: "BASELINED"
   - id: "TC-004"
     title: "Controlled Tool Gateway Whitelist, RBAC & Row Cap Enforcement"
@@ -44,15 +52,15 @@ test_cases:
     priority: "P0"
     requirement_refs: ["FR-09", "BR-004", "CTRL-001", "CTRL-002"]
     acceptance_criteria_refs: ["AC-003"]
-    test_path: "tests/unit/test_contracts_and_guardrails.py"
+    test_path: "tests/contract/test_contracts_and_guardrails.py"
     status: "BASELINED"
   - id: "TC-005"
     title: "BoundedTimeRange Query Guardrail"
-    test_type: "unit"
+    test_type: "contract"
     priority: "P0"
     requirement_refs: ["FR-05", "CTRL-003"]
     acceptance_criteria_refs: []
-    test_path: "tests/unit/test_contracts_and_guardrails.py"
+    test_path: "tests/contract/test_contracts_and_guardrails.py"
     status: "BASELINED"
   - id: "TC-006"
     title: "Clean Architecture & Three-Plane Dependency Isolation"
@@ -61,4 +69,68 @@ test_cases:
     requirement_refs: ["FR-09", "NFR-003", "CTRL-004"]
     acceptance_criteria_refs: []
     test_path: "tests/architecture/test_clean_architecture_boundaries.py"
+    status: "BASELINED"
+  - id: "TC-007"
+    title: "HTTPS Domain Routing, HSTS Headers & Encrypt-then-MAC IP/Port Masking"
+    test_type: "security"
+    priority: "P0"
+    requirement_refs: ["FR-10", "CTRL-005"]
+    acceptance_criteria_refs: []
+    test_path: "tests/unit/test_security_and_defense.py"
+    status: "BASELINED"
+  - id: "TC-008"
+    title: "JWT HS256 IP-HMAC Binding, SHA-256 Token Revocation, WAF & Sliding-Window Rate Limiting"
+    test_type: "security"
+    priority: "P0"
+    requirement_refs: ["FR-10", "CTRL-003", "CTRL-006"]
+    acceptance_criteria_refs: []
+    test_path: "tests/unit/test_security_and_defense.py"
+    status: "BASELINED"
+  - id: "TC-009"
+    title: "Independent & Inter-Plane Framework Verification Across Data Plane, Application Plane, and Intelligence Plane"
+    test_type: "integration"
+    priority: "P0"
+    requirement_refs: ["FR-01", "FR-02", "FR-03", "FR-04", "FR-05", "FR-06", "FR-07", "FR-08", "FR-09", "FR-10", "BR-003", "BR-004"]
+    acceptance_criteria_refs: ["AC-001", "AC-002", "AC-003"]
+    test_path: "tests/integration/test_three_planes_framework.py"
+    status: "BASELINED"
+  - id: "TC-010"
+    title: "100-Bot Data Plane Load, Cache-Eviction Chaos, Lakehouse Medallion & Contract Fuzzing Campaign"
+    test_type: "performance"
+    priority: "P0"
+    requirement_refs: ["FR-01", "FR-02", "FR-03", "FR-04", "FR-05", "FR-06", "FR-07", "FR-08", "NFR-001", "NFR-002", "NFR-003", "BR-001", "BR-002", "BR-003"]
+    acceptance_criteria_refs: ["AC-001", "AC-002"]
+    test_path: "tests/performance/test_100_bots_data_plane_swarm.py"
+    status: "BASELINED"
+  - id: "TC-011"
+    title: "End-to-End Zero-Mock Data Platform v0.1 (12 Stages) & Domain Microservices Decomposition Verification"
+    test_type: "e2e"
+    priority: "P0"
+    requirement_refs: ["FR-01", "FR-02", "FR-03", "FR-04", "FR-05", "FR-06", "FR-07", "FR-08", "FR-09", "FR-10", "NFR-001", "NFR-002", "NFR-003", "BR-001", "BR-002", "BR-003", "BR-004"]
+    acceptance_criteria_refs: ["AC-001", "AC-002", "AC-003"]
+    test_path: "tests/e2e/test_data_platform_v01_e2e.py"
+    status: "BASELINED"
+  - id: "TC-012"
+    title: "Medallion Data Quality Gates, Natural-Key Silver Compaction & Gold Decimal Verification"
+    test_type: "data_quality"
+    priority: "P0"
+    requirement_refs: ["FR-07", "BR-001", "BR-002"]
+    acceptance_criteria_refs: ["AC-001"]
+    test_path: "tests/data_quality/test_medallion_quality_gates.py"
+    status: "BASELINED"
+  - id: "TC-013"
+    title: "Streaming Gap Auto-Healing, DLQ Isolation, Monotonic State & Anomaly Cooldown Resilience"
+    test_type: "resilience"
+    priority: "P0"
+    requirement_refs: ["FR-01", "FR-02", "FR-03", "BR-003"]
+    acceptance_criteria_refs: ["AC-001", "AC-002"]
+    test_path: "tests/resilience/test_gap_recovery_and_dlq.py"
+    status: "BASELINED"
+  - id: "TC-014"
+    title: "Canonical Kafka Topic Routing, Consumer Groups & Shared Dataset Contracts Verification"
+    test_type: "contract"
+    priority: "P0"
+    requirement_refs: ["FR-03", "FR-06"]
+    acceptance_criteria_refs: ["AC-001"]
+    test_path: "tests/contract/test_topic_and_dataset_contracts.py"
     status: "BASELINED"

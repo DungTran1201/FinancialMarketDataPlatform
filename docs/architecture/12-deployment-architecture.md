@@ -17,6 +17,7 @@ See also: [Diagram 15: Deployment Architecture](../diagrams/deployment/15-deploy
 | **`lakehouse`** | `docker compose --profile core --profile lakehouse up -d` | Adds `minio`, `consumer-lakehouse-bronze`, `spark-worker`, `dbt-runner`, `great-expectations`, `airflow` | $+ 4.5 - 6.0\text{ GB}$ | Running Bronze–Silver–Gold Lakehouse pipelines, historical backfills, and data quality suites. |
 | **`observability`** | `docker compose --profile core --profile observability up -d` | Adds `prometheus`, `grafana` | $+ 0.6\text{ GB}$ | Monitoring ingestion lag, API P50/P95/P99 latency, and alerting dashboards. |
 | **`bi`** | `docker compose --profile core --profile bi up -d` | Adds `superset` | $+ 1.2\text{ GB}$ | Interactive BI visualization and market surveillance dashboards. |
+| **`microservices`** | `docker compose --profile core --profile microservices up -d` | Adds `svc-market-hot`, `svc-historical-backfill`, `svc-analytics-quant`, `svc-catalog-governance`, `svc-iam-security`, `svc-intelligence-agent`, `svc-data-plane-v01` | $+ 1.2\text{ GB}$ | Running decomposed domain microservices (`ADR-007`) with independent scaling and health probes behind `svc-api-gateway` (`backend-api:8000`). |
 
 ### Why Apache Kafka Runs in KRaft Mode
 - Running Apache Kafka in **KRaft (Kafka Raft Metadata) mode** eliminates the separate Apache ZooKeeper container, saving $\sim 512\text{ MB}-1\text{ GB}$ of JVM heap and reducing local container startup time by $50\%$.

@@ -33,7 +33,7 @@ In accordance with Section `8.1` and `8.2`, the Intelligence Plane starts with *
 
 ## 3. Controlled Tool Gateway & Catalog of 10 Deterministic Tools
 
-All Agent data access passes through `ControlledToolGateway` (`src/agent/tools/gateway.py`).
+All Agent data access passes through `ControlledToolGateway` (`src/intelligence/tools/gateway.py`).
 
 | # | Tool Name | Backing Store | Input Schema Summary | Output Schema & Provenance | Max Window / Row Cap | Timeout |
 |---|---|---|---|---|---|---|

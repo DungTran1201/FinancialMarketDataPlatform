@@ -57,7 +57,7 @@ flowchart TB
 
 ## 3. Multi-Provider Extensibility Boundary
 
-To satisfy Requirement `2.2` (*"support adding other providers without requiring substantial modifications to the entire Data Platform"*), provider-specific formats are terminated strictly inside `src/collectors/providers/<provider_name>/`:
+To satisfy Requirement `2.2` (*"support adding other providers without requiring substantial modifications to the entire Data Platform"*), provider-specific formats are terminated strictly inside `src/ingestion/providers/<provider_name>/`:
 
 1. **Symbol Normalization**: Exchange-specific symbols (`BTC-USDT`, `XBT/USD`, `btcusdt`) are mapped via the `monitored_instruments` catalog into canonical uppercase symbols (`BTCUSDT`) paired with explicit `provider` (`binance`, `coinbase`, etc.).
 2. **Timestamp & Precision Normalization**: Exchange timestamps (seconds, milliseconds, microseconds, or ISO strings) are converted to UTC millisecond `DateTime64(3, 'UTC')`, and all monetary strings/floats are parsed into exact `Decimal` strings before leaving the collector.

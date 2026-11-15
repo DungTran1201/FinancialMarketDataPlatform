@@ -16,8 +16,8 @@ Operates the data platform reliably through observable services, secure configur
 
 ## 2. Core Responsibilities
 
-1. Maintain `docker-compose.yml` profiles (`core`, `lakehouse`, `intelligence`, `observability`, `bi`), container health checks, environment configuration (`src/shared/config.py`), and CI workflows (`.github/workflows/ci.yml`).
-2. Define Prometheus metrics (`deploy/prometheus/prometheus.yml`), structured logs, data freshness and Kafka consumer-lag indicators, bounded-cardinality labels, and actionable alerts.
+1. Maintain `docker-compose.yml` profiles (`core`, `lakehouse`, `intelligence`, `observability`, `bi`, `microservices`), container health checks, environment configuration (`src/shared/config/settings.py`), and CI workflows (`.github/workflows/ci.yml`).
+2. Define Prometheus metrics (`deploy/observability/prometheus/prometheus.yml`), structured logs, data freshness and Kafka consumer-lag indicators, bounded-cardinality labels, and actionable alerts.
 3. Author runbooks (`docs/product/13-operations/`) for exchange source outages, consumer lag, DLQ growth, Redis cache rebuilds, ClickHouse pressure, lakehouse failures, and backfill recovery.
 4. Design backup/restore, Kafka replay, compaction, retention, and disaster-recovery procedures.
 5. Validate service network isolation (`frontend_net`, `app_control_net`, `data_plane_net`) and resource budgets.
@@ -27,7 +27,8 @@ Operates the data platform reliably through observable services, secure configur
 - `docker-compose.yml`
 - `deploy/`
 - `.github/workflows/`
-- `src/shared/config.py`
+- `src/shared/config/`
+- `src/shared/observability/`
 - `tests/`
 - `docs/architecture/`
 - `docs/product/13-operations/`
@@ -45,7 +46,7 @@ Operates the data platform reliably through observable services, secure configur
 
 - [AGENTS.md](../../AGENTS.md)
 - `docs/architecture/11-reliability-and-observability.md` and `12-deployment-architecture.md`
-- `docker-compose.yml`, `.env.example`, `deploy/prometheus/prometheus.yml`, and `.github/workflows/ci.yml`
+- `docker-compose.yml`, `.env.example`, `deploy/observability/prometheus/prometheus.yml`, and `.github/workflows/ci.yml`
 - `models/deployment/deployment.yaml`
 
 ## 6. Expected Outputs

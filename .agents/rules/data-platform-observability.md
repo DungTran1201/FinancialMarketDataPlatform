@@ -30,5 +30,5 @@ Governs operational telemetry (Prometheus metrics, structured logs, correlation 
 
 ## 4. Verification Mechanism
 
-- Prometheus configuration review (`deploy/prometheus/prometheus.yml`), `docs/architecture/11-reliability-and-observability.md`, and `tools/validators/run_all.py`.
+- Prometheus configuration review (`deploy/observability/prometheus/prometheus.yml`), `docs/architecture/11-reliability-and-observability.md`, and `tools/validators/run_all.py`.
 

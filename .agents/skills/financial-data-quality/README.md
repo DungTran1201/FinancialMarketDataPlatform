@@ -17,7 +17,7 @@ Primary owning Agent role: `data-quality-governance-engineer` (`.agents/agents/d
 
 1. `AGENTS.md` — Root Agent operating protocol.
 2. `.agents/agents/data-quality-governance-engineer.md` — Owning role definition.
-3. `src/quality/expectations/` and `models/testing/` — Associated expectation suite and test model locations.
+3. `src/lakehouse/quality/` and `models/testing/` — Associated expectation suite and test model locations.
 
 ## 5. Required Artifacts
 

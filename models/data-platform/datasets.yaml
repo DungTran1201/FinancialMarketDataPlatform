@@ -1,0 +1,90 @@
+version: "1.0"
+
+metadata:
+  model_id: "MODEL-DP-001"
+  name: "Data Platform Canonical Datasets Model"
+  description: "Authoritative catalog of raw, bronze, silver, gold, hot-state, and control-plane datasets."
+  status: "BASELINED"
+  canonical_model: true
+  created_at: "2026-11-15"
+  updated_at: "2026-11-15"
+  owner: "data-platform-architect"
+  source_documents:
+    - "docs/architecture/04-data-platform-architecture.md"
+    - "docs/architecture/14-data-platform-v01-and-microservices-architecture.md"
+    - "docs/specifications/data-dictionary.md"
+
+datasets:
+  - name: "raw.market_trades"
+    layer: "raw"
+    storage_engine: "Kafka"
+    natural_key: ["provider", "symbol", "trade_id"]
+    partition_by: ["provider", "symbol"]
+    code_ref: "src/shared/contracts/events/market_events.py"
+  - name: "raw.market_klines"
+    layer: "raw"
+    storage_engine: "Kafka"
+    natural_key: ["provider", "symbol", "interval", "open_time"]
+    partition_by: ["provider", "symbol"]
+    code_ref: "src/shared/contracts/events/market_events.py"
+  - name: "bronze.market_klines"
+    layer: "bronze"
+    storage_engine: "MinIO_Iceberg"
+    natural_key: ["event_id"]
+    partition_by: ["provider", "ingestion_date"]
+    code_ref: "src/lakehouse/bronze/archiver.py"
+  - name: "bronze.market_trades"
+    layer: "bronze"
+    storage_engine: "MinIO_Iceberg"
+    natural_key: ["event_id"]
+    partition_by: ["provider", "ingestion_date"]
+    code_ref: "src/lakehouse/bronze/archiver.py"
+  - name: "silver.market_klines"
+    layer: "silver"
+    storage_engine: "MinIO_Iceberg"
+    natural_key: ["provider", "symbol", "interval", "open_time"]
+    partition_by: ["provider", "symbol", "interval"]
+    code_ref: "src/lakehouse/silver/merge_engine.py"
+  - name: "silver.market_trades"
+    layer: "silver"
+    storage_engine: "MinIO_Iceberg"
+    natural_key: ["provider", "symbol", "trade_id"]
+    partition_by: ["provider", "symbol"]
+    code_ref: "src/lakehouse/silver/merge_engine.py"
+  - name: "silver.order_book_snapshots"
+    layer: "silver"
+    storage_engine: "MinIO_Iceberg"
+    natural_key: ["provider", "symbol", "last_update_id"]
+    partition_by: ["provider", "symbol"]
+    code_ref: "src/lakehouse/silver/merge_engine.py"
+  - name: "gold.fct_daily_market_summary"
+    layer: "gold"
+    storage_engine: "ClickHouse"
+    natural_key: ["provider", "symbol", "trading_date"]
+    partition_by: ["trading_date"]
+    code_ref: "src/lakehouse/gold/mart_engine.py"
+  - name: "gold.fct_realized_volatility"
+    layer: "gold"
+    storage_engine: "ClickHouse"
+    natural_key: ["provider", "symbol", "interval"]
+    partition_by: ["interval"]
+    code_ref: "src/lakehouse/gold/mart_engine.py"
+  - name: "gold.fct_orderbook_liquidity"
+    layer: "gold"
+    storage_engine: "ClickHouse"
+    natural_key: ["provider", "symbol", "last_update_id"]
+    partition_by: ["provider"]
+    code_ref: "src/lakehouse/gold/mart_engine.py"
+  - name: "hot.market_prices"
+    layer: "hot"
+    storage_engine: "Redis"
+    natural_key: ["provider", "symbol"]
+    partition_by: ["provider", "symbol"]
+    code_ref: "src/streaming/consumers/hot_redis.py"
+  - name: "control.ingestion_watermarks"
+    layer: "control"
+    storage_engine: "PostgreSQL"
+    natural_key: ["provider", "symbol", "interval"]
+    partition_by: ["provider"]
+    code_ref: "src/ingestion/infrastructure/watermark_store.py"
+

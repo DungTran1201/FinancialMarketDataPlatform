@@ -17,7 +17,7 @@ Primary owning Agent role: `streaming-data-engineer` (`.agents/agents/streaming-
 
 1. `AGENTS.md` — Root Agent operating protocol.
 2. `.agents/agents/streaming-data-engineer.md` — Owning role definition.
-3. `src/collectors/` and `src/shared/contracts/events.py` — Associated collector and event contract locations.
+3. `src/ingestion/` and `src/shared/contracts/events/market_events.py` — Associated ingestion and event contract locations.
 
 ## 5. Required Artifacts
 
