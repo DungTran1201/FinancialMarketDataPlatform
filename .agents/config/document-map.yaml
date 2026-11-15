@@ -25,6 +25,23 @@ shared_platform_baselines:
       - "models/domain/domain.yaml"
       - "models/api/api.yaml"
 
+reader_journey_domains:
+  overview:
+    path: "docs/overview/"
+    description: "Orientation, system overview, and polyglot tech stack"
+  contracts:
+    path: "docs/contracts/"
+    description: "Consolidated requirements matrix, API contracts, and event schemas"
+  operations:
+    path: "docs/operations/"
+    description: "Container deployment profiles, SRE runbooks, and Prometheus alerts"
+  development:
+    path: "docs/development/"
+    description: "Developer quickstart, local environment, and codebase architecture map"
+  archive:
+    path: "docs/archive/"
+    description: "Historical architecture evolution and superseded designs"
+
 product_lifecycle_phases:
   phase_00_discovery:
     id: "PHASE-00"

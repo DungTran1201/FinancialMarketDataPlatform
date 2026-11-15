@@ -4,7 +4,7 @@
 
 - **Screen ID**: `SCR-001`
 - **Title**: Real-Time Data Flow Observatory & Parallel-Branch Telemetry UI
-- **Route**: `GET /ui/data-flow` ([src/serving/api/gateway/ui.py](../../../src/serving/api/gateway/ui.py)) + static assets `/ui/assets/observatory.{css,js}`
+- **Route**: `GET /data-flow` ([frontend/src/modules/data-flow/DataFlowModule.ts](../../../frontend/src/modules/data-flow/DataFlowModule.ts)) + `GET /api/v1/observability/data-flow` ([src/serving/api/gateway/observability.py](../../../src/serving/api/gateway/observability.py))
 - **Backing Telemetry APIs**: `/api/v1/observability/*` (`API-017`..`API-022`), SSE `/api/v1/observability/stream`, WS `/ws/v1/observability/stream`, plus backward-compatible `API-011`, `API-016`
 - **Derived Diagram**: [Diagram UX-001: Real-Time Data Flow UI Architecture](../../diagrams/ux/01-realtime-data-flow-ui-architecture.md)
 
