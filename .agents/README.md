@@ -19,3 +19,4 @@ Prior to creating `greenfield/main`, the legacy `.agents/hooks.json` and `script
 - [rules/greenfield-engineering-rules.md](rules/greenfield-engineering-rules.md) — Non-negotiable architecture, hardware, quant, and UI rules.
 - [workflows/phase-lifecycle.md](workflows/phase-lifecycle.md) — Controlled Phase 0–9 progression and Work-Item state transitions.
 - [skills/phase-gate-review/SKILL.md](skills/phase-gate-review/SKILL.md) — Operational procedure for verifying Phase Gates and PoC evidence.
+

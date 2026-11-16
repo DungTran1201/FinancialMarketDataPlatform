@@ -14,3 +14,4 @@ Resource-disciplined multi-asset Data Platform, Quantitative Intelligence workbe
 - Agent Rules & Workflow: [AGENTS.md](AGENTS.md) | [.agents/README.md](.agents/README.md)
 - Documentation Hub: [docs/README.md](docs/README.md)
 - Validation Suite: `.\.venv\Scripts\python.exe tools/validators/run_all.py`
+

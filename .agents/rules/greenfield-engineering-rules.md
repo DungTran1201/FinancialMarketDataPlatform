@@ -6,3 +6,4 @@
 4. **Quantitative Integrity**: Separate Trade Flow, Order Flow, Liquidity Flow, and Derivatives Positioning. Never equate volume, open interest, or funding rate with net capital inflow. Enforce point-in-time feature joins (`available_at <= decision_time`) and walk-forward cost/slippage deduction before evaluating models against Tier 0 baselines.
 5. **No Speculative Implementation or Fake UI**: No mock price arrays or placeholder KPI cards; degraded, stale, unimplemented, or abstained states must be shown explicitly.
 6. **Legacy Branch Preservation**: Never delete, force-push, or rewrite `main`, `feat/data-plane-production-delivery`, or other historical branches.
+

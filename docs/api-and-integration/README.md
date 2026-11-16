@@ -27,3 +27,4 @@ Phase 3 home for formal boundary contracts:
 - WebSocket / SSE real-time stream envelope & conflation policy
 - NATS JetStream subjects, retention, and consumer group specifications
 - Authentication, RBAC capabilities matrix & standard error contracts
+

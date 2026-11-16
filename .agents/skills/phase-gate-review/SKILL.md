@@ -11,3 +11,4 @@ description: Checklist and execution standard for preparing and verifying Phase 
    - Record exact host hardware specs, Python/OS/container versions, dataset shape, workload rates, duration, raw measurements, and known limitations.
    - Never fabricate or extrapolate unmeasured capacity claims.
 4. Record explicit open issues, unresolved conflicts, and blocking prerequisites in the corresponding `docs/phase-reports/` review document before requesting progression approval.
+

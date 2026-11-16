@@ -25,3 +25,4 @@ Contains standalone Mermaid diagrams synchronized with [docs/architecture/](../a
 ## Rules
 - Every diagram file MUST declare YAML frontmatter metadata and cite its authoritative source spec in `references`.
 - Distinguish solid arrows (`active / verified / primary path`) from dashed arrows (`optional / async / recovery / future path`) in legends.
+

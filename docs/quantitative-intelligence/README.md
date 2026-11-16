@@ -28,3 +28,4 @@ Phase 3 & Phase 5 home for quantitative research governance and specifications:
 - `reference-library/` — Verified academic papers, official exchange methodology references, DOIs.
 - `model-cards/` — Tier 0 baselines through justified Tier 1/2/3 specs with compute budgets & limitations.
 - `evaluation-and-inference-spec.md` — Calibration, transaction costs, DQ gating, and abstention rules.
+

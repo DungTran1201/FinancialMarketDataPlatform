@@ -56,3 +56,4 @@ Documentation is a **first-class deliverable** of `FinancialMarketDataPlatform` 
 1. Read [AGENTS.md](../AGENTS.md) and this index first.
 2. Check existing work items in [work-items/](work-items/README.md) before creating specs.
 3. Update cross-links and run `.\.venv\Scripts\python.exe tools/validators/run_all.py` after edits (automatically verified by the `PostToolUse` hook).
+

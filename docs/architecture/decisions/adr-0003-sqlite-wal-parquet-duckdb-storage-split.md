@@ -43,3 +43,4 @@ Adopt Option 3 as the core persistence architecture, verified by Phase 2 SQLite 
 
 - **Positive**: Zero external database server RAM overhead (`0 MB` idle daemon), ACID metadata + fast columnar analytics + easy filesystem snapshots/backups.
 - **Negative**: Horizontal scale-out beyond one host requires implementing distributed adapters (`PostgresMetadataAdapter`, `ObjectStoreParquetAdapter`) behind existing ports.
+

@@ -54,3 +54,4 @@ flowchart LR
 - **Solid Arrows (`-->`)**: Nominal verified path.
 - **Dashed Arrows (`-.->`)**: Error quarantine (`DLQ`), L2 book recovery, DQ promotion block, and inference abstention safety path.
 - **Authoritative Spec**: [srs.md](../product/srs.md), [system-architecture-document.md](../architecture/system-architecture-document.md).
+

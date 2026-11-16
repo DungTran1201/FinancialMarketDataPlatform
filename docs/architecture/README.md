@@ -34,3 +34,4 @@ Authoritative home for Phase 2 architecture design, technology evaluations, 8 GB
 ## Update Rules
 - Diagrams are stored in [docs/diagrams/](../diagrams/README.md) and linked here.
 - Benchmark numbers remain marked `[TARGET]` until PoC evidence is recorded in `docs/testing-and-operations/`.
+

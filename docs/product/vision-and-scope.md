@@ -56,3 +56,4 @@ Supported venues in initial baseline:
 - No conflation of trading volume, Open Interest delta, or funding rate with "net capital inflow".
 - No silent fallback to hardcoded mock prices, synthetic candles, or uncalibrated forecast displays.
 - No heavyweight distributed middleware (Kafka, ClickHouse, Spark, Flink, Postgres, Kubernetes) without quantified overriding proof against the `7.85 GB` host budget.
+

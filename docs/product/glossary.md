@@ -31,3 +31,4 @@ review_criteria:
 | **Fund Flow / On-Chain Flow** | Verified net asset transfers across ETFs, custody wallets, or exchange reserve addresses. | Excluded from v1 unless external verified source is explicitly integrated; never infer from trading volume. |
 | **Point-in-Time Alignment** | Research constraint requiring every feature value to carry `available_at <= decision_time` using `ingestion_time`/watermark availability. | Prevents look-ahead leakage from late exchange messages or unclosed bars. |
 | **Model Abstention** | Explicit refusal by inference service (`abstention_flag=True`) to issue an actionable forecast when DQ degrades or feature PSI drift exceeds threshold. | Prefer explicit abstention over emitting false confidence on corrupt book/stale feeds. |
+

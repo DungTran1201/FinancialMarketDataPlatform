@@ -72,3 +72,4 @@ review_criteria:
 
 - **Blocker Status (`BLOCKER-P2-DOCKER`)**: `com.docker.service` is `Stopped` (`StartType: Manual`), Docker daemon pipe `//./pipe/dockerDesktopLinuxEngine` is offline, and host RAM currently has `1.55 GB` free with no `%USERPROFILE%\.wslconfig` ceiling.
 - **Impact**: Real **NATS JetStream** durability, NAK/DLQ routing, container restart continuity (`POC-01`), and combined multi-process `SIGKILL` Parquet/SQLite/NATS crash recovery (`POC-04`) remain **`NOT_RUN`** until Docker Desktop engine is started safely (recommended with `[wsl2] memory=1536MB`).
+

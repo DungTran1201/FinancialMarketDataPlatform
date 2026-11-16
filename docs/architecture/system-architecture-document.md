@@ -57,3 +57,4 @@ Rather than deploying heavyweight multi-container JVM/OLAP clusters (Kafka, Spar
 - **Slow UI Client**: FastAPI WebSocket fan-out tracks bounded per-client send queues (`maxsize=1` or small coalescing map per symbol) applying **latest-state-wins conflation** instead of unbounded queuing.
 - **L2 Book Gap Recovery**: Sequence mismatch or crossed spread (`best_bid >= best_ask`) immediately sets book status to `UNSYNCED`, suppresses OFI/liquidity metrics (`BR-METH-004`), and schedules rate-limited REST baseline snapshot resync.
 - **Crash Recovery**: On ungraceful worker/container restart (`AC-03`, `AC-15`), NATS redelivers unacknowledged events from durable consumer offsets, atomic Parquet temp writes discard partial `.tmp` files cleanly, and Silver natural-key deduplication avoids duplicate final rows.
+

@@ -33,3 +33,4 @@ review_criteria:
 ## Authoring Rules
 1. Name files `adr-NNNN-<kebab-title>.md`.
 2. Explicitly reject heavyweight distributed alternatives unless backed by quantitative 8 GB workload justification.
+

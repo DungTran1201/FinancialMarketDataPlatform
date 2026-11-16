@@ -25,3 +25,4 @@ All engineering tasks across Phases 0–9 are tracked in machine-validated Work 
 
 ## Required Fields (`Section 9`)
 Every work item MUST define: `work_item_id`, `objective`, `scope`, `dependencies`, `prerequisites`, `steps`, `affected_modules`, `test_requirements`, `acceptance_criteria`, `risks`, `evidence`, and `status`.
+

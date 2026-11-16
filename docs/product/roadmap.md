@@ -30,3 +30,4 @@ review_criteria:
 | **`R2`** | **Quant Research & Inference Engine** | Leak-free dataset builder, online/offline feature parity, Tier 0/1/2 models, purged walk-forward net-of-cost evaluation, Model Registry, DQ-gated inference w/ abstention & drift monitor. | `Phase 5` | `AC-06`..`AC-08`. |
 | **`R3`** | **15-Module Analytical Workbench & Security** | RBAC + Auth API, lightweight TS SPA covering all 15 modules driven exclusively by verified `R1`/`R2` backend contracts. | `Phase 6` | `AC-12`, `AC-13`. |
 | **`R4`** | **Endurance, Security & Production Readiness** | E2E integration, kill/replay chaos drills, SQLite/Parquet backup-restore verification, 2-hour 8 GB memory/CPU/disk soak test, formal Readiness Report. | `Phases 7–9` | `AC-01`..`AC-15` + Section 9 13-point gate. |
+

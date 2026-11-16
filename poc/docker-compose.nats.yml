@@ -20,3 +20,4 @@ services:
 volumes:
   nats_poc_data:
     name: fmdp_poc_nats_data
+

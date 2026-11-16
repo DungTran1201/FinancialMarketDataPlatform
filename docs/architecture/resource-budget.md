@@ -55,3 +55,4 @@ review_criteria:
 - Active Hot SQLite WAL + Model Artifacts: **`<= 250 MB`**.
 - Working Bronze + Silver + Gold Parquet on `C:` (active recent window, e.g., 7–14 days ZSTD compacted): **`<= 2.5–3.0 GB`** (total runtime footprint safely `< 4.5 GB`).
 - **Cold Archival Option (`DEC-P0-003`)**: Multi-month research datasets and cold Parquet partitions route via env config `FMDP_COLD_STORAGE_DIR=E:\FMDPData\parquet` once multi-month research begins.
+

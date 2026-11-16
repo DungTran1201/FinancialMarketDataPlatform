@@ -39,3 +39,4 @@ review_criteria:
 | `AC-13` | Honest Zero-Mock UI | All implemented UI modules render live backend data, show `source`, `UTC timestamp`, `DQ badge`, and `ABSTAINED / UNAVAILABLE` states explicitly; automated scan confirms zero mock price fallback arrays in `frontend/`. |
 | `AC-14` | Multi-Exchange Parity (`Binance` + `OKX`) | Live public REST/WS PoC + Phase 4 adapters successfully parse and normalize Spot, Perpetual, and Expiry Futures feeds from BOTH **Binance** and **OKX**, accurately converting OKX contract units (`ctVal`) vs Binance base/quote volumes into canonical quote/base fields. |
 | `AC-15` | Hybrid Runtime Restart Continuity | Stopping and restarting BOTH the containerized NATS JetStream container AND native Python consumer process recovers active consumer subscriptions, SQLite WAL state, and disk-backed stream cursors within `< 30s` with zero state corruption. |
+

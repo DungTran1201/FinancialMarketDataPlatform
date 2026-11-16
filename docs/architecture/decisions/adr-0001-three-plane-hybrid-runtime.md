@@ -42,3 +42,4 @@ Adopt **Option 3**, using **Hybrid Native Windows Python 3.12 + Containerized NA
 
 - **Positive**: Isolates heavy analytics from ingestion latency (`NFR-PERF-02`), keeps idle RAM `< 500 MB`, avoids WSL2 overhead for Python/DuckDB/UI.
 - **Negative**: Requires clean IPC (`NATS` events + `SQLite WAL` single writer / `Parquet` partition visibility) and explicit startup/shutdown orchestration across 2 Python processes + 1 Docker container.
+

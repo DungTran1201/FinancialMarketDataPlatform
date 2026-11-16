@@ -39,3 +39,4 @@ Evaluate and adopt **NATS JetStream** inside a memory-capped container (`<= 256 
 
 - **Positive**: Disk-backed durability & replay under `150 MB` RAM; native pull backpressure protects consumer processes.
 - **Negative**: Requires explicit Docker volume persistence and poison-message DLQ bridge code on `MaxDeliver` exhaustion (verified in Phase 2 PoC).
+

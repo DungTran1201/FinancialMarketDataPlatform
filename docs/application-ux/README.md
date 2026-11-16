@@ -23,3 +23,4 @@ review_criteria:
 # Application & UX (`docs/application-ux/`)
 
 Houses the Frontend Architecture, Information Architecture, Visualization Guidelines, User Flows, and Screen Specifications for all 15 application modules defined in Phase 1.
+

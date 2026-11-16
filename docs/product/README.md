@@ -41,3 +41,4 @@ Stores the versioned **Phase 1 — Requirements and Product Definition** baselin
 ## Update Rules
 - Any requirement modification requires version increment and RTM update.
 - No Phase 2 selection may weaken an `ACCEPTED`/`APPROVED` requirement silently.
+

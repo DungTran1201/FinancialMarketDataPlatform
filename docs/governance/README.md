@@ -32,3 +32,4 @@ This directory houses standards, templates, lifecycle checklists, and governance
 ## Dependencies & Agent Rules
 - Depends on root [AGENTS.md](../../AGENTS.md) and [.agents/hooks.json](../../.agents/hooks.json).
 - Every file created here is checked automatically by [validate_greenfield.py](../../tools/validators/validate_greenfield.py).
+

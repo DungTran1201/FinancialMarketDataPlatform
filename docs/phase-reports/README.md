@@ -28,3 +28,4 @@ Contains formal phase assessment and acceptance packages (`phase-<n>-<slug>.md`)
 - Naming: `phase-<N>-<topic>.md`.
 - Must distinguish verified evidence from planned targets (`Phase 0..9`).
 - Updated at the close of each phase before transitioning work items to `ACCEPTED` / `COMPLETE`.
+

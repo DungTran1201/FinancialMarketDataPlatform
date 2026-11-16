@@ -32,3 +32,4 @@ Before creating specifications, PoC benchmarks, or code, agents MUST read in seq
 ```powershell
 .\.venv\Scripts\python.exe tools/validators/run_all.py
 ```
+

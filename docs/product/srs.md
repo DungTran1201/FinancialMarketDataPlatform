@@ -126,3 +126,4 @@ All 15 modules MUST display real source metadata, UTC timestamps, DQ badges, and
 | `NFR-SEC-001` | **Auth & Secret Safety** | `100%` mutating/admin routes require valid credentials (`401`/`403` enforced); API keys & passwords stored hashed; zero plaintext secrets in logs/docs/Git. |
 | `NFR-MOD-001` | **Replaceable Adapters** | Event bus, hot cache, metadata store, query engine, exchange connectors, and model store sit behind typed protocol ports testable without heavyweight daemons. |
 | `NFR-OBS-001` | **Telemetry Hygiene** | JSON structured logs + Prometheus metrics with strictly bounded label cardinality (no `event_id`/`trade_id`/raw IP labels). |
+

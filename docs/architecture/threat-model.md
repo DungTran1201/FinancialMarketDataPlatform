@@ -44,3 +44,4 @@ review_criteria:
 | `THR-05` | `TB-2` | Unbounded NATS JetStream exposure on LAN (`0.0.0.0:4222`) allowing spoofed market events. | Bind Docker published port strictly to `127.0.0.1:4222:4222`; enable NATS token/user authentication in container config even on localhost. |
 | `THR-06` | `TB-3` | Slow-client WebSocket flood exhausting Python `asyncio` memory on `7.85 GB` host. | Hard limit max concurrent WS clients & per-client queue bounds using latest-snapshot conflation + idle ping/pong timeouts. |
 | `THR-07` | `TB-4` | Arbitrary Python `pickle` deserialization executing code on Model Registry load. | Prefer safe serialization formats (`ONNX` / LightGBM text/JSON / `skops` / JSON coefficients + checksum verification) over raw untrusted `pickle` blobs. |
+

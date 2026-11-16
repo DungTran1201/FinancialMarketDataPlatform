@@ -36,3 +36,4 @@ review_criteria:
 
 Direct inspection on `2026-11-16` confirmed the working tree on `feat/data-plane-production-delivery` (`e7708e0`) still contained legacy code (`src/` `149` files), Documentation V2 (`docs/` `372` files), `frontend/` (`59` files), `deploy/` (`16` files), and `.local_lakehouse/` (`1,709` files).
 - **Executed Resolution**: Preserved all legacy branches (`main`, `feat/data-plane-production-delivery`, `arch/*`, `docs/*`) untouched; created isolated orphan branch `greenfield/main`; removed legacy artifacts from `greenfield/main`; replaced legacy V2 hooks/validator with clean greenfield validation (`validate_greenfield.py`).
+
