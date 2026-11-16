@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import httpx
 import pytest
+from fastapi.testclient import TestClient
 from src.serving.api.main import create_app
 from src.shared.observability.tracing import compute_parallel_branch_latencies
 
@@ -218,4 +219,16 @@ async def test_observatory_end_to_end_trace_lag_lakehouse_dlq_and_rollup() -> No
         bucket_eid = lat["timeseries_buckets"][0]["event_ids"][0]
         bucket_trace = await client.get(f"/api/v1/observability/traces/{bucket_eid}")
         assert bucket_trace.status_code == 200
+
+
+def test_observability_websocket_snapshot_and_ping_pong() -> None:
+    """Verify WebSocket /ws/v1/observability/stream emits initial snapshot and responds pong to ping."""
+    app = create_app()
+    with TestClient(app) as client, client.websocket_connect("/ws/v1/observability/stream") as ws:
+        snap = ws.receive_json()
+        assert snap["type"] == "snapshot"
+        assert "overview" in snap
+        ws.send_json({"type": "ping", "timestamp": 123456})
+        pong = ws.receive_json()
+        assert pong == {"type": "pong", "timestamp": 123456}
 

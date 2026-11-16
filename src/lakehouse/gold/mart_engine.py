@@ -8,6 +8,8 @@ depths are computed and stored using exact fixed-point `Decimal` arithmetic (`0.
 from __future__ import annotations
 
 import math
+import os
+import uuid
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
@@ -252,5 +254,13 @@ class GoldLayerMartEngine:
         out_dir.mkdir(parents=True, exist_ok=True)
         out_file = out_dir / f"gold_{mart_name}.parquet"
         if rows:
-            pq.write_table(pa.Table.from_pylist(rows), out_file, compression="ZSTD")
+            tmp_file = out_file.with_name(
+                f".{out_file.name}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp"
+            )
+            try:
+                pq.write_table(pa.Table.from_pylist(rows), tmp_file, compression="ZSTD")
+                tmp_file.replace(out_file)
+            except Exception:
+                tmp_file.unlink(missing_ok=True)
+                raise
         return out_file

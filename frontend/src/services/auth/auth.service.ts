@@ -34,24 +34,27 @@ export class AuthService {
   }
 
   public async login(username: string, password: string): Promise<{ user: UserProfile; tokens: AuthTokens }> {
-    const res = await this.client.post('/auth/token', { username, password });
+    const raw = await this.client.post('/auth/token', { username, password });
+    const res = raw?.data ?? raw ?? {};
     const tokens: AuthTokens = {
-      access_token: res.access_token || 'mock_access_token',
-      refresh_token: res.refresh_token || 'mock_refresh_token',
+      access_token: res.access_token || '',
+      refresh_token: res.refresh_token || '',
       token_type: res.token_type || 'Bearer',
-      expires_in_seconds: res.expires_in ?? 3600
+      expires_in_seconds: res.expires_in ?? 900
     };
 
     const user: UserProfile = {
-      id: res.user_id || 'usr-admin-01',
+      id: res.user_id || res.jti || 'usr-session',
       username: username,
       email: `${username}@fmdp.local`,
-      role: (res.role || 'ADMIN') as any,
+      role: (String(res.role || 'ANALYST').toUpperCase()) as any,
       tier: (res.tier || 'INSTITUTIONAL') as any,
       created_at: new Date().toISOString()
     };
 
-    localStorage.setItem(TOKEN_KEY, tokens.access_token);
+    if (tokens.access_token) {
+      localStorage.setItem(TOKEN_KEY, tokens.access_token);
+    }
     localStorage.setItem(USER_KEY, JSON.stringify(user));
 
     return { user, tokens };
@@ -63,21 +66,30 @@ export class AuthService {
   }
 
   public async getApiKeys(): Promise<ApiKeyItem[]> {
-    const res = await this.client.get('/auth/api-keys');
-    const items = Array.isArray(res) ? res : res.keys || [];
-    return items.map((k: any) => ({
-      id: k.id || k.key_id,
-      name: k.name || 'Default Quant Key',
-      key_prefix: k.key_prefix || 'fmdp_live_...',
-      created_at: k.created_at || new Date().toISOString(),
-      expires_at: k.expires_at,
-      is_active: k.is_active ?? true,
-      rate_limit_rpm: k.rate_limit_rpm ?? 3000
-    }));
+    try {
+      const res = await this.client.get('/auth/api-keys');
+      const items = Array.isArray(res) ? res : res.data || res.keys || [];
+      return items.map((k: any) => ({
+        id: k.id || k.key_id,
+        name: k.name || 'Default Quant Key',
+        key_prefix: k.key_prefix || 'fmdp_live_...',
+        created_at: k.created_at || new Date().toISOString(),
+        expires_at: k.expires_at,
+        is_active: k.is_active ?? true,
+        rate_limit_rpm: k.rate_limit_rpm ?? 3000
+      }));
+    } catch {
+      return [];
+    }
   }
 
   public async createApiKey(name: string): Promise<{ key_id: string; raw_key: string }> {
-    return await this.client.post('/auth/api-keys', { name });
+    const raw = await this.client.post('/auth/api-keys', { name });
+    const data = raw?.data ?? raw ?? {};
+    return {
+      key_id: data.key_id || '',
+      raw_key: data.api_key_once || data.raw_key || ''
+    };
   }
 
   public async revokeApiKey(keyId: string): Promise<void> {

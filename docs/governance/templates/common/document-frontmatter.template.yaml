@@ -1,0 +1,37 @@
+# Canonical YAML Frontmatter Template (Instantiate at top of every Phase 2 Markdown spec)
+# Validated against docs/governance/schemas/document-frontmatter.schema.json
+---
+doc_id: "<PLANE>-<DOMAIN>-<TYPE>-001"        # REQUIRED: Unique uppercase ID, e.g., DP-ING-SPEC-001
+title: "<Concise Document Title>"             # REQUIRED
+doc_type: "specification"                     # REQUIRED: index | architecture | standard | governance | specification | adr | diagram | glossary
+plane: "<data-plane|application-plane|intelligence-plane|platform>" # REQUIRED
+scope_level: "<platform|plane|domain|capability|component|use-case>" # REQUIRED
+domain: "<domain-slug>"                       # CONDITIONAL: Required when scope_level is domain, capability, component, or use-case
+capability_id: "<CAP-DOMAIN-001>"             # CONDITIONAL: Required when inside a capability directory
+status: "DRAFT"                               # REQUIRED: DRAFT | IN_REVIEW | APPROVED | DEPRECATED
+implementation_status: "NOT_IMPLEMENTED"      # REQUIRED for specs: PLANNED | NOT_IMPLEMENTED | SIMULATED | PARTIALLY_IMPLEMENTED | IMPLEMENTED | VERIFIED | NOT_APPLICABLE
+version: "0.1.0"                              # REQUIRED: SemVer X.Y.Z
+owner_role: "<role-from-raci>"                # REQUIRED: e.g., business-analyst, data-architect, fullstack-engineer
+accountable_role: "<role-from-raci>"          # REQUIRED: Single final approval role from roles-and-raci.md
+created_at: "YYYY-MM-DD"                      # REQUIRED: ISO-8601 date
+updated_at: "YYYY-MM-DD"                      # REQUIRED: ISO-8601 date
+source_of_truth:                              # REQUIRED
+  is_authoritative: true                      # Set false for derived diagrams or summaries
+  authoritative_source:
+    - "<repo/relative/path/to/authoritative/doc-or-contract>"
+  derived_from: []                            # OPTIONAL: upstream requirements/contracts
+related_docs:                                 # REQUIRED (may be empty list [] initially)
+  - "<DOC-ID-OR-PATH>"
+depends_on: []                                # OPTIONAL: upstream capability/doc IDs
+requirement_ids: []                           # OPTIONAL: IDs defined or verified by this document
+# REQUIRED when status == APPROVED:
+# change_metadata:
+#   approved_by: "<Human Name / Role>"
+#   approved_at: "YYYY-MM-DD"
+#   change_summary: "<Concise summary of approved change>"
+revision_history:                             # REQUIRED when status == APPROVED (at least one entry matching version)
+  - version: "0.1.0"
+    date: "YYYY-MM-DD"
+    author_role: "<role-from-raci>"
+    summary: "Initial draft."
+---

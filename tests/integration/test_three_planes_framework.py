@@ -127,6 +127,27 @@ class TestPlaneADataPlaneIndependently(unittest.IsolatedAsyncioTestCase):
         assert hot_price is not None
         self.assertEqual(hot_price.last_price, Decimal("90500.00"))
 
+        # Verify Lua script ARGV alignment (ARGV[1]=ts_ms, ARGV[2]=ttl, ARGV[3..]=field/value pairs)
+        from src.streaming.consumers.hot_redis import REDIS_MONOTONIC_UPSERT_LUA
+
+        self.assertIn("for i = 3, #ARGV, 2 do", REDIS_MONOTONIC_UPSERT_LUA)
+        eval_calls: list[tuple[object, ...]] = []
+
+        class _FakeRedis:
+            def eval(self, *args: object) -> int:
+                eval_calls.append(args)
+                return 1
+
+        synced_projector = HotStateProjector(price_ttl_seconds=300, redis_client=_FakeRedis())
+        self.assertTrue(synced_projector.project_event(env_newer))
+        self.assertEqual(len(eval_calls), 1)
+        _lua, num_keys, _key, arg1_ts, arg2_ttl, *pairs = eval_calls[0]
+        self.assertEqual(num_keys, 1)
+        self.assertEqual(arg2_ttl, 300)
+        self.assertEqual(len(pairs) % 2, 0)
+        self.assertEqual(pairs[0], "exchange_event_time_ms")
+        self.assertEqual(pairs[1], str(arg1_ts))
+
     def test_clickhouse_replacing_merge_tree_deduplication_and_bronze_to_silver_dq(self) -> None:
         open_t = datetime(2026, 11, 15, 12, 0, 0, tzinfo=UTC)
         close_t = open_t + timedelta(minutes=1)
@@ -427,6 +448,11 @@ class TestInterPlaneCommunicationEndToEnd(unittest.TestCase):
         self.assertEqual(rep_data["symbol"], "SOLUSDT")
         self.assertEqual(len(rep_data["provenance_citations"]), 7)
         self.assertIn("Deterministic market intelligence report", rep_data["summary"])
+
+        # Step 5: List runs via GET /api/v1/agents/runs
+        list_res = self.client.get("/api/v1/agents/runs")
+        self.assertEqual(list_res.status_code, 200)
+        self.assertTrue(any(r["run_id"] == run_id for r in list_res.json()["data"]))
 
 
 if __name__ == "__main__":

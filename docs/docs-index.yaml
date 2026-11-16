@@ -1,0 +1,58 @@
+schema_version: "2.0.0"
+documentation_phase: "PHASE_1_FOUNDATION"
+phase_2_started: false
+repository: "DungTran1201/FinancialMarketDataPlatform"
+updated_at: "2026-11-16"
+root_entrypoint: "docs/README.md"
+validator_entrypoint: "scripts/docs/validate_docs.py"
+
+governance:
+  readme: "docs/governance/README.md"
+  architecture: "docs/governance/documentation-architecture.md"
+  standards_readme: "docs/governance/standards/README.md"
+  standards_register: "docs/governance/standards/standards-register.md"
+  templates_readme: "docs/governance/templates/README.md"
+  artifact_catalog: "docs/governance/catalog/artifact-catalog.yaml"
+  applicability_matrix: "docs/governance/catalog/artifact-applicability-matrix.yaml"
+  schemas_dir: "docs/governance/schemas"
+  migration_inventory: "docs/governance/migration/legacy-inventory.md"
+  migration_disposition: "docs/governance/migration/legacy-disposition.md"
+
+planes:
+  - id: "data-plane"
+    status: "RESERVED_PHASE_2"
+    target_root: "docs/data-plane"
+    owner_role: "data-architect"
+    code_roots:
+      - "src/ingestion"
+      - "src/streaming"
+      - "src/lakehouse"
+      - "src/shared/contracts"
+  - id: "application-plane"
+    status: "RESERVED_PHASE_2"
+    target_root: "docs/application-plane"
+    owner_role: "system-architect"
+    code_roots:
+      - "src/serving"
+      - "frontend"
+      - "src/shared/security"
+  - id: "intelligence-plane"
+    status: "RESERVED_PHASE_2"
+    target_root: "docs/intelligence-plane"
+    owner_role: "ai-engineer"
+    code_roots:
+      - "src/intelligence"
+
+overview:
+  status: "RESERVED_PHASE_2"
+  target_root: "docs/overview"
+  owner_role: "system-architect"
+
+agent_entrypoints:
+  primary: "AGENTS.md"
+  hooks_config: ".agents/hooks.json"
+  reading_order:
+    - "AGENTS.md"
+    - "docs/README.md"
+    - "docs/docs-index.yaml"
+    - "docs/governance/standards/ai-agent-and-discovery-standards.md"

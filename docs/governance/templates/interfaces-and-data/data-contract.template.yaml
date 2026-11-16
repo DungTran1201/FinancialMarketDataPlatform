@@ -1,0 +1,38 @@
+# Data Contract Template (Dataset ownership, schema, SLA, quality & evolution)
+# Instantiate inside <capability>/contracts/data-contract.yaml or <plane>/shared-contracts/
+schema_version: "2.0.0"
+contract_id: "DC-<DOM>-001"
+dataset_name: "<layer.dataset_name>"
+owner_role: "data-architect"
+document_status: "DRAFT"                        # DRAFT | IN_REVIEW | APPROVED | DEPRECATED
+implementation_status: "NOT_IMPLEMENTED"        # PLANNED | NOT_IMPLEMENTED | SIMULATED | PARTIALLY_IMPLEMENTED | IMPLEMENTED | VERIFIED
+storage_tier: "<STREAM | HOT | OLAP | BRONZE | SILVER | GOLD | OLTP>"
+natural_key:
+  - "<natural_key_column>"
+partition_strategy: "<partition expression or key>"
+time_semantics:
+  timezone: "UTC"
+  event_time_field: "<exchange_event_time>"
+  ingestion_time_field: "<ingested_at>"
+freshness_slo:
+  target_max_lag_seconds: null                  # Set numeric value ONLY if approved; otherwise keep null and track open question
+  unresolved_reason: "TARGET_UNRESOLVED: Pending approved SLA decision"
+schema:
+  format: "<JSON | Parquet | Iceberg | ClickHouse | PostgreSQL>"
+  fields:
+    - name: "<field_name>"
+      type: "<string | decimal(38,18) | timestamp_utc | int64 | boolean>"
+      nullable: false
+      description: "<Field semantics and units>"
+quality_rules:
+  - rule_id: "DQ-<DOM>-001"
+    expression: "<Deterministic invariant>"
+    severity: "BLOCKING"                        # BLOCKING | WARNING
+    failure_action: "<Block promotion / Route to DLQ / Alert>"
+lineage:
+  upstream_sources: []
+  transformation_owner: "<job or engine>"
+  downstream_consumers: []
+compatibility_policy:
+  evolution_mode: "BACKWARD_COMPATIBLE"
+  breaking_change_rule: "Major version bump + dual-write migration required"

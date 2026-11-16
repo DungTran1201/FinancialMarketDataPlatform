@@ -21,7 +21,7 @@ REDIS_MONOTONIC_UPSERT_LUA = """
 local current_ts = redis.call('HGET', KEYS[1], 'exchange_event_time_ms')
 local incoming_ts = tonumber(ARGV[1])
 if (not current_ts) or (incoming_ts >= tonumber(current_ts)) then
-    for i = 2, #ARGV, 2 do
+    for i = 3, #ARGV, 2 do
         redis.call('HSET', KEYS[1], ARGV[i], ARGV[i + 1])
     end
     redis.call('EXPIRE', KEYS[1], tonumber(ARGV[2]))

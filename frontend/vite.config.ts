@@ -1,6 +1,9 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
+const apiTarget = process.env.VITE_API_TARGET || 'http://127.0.0.1:8000';
+const wsTarget = apiTarget.replace(/^http/, 'ws');
+
 export default defineConfig({
   root: '.',
   publicDir: 'public',
@@ -14,12 +17,14 @@ export default defineConfig({
     host: '0.0.0.0',
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8000',
-        changeOrigin: true
+        target: apiTarget,
+        changeOrigin: true,
+        secure: false
       },
       '/ws': {
-        target: 'ws://127.0.0.1:8000',
-        ws: true
+        target: wsTarget,
+        ws: true,
+        secure: false
       }
     }
   },

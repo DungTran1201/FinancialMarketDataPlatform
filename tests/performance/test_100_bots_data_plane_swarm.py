@@ -802,6 +802,7 @@ def run_100_bot_data_plane_campaign() -> dict[str, Any]:
     with SUMMARY_LOG_PATH.open("w", encoding="utf-8") as fh:
         json.dump(summary, fh, indent=2, ensure_ascii=False)
 
+    runtime.close()
     return summary
 
 

@@ -182,6 +182,10 @@ class PlatformRuntimeContainer:
         self.microservice_registry = MicroserviceRegistry(config=self.config)
         self._mount_domain_microservices()
 
+    def close(self) -> None:
+        """Release durable storage handles cleanly on runtime shutdown."""
+        self.data_platform_v01.watermark_store.close()
+
     def _mount_domain_microservices(self) -> None:
         from src.serving.api.services.analytics import create_analytics_microservice_app
         from src.serving.api.services.catalog import create_catalog_microservice_app

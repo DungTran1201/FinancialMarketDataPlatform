@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
@@ -74,16 +76,45 @@ def create_app(
 
     cfg = config or PlatformConfig()
     rt = runtime or PlatformRuntimeContainer(config=cfg)
+
+    @asynccontextmanager
+    async def lifespan(_app: Any) -> AsyncIterator[None]:
+        try:
+            yield
+        finally:
+            rt.close()
+
     app = FastAPI(
         title="Real-time Financial Market Data Platform API",
         version="0.1.0",
         docs_url="/api/docs",
         openapi_url="/api/openapi.json",
+        lifespan=lifespan,
     )
     app.state.runtime = rt
     rt.microservice_registry.register_asgi_app("svc-api-gateway", app)
 
     jwt_service, ip_cipher, _ = install_security_defense_middleware(app, config=cfg, tier_overrides=tier_overrides)
+
+    @app.get("/", tags=["Health"])
+    async def root_service_index() -> dict[str, Any]:
+        return {
+            "service": "Real-time Financial Market Data Platform API",
+            "version": "0.1.0",
+            "status": "alive",
+            "environment": cfg.app_env,
+            "endpoints": {
+                "swagger_docs": "/api/docs",
+                "openapi_schema": "/api/openapi.json",
+                "health_live": "/api/v1/health/live",
+                "health_ready": "/api/v1/health/ready",
+                "metrics": "/metrics",
+                "observability_overview": "/api/v1/observability/overview",
+                "observability_sse": "/api/v1/observability/stream",
+                "observability_ws": "/ws/v1/observability/stream",
+            },
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
 
     @app.get("/api/v1/health/live", tags=["Health"])
     async def health_live() -> dict[str, Any]:

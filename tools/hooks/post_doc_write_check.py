@@ -1,4 +1,4 @@
-"""PostToolUse hook running documentation and README validators after doc modifications."""
+"""PostToolUse hook running Documentation V2 validator after Markdown/YAML doc writes."""
 
 from __future__ import annotations
 
@@ -8,23 +8,18 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+DOCS_VALIDATOR = REPO_ROOT / "scripts" / "docs" / "validate_docs.py"
 
 
 def main() -> int:
-    r1 = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "tools/validators/validate_docs.py")],
+    result = subprocess.run(
+        [sys.executable, str(DOCS_VALIDATOR)],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
     )
-    r2 = subprocess.run(
-        [sys.executable, str(REPO_ROOT / "tools/validators/validate_readmes.py")],
-        cwd=REPO_ROOT,
-        capture_output=True,
-        text=True,
-    )
-    if r1.returncode != 0 or r2.returncode != 0:
-        sys.stderr.write((r1.stdout or "") + (r1.stderr or "") + (r2.stdout or "") + (r2.stderr or ""))
+    if result.returncode != 0:
+        sys.stderr.write((result.stdout or "") + (result.stderr or ""))
         return 1
     print(json.dumps({}))
     return 0
@@ -32,4 +27,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

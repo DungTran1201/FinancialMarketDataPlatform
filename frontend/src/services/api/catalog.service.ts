@@ -5,48 +5,103 @@ export class CatalogService {
   constructor(private client = defaultApiClient) {}
 
   public async getDatasets(): Promise<DatasetCatalogItem[]> {
-    const res = await this.client.get('/catalog/datasets');
-    const items = Array.isArray(res) ? res : res.datasets || [];
-    return items.map((d: any) => ({
-      id: d.id || d.name,
-      name: d.name,
-      layer: d.layer || 'SILVER',
-      storage_format: d.storage_format || 'ICEBERG_V2',
-      retention: d.retention || '90 days',
-      update_frequency: d.update_frequency || 'Continuous',
-      total_records: d.total_records ?? 154200,
-      size_bytes: d.size_bytes ?? 48200000,
-      last_ingested_at: d.last_ingested_at || new Date().toISOString(),
-      schema: d.schema || []
-    }));
+    const [lineageRes, storageRes] = await Promise.all([
+      this.client.get('/data-platform/v01/lineage'),
+      this.client.get('/observability/storage').catch(() => ({}))
+    ]);
+    const items = Array.isArray(lineageRes) ? lineageRes : lineageRes.datasets || [];
+    const lh = storageRes?.lakehouse || {};
+    const chRows = storageRes?.clickhouse_warehouse?.total_rows ?? 0;
+    const redisRows = storageRes?.redis_hot_state?.price_keys_count ?? 0;
+    const layerMap: Record<string, DatasetCatalogItem['layer']> = {
+      BRONZE: 'BRONZE',
+      SILVER: 'SILVER',
+      GOLD: 'GOLD',
+      STREAM: 'KAFKA',
+      HOT: 'HOT_CACHE'
+    };
+    const formatMap: Record<string, DatasetCatalogItem['storage_format']> = {
+      BRONZE: 'PARQUET',
+      SILVER: 'ICEBERG_V2',
+      GOLD: 'PARQUET',
+      OLAP: 'CLICKHOUSE_REPLACING_MERGE_TREE',
+      HOT: 'REDIS_HASH',
+      STREAM: 'JSON_KAFKA'
+    };
+    return items.map((d: any) => {
+      const rawLayer = String(d.layer || 'SILVER').toUpperCase();
+      const natKeys: string[] = Array.isArray(d.natural_key) ? d.natural_key : [];
+      const records =
+        rawLayer === 'BRONZE'
+          ? (lh.bronze?.total_rows ?? 0)
+          : rawLayer === 'SILVER'
+            ? (lh.silver?.total_rows ?? 0)
+            : rawLayer === 'GOLD'
+              ? (lh.gold?.total_rows ?? 0)
+              : rawLayer === 'OLAP'
+                ? chRows
+                : rawLayer === 'HOT'
+                  ? redisRows
+                  : 0;
+      const bytes = rawLayer === 'BRONZE' ? (lh.bronze?.total_bytes ?? 0) : 0;
+      return {
+        id: d.dataset_id || d.id || d.name,
+        name: d.dataset_id || d.name,
+        layer: layerMap[rawLayer] || 'SILVER',
+        storage_format: formatMap[rawLayer] || 'ICEBERG_V2',
+        retention: d.retention_policy || d.retention || '90 days',
+        update_frequency: d.freshness_slo_seconds ? `SLO ${d.freshness_slo_seconds}s` : 'Continuous',
+        total_records: records,
+        size_bytes: bytes,
+        last_ingested_at: new Date().toISOString(),
+        schema:
+          d.schema ||
+          natKeys.map((k: string) => ({
+            name: k,
+            type: 'string',
+            nullable: false,
+            is_natural_key: true
+          }))
+      };
+    });
   }
 
   public async getLineage(): Promise<{ nodes: string[]; edges: LineageEdge[] }> {
-    const res = await this.client.get('/catalog/lineage');
+    const res = await this.client.get('/data-platform/v01/lineage');
+    const datasets = Array.isArray(res?.datasets) ? res.datasets : [];
+    const rawEdges = Array.isArray(res?.lineage_edges) ? res.lineage_edges : res?.edges || [];
+    const edges: LineageEdge[] = rawEdges.map((e: any) => ({
+      from_dataset: e.from_dataset || e.upstream_dataset || '',
+      to_dataset: e.to_dataset || e.downstream_dataset || '',
+      transformation: e.transformation || e.transformation_job || ''
+    }));
+    const nodes: string[] =
+      datasets.length > 0
+        ? datasets.map((d: any) => String(d.dataset_id || d.name))
+        : ['Binance WS/REST', 'Kafka (market.raw.*.v1)', 'Redis Hot Cache', 'MinIO Bronze', 'Silver Iceberg', 'Gold dbt Marts', 'ClickHouse OLAP', 'FastAPI Serving'];
     return {
-      nodes: res.nodes || ['Binance WS/REST', 'Kafka (market.raw.*.v1)', 'Redis Hot Cache', 'MinIO Bronze', 'Silver Iceberg', 'Gold dbt Marts', 'ClickHouse OLAP', 'FastAPI Serving'],
-      edges: res.edges || [
-        { from_dataset: 'Binance WS/REST', to_dataset: 'Kafka (market.raw.*.v1)', transformation: 'Normalizer & Token Bucket' },
-        { from_dataset: 'Kafka (market.raw.*.v1)', to_dataset: 'Redis Hot Cache', transformation: 'Monotonic Lua Projector' },
-        { from_dataset: 'Kafka (market.raw.*.v1)', to_dataset: 'ClickHouse OLAP', transformation: 'Micro-batch (1s / 5000 rows)' },
-        { from_dataset: 'Kafka (market.raw.*.v1)', to_dataset: 'MinIO Bronze', transformation: 'Parquet Append-Only Archiver' },
-        { from_dataset: 'MinIO Bronze', to_dataset: 'Silver Iceberg', transformation: 'PySpark Merge & Deduplication' },
-        { from_dataset: 'Silver Iceberg', to_dataset: 'Gold dbt Marts', transformation: 'dbt Core Multi-Timeframe MVs' },
-        { from_dataset: 'Redis Hot Cache', to_dataset: 'FastAPI Serving', transformation: 'Sub-15ms Query Router' },
-        { from_dataset: 'ClickHouse OLAP', to_dataset: 'FastAPI Serving', transformation: 'OLAP Fallback & Quant Analytics' }
-      ]
+      nodes,
+      edges:
+        edges.length > 0
+          ? edges
+          : [
+              { from_dataset: 'exchange.binance.spot_api', to_dataset: 'kafka.market.raw.klines.v1', transformation: 'collector-rest-and-ws' },
+              { from_dataset: 'kafka.market.raw.klines.v1', to_dataset: 'redis.market.hot_state.v1', transformation: 'consumer-hot-redis' },
+              { from_dataset: 'kafka.market.raw.klines.v1', to_dataset: 'clickhouse.market_data.klines_1m', transformation: 'consumer-analytics-ch' },
+              { from_dataset: 'kafka.market.raw.klines.v1', to_dataset: 'lakehouse.bronze.raw_events', transformation: 'consumer-lakehouse-bronze' }
+            ]
     };
   }
 
   public async getDataQualityReport(): Promise<DataQualityCheckResult[]> {
-    const res = await this.client.get('/catalog/data-quality');
-    const items = Array.isArray(res) ? res : res.checks || [];
+    const res = await this.client.get('/observability/storage');
+    const items = Array.isArray(res) ? res : res.dq_rules || res.checks || [];
     return items.map((c: any) => ({
       rule_id: c.rule_id || 'DQ-001',
-      rule_name: c.rule_name || 'Positive Financial Numbers',
-      dataset_id: c.dataset_id || 'market.raw.trades.v1',
+      rule_name: c.rule_name || c.rule || 'Positive Financial Numbers',
+      dataset_id: c.dataset_id || c.dataset || 'silver.market_klines',
       status: c.status || 'PASSED',
-      evaluated_records: c.evaluated_records ?? 5000,
+      evaluated_records: c.evaluated_records ?? (res?.lakehouse?.silver?.total_rows || 0),
       violated_records: c.violated_records ?? 0,
       last_run_at: c.last_run_at || new Date().toISOString(),
       sample_violation: c.sample_violation

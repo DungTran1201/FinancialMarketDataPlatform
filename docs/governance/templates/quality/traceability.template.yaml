@@ -1,0 +1,23 @@
+# Bidirectional Traceability Matrix Template (Instantiate as <capability>/quality/traceability.yaml)
+# Validated against docs/governance/schemas/traceability.schema.json
+schema_version: "2.0.0"
+capability_id: "CAP-<DOM>-001"
+owner_role: "business-analyst"
+document_status: "DRAFT"
+links:
+  - business_need_id: "BR-<DOM>-001"
+    requirement_id: "FR-<DOM>-001"
+    rule_or_use_case_ids:
+      - "UC-<DOM>-001"
+      - "RULE-<DOM>-001"
+    design_doc_ids:
+      - "<CAP-DESIGN-DOC-ID>"
+    contract_paths:
+      - "<path/to/openapi.yaml or asyncapi.yaml or data-contract.yaml>"
+    implementation_paths:
+      - "<src/...>"
+    test_case_ids:
+      - "TC-<DOM>-001"
+    test_paths:
+      - "tests/<category>/<test_file.py>"
+    verification_evidence: "<NOT_VERIFIED or exact CI run/test report reference>"

@@ -1,0 +1,273 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fmdp.internal/docs/governance/schemas/capability-manifest.schema.json",
+  "title": "FMDP Capability Manifest Schema (capability.yaml)",
+  "description": "Validates per-capability metadata, risk signals, required artifact applicability decisions, and implementation state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "capability_id",
+    "name",
+    "plane",
+    "domain",
+    "owner_role",
+    "accountable_role",
+    "risk_tier",
+    "risk_signals",
+    "scope",
+    "in_scope",
+    "out_of_scope",
+    "authoritative_documents",
+    "required_artifacts",
+    "document_status",
+    "implementation_status",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^2\\.[0-9]+\\.[0-9]+$"
+    },
+    "capability_id": {
+      "type": "string",
+      "pattern": "^CAP-[A-Z0-9-]+$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3
+    },
+    "plane": {
+      "type": "string",
+      "enum": [
+        "data-plane",
+        "application-plane",
+        "intelligence-plane"
+      ]
+    },
+    "domain": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "owner_role": {
+      "$ref": "#/$defs/roleEnum"
+    },
+    "accountable_role": {
+      "$ref": "#/$defs/roleEnum"
+    },
+    "risk_tier": {
+      "type": "string",
+      "enum": [
+        "LOW",
+        "MEDIUM",
+        "HIGH_CRITICAL"
+      ]
+    },
+    "risk_signals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handles_auth_or_rbac",
+        "handles_user_or_financial_data",
+        "external_exposure",
+        "schema_or_db_migration",
+        "realtime_or_event_streaming",
+        "agent_write_capable_tools",
+        "cross_plane_dependencies"
+      ],
+      "properties": {
+        "handles_auth_or_rbac": { "type": "boolean" },
+        "handles_user_or_financial_data": { "type": "boolean" },
+        "external_exposure": { "type": "boolean" },
+        "schema_or_db_migration": { "type": "boolean" },
+        "realtime_or_event_streaming": { "type": "boolean" },
+        "agent_write_capable_tools": { "type": "boolean" },
+        "cross_plane_dependencies": { "type": "boolean" },
+        "exposes_http_api": { "type": "boolean" }
+      }
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 10
+    },
+    "in_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 2 }
+    },
+    "out_of_scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 2 }
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "capabilities": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^CAP-[A-Z0-9-]+$" }
+        },
+        "shared_contracts": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "external_systems": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "authoritative_documents": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "related_contracts": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "required_artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact_id",
+          "path",
+          "applicability",
+          "status"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "pattern": "^ART-[A-Z0-9-]+$"
+          },
+          "path": {
+            "type": ["string", "null"]
+          },
+          "applicability": {
+            "type": "string",
+            "enum": [
+              "REQUIRED",
+              "CONDITIONAL",
+              "RECOMMENDED",
+              "NOT_APPLICABLE_WITH_REASON"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PRESENT",
+              "MISSING",
+              "NOT_APPLICABLE"
+            ]
+          },
+          "not_applicable_reason": {
+            "type": "string",
+            "minLength": 5
+          }
+        },
+        "if": {
+          "anyOf": [
+            {
+              "properties": {
+                "applicability": { "const": "NOT_APPLICABLE_WITH_REASON" }
+              },
+              "required": ["applicability"]
+            },
+            {
+              "properties": {
+                "status": { "const": "NOT_APPLICABLE" }
+              },
+              "required": ["status"]
+            }
+          ]
+        },
+        "then": {
+          "required": ["not_applicable_reason"]
+        }
+      }
+    },
+    "document_status": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "IN_REVIEW",
+        "APPROVED",
+        "DEPRECATED"
+      ]
+    },
+    "implementation_status": {
+      "type": "string",
+      "enum": [
+        "PLANNED",
+        "NOT_IMPLEMENTED",
+        "SIMULATED",
+        "PARTIALLY_IMPLEMENTED",
+        "IMPLEMENTED",
+        "VERIFIED"
+      ]
+    },
+    "code_paths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "test_paths": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "open_questions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "change_metadata": {
+      "type": "object",
+      "required": ["approved_by", "approved_at", "change_summary"],
+      "properties": {
+        "approved_by": { "type": "string", "minLength": 2 },
+        "approved_at": { "$ref": "#/$defs/isoDate" },
+        "change_summary": { "type": "string", "minLength": 5 }
+      }
+    },
+    "updated_at": {
+      "$ref": "#/$defs/isoDate"
+    }
+  },
+  "if": {
+    "properties": {
+      "document_status": { "const": "APPROVED" }
+    },
+    "required": ["document_status"]
+  },
+  "then": {
+    "required": ["change_metadata"]
+  },
+  "$defs": {
+    "isoDate": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+    },
+    "roleEnum": {
+      "type": "string",
+      "enum": [
+        "documentation-architect",
+        "business-analyst",
+        "system-architect",
+        "fullstack-engineer",
+        "data-architect",
+        "database-architect",
+        "ai-engineer",
+        "security-architect",
+        "qa-lead",
+        "devops-sre",
+        "documentation-tooling-engineer"
+      ]
+    }
+  }
+}

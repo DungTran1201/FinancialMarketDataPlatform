@@ -4,7 +4,11 @@ import type {
   EventLifecycleTrace,
   ParallelBranchLatency
 } from '@/types/observability';
-import { observabilityService } from '@/services/api/observability.service';
+import {
+  mapRawTrace,
+  normalizeOverviewPayload,
+  observabilityService
+} from '@/services/api/observability.service';
 import { sseClient } from '@/services/api/sse';
 
 export interface ObservabilityState {
@@ -89,9 +93,29 @@ class ObservabilityStore {
 
     sseClient.connect();
 
+    const applyOverview = (overviewPayload: any) => {
+      if (!overviewPayload) return;
+      const normalized = normalizeOverviewPayload(overviewPayload);
+      this.state.kpis = normalized.kpis;
+      this.state.platformStatus = normalized.platform_status;
+    };
+
+    const unsubSnapshot = sseClient.on('snapshot', (data: any) => {
+      applyOverview(data.overview ?? data);
+      if (data.topology) {
+        this.state.topology = data.topology;
+      }
+      this.notify();
+    });
+
+    const unsubHeartbeat = sseClient.on('heartbeat', (data: any) => {
+      applyOverview(data.overview ?? data);
+      this.notify();
+    });
+
     const unsubPulse = sseClient.on('pulse', (data: any) => {
       if (data.kpis) {
-        this.state.kpis = { ...this.state.kpis, ...data.kpis };
+        applyOverview(data);
       }
       if (data.topology) {
         this.state.topology = data.topology;
@@ -99,12 +123,15 @@ class ObservabilityStore {
       this.notify();
     });
 
-    const unsubTrace = sseClient.on('trace', (trace: EventLifecycleTrace) => {
-      this.state.traces = [trace, ...this.state.traces.slice(0, 49)];
+    const unsubTrace = sseClient.on('trace', (payload: any) => {
+      const mapped = mapRawTrace(payload?.trace ?? payload);
+      this.state.traces = [mapped, ...this.state.traces.slice(0, 49)];
       this.notify();
     });
 
     this.sseUnsubscribe = () => {
+      unsubSnapshot();
+      unsubHeartbeat();
       unsubPulse();
       unsubTrace();
     };

@@ -1,0 +1,103 @@
+# OpenAPI 3.1.0 Contract Template (Selected per tooling review: FastAPI native + JSON Schema Draft 2020-12)
+# Instantiate as contracts/openapi.yaml inside owning capability or shared-contracts/
+openapi: "3.1.0"
+info:
+  title: "<Capability or Service API Name>"
+  version: "0.1.0"
+  summary: "<Short API contract purpose>"
+  description: "<Authoritative HTTP interface specification. Do not duplicate field tables in Markdown.>"
+  x-owner-role: "fullstack-engineer"
+  x-document-status: "DRAFT"                     # DRAFT | IN_REVIEW | APPROVED | DEPRECATED
+  x-implementation-status: "NOT_IMPLEMENTED"    # PLANNED | NOT_IMPLEMENTED | SIMULATED | PARTIALLY_IMPLEMENTED | IMPLEMENTED | VERIFIED
+servers:
+  - url: "/api/v1"
+    description: "Versioned platform API base path"
+security:
+  - bearerAuth: []
+paths:
+  /example-resources/{resourceId}:
+    get:
+      operationId: "<domain>_get_example_resource"
+      summary: "<Short action description>"
+      parameters:
+        - name: resourceId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+      responses:
+        "200":
+          description: "Success response"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExampleResponse"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  responses:
+    UnauthorizedError:
+      description: "Authentication required or token invalid"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    ForbiddenError:
+      description: "Caller lacks required RBAC capability"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+    ValidationError:
+      description: "Request or query boundary validation failed"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetails"
+  schemas:
+    ExampleResponse:
+      type: object
+      required: [id, decimal_value, recorded_at_utc]
+      properties:
+        id:
+          type: string
+        decimal_value:
+          type: string
+          description: "Exact decimal encoded as string (never binary float)"
+        recorded_at_utc:
+          type: string
+          format: date-time
+    ProblemDetails:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        request_id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

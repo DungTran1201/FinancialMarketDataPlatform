@@ -97,15 +97,13 @@ if !errorlevel! neq 0 (
     "!VENV_PYTHON!" -m pip install pyarrow pyiceberg dbt-core dbt-clickhouse
 )
 
-echo   [INFO] Installing PySpark and Great Expectations (optional heavy batch engines)...
-"!VENV_PYTHON!" -m pip install "pyspark>=3.5.1" "great-expectations>=0.18.15" >nul 2>&1
-if !errorlevel! equ 0 (
-    echo   [OK] PySpark and Great Expectations installed successfully.
-) else (
-    echo   [INFO] Installing PySpark standalone...
-    "!VENV_PYTHON!" -m pip install "pyspark>=3.5.1" >nul 2>&1
-    echo   [OK] Lakehouse Python packages configured.
+echo   [INFO] Installing PySpark and Great Expectations (Lakehouse batch & DQ engines)...
+"!VENV_PYTHON!" -m pip install "pyspark>=3.5.1" "great-expectations>=0.18.15"
+if !errorlevel! neq 0 (
+    echo   [ERROR] Failed to install PySpark or Great Expectations required by run.bat Stage 3.
+    exit /b 1
 )
+echo   [OK] PySpark and Great Expectations installed successfully.
 
 REM ----------------------------------------------------------------------------
 REM [5/7] Initialize Local Medallion Lakehouse (Parquet/Iceberg), Spark & dbt Directories

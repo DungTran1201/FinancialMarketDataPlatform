@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import os
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -56,7 +58,15 @@ class BronzeParquetArchiver:
             out_dir.mkdir(parents=True, exist_ok=True)
             out_file = out_dir / f"part_{event_type}_{batch_id}.parquet"
             table = pa.Table.from_pylist(rows)
-            pq.write_table(table, out_file, compression="ZSTD")
+            tmp_file = out_file.with_name(
+                f".{out_file.name}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp"
+            )
+            try:
+                pq.write_table(table, tmp_file, compression="ZSTD")
+                tmp_file.replace(out_file)
+            except Exception:
+                tmp_file.unlink(missing_ok=True)
+                raise
             written_files.append(out_file)
 
         return written_files

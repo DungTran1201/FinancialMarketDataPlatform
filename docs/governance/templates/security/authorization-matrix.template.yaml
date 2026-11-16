@@ -1,0 +1,17 @@
+# Authorization Matrix Template (Subject, Resource, Action, Condition, Expected Decision)
+# Instantiate as <capability>/security/authorization-matrix.yaml
+schema_version: "2.0.0"
+capability_id: "CAP-<DOM>-001"
+owner_role: "security-architect"
+document_status: "DRAFT"
+implementation_status: "NOT_IMPLEMENTED"
+default_policy: "DENY_BY_DEFAULT"
+rules:
+  - rule_id: "AUTHZ-<DOM>-001"
+    subject: "<role:viewer | role:analyst | role:operator | role:admin | service:agent-worker | unauthenticated>"
+    resource: "<HTTP method + route | tool_name | dataset>"
+    action: "read"                              # read | write | execute | admin | revoke
+    condition: "<Valid JWT + verified RBAC capability + optional IP/scope check>"
+    expected_decision: "ALLOW"                  # ALLOW | DENY
+    verified_by_test: "TC-<DOM>-001"
+    as_is_enforced: false                       # Must honestly reflect code reality

@@ -1,0 +1,43 @@
+# Capability Manifest Template (Instantiate as capability.yaml inside each capability directory)
+# Validated against docs/governance/schemas/capability-manifest.schema.json
+schema_version: "2.0.0"
+capability_id: "CAP-<DOM>-001"
+name: "<Capability Name>"
+plane: "<data-plane|application-plane|intelligence-plane>"
+domain: "<domain-slug>"
+owner_role: "<role-from-raci>"
+accountable_role: "<role-from-raci>"
+risk_tier: "MEDIUM"                           # LOW | MEDIUM | HIGH_CRITICAL
+risk_signals:                                 # Used to compute artifact applicability
+  handles_auth_or_rbac: false
+  handles_user_or_financial_data: false
+  external_exposure: false
+  schema_or_db_migration: false
+  realtime_or_event_streaming: false
+  agent_write_capable_tools: false
+  cross_plane_dependencies: false
+scope: "<Concise 1-2 sentence capability responsibility statement>"
+in_scope:
+  - "<Explicit in-scope item>"
+out_of_scope:
+  - "<Explicit out-of-scope item>"
+dependencies:
+  capabilities: []
+  shared_contracts: []
+  external_systems: []
+authoritative_documents:
+  - "README.md"
+related_contracts: []
+required_artifacts:
+  - artifact_id: "ART-CAP-SPEC"
+    path: "<capability-specification.md>"
+    applicability: "REQUIRED"                 # REQUIRED | CONDITIONAL | RECOMMENDED | NOT_APPLICABLE_WITH_REASON
+    status: "PRESENT"                         # PRESENT | MISSING | NOT_APPLICABLE
+    # not_applicable_reason: "<Mandatory non-empty reason when applicability == NOT_APPLICABLE_WITH_REASON>"
+document_status: "DRAFT"                      # DRAFT | IN_REVIEW | APPROVED | DEPRECATED
+implementation_status: "NOT_IMPLEMENTED"      # PLANNED | NOT_IMPLEMENTED | SIMULATED | PARTIALLY_IMPLEMENTED | IMPLEMENTED | VERIFIED
+code_paths: []
+test_paths: []
+open_questions: []
+blockers: []
+updated_at: "YYYY-MM-DD"

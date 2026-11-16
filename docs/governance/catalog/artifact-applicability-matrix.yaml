@@ -1,0 +1,376 @@
+# Documentation V2 Artifact Applicability Matrix
+# Validated against docs/governance/schemas/artifact-applicability-matrix.schema.json
+schema_version: "2.0.0"
+doc_id: "GOV-CAT-MAT-001"
+title: "Documentation V2 Risk-Based Artifact Applicability Matrix"
+status: "APPROVED"
+owner_role: "documentation-architect"
+accountable_role: "documentation-architect"
+updated_at: "2026-11-16"
+
+applicability_classes:
+  - code: "REQUIRED"
+    meaning: "MUST be produced, populated cleanly, and pass automated & human gate review before capability approval."
+  - code: "CONDITIONAL"
+    meaning: "REQUIRED when specific technical signals, work types, or complexity predicates apply; otherwise omit or document NOT_APPLICABLE_WITH_REASON."
+  - code: "RECOMMENDED"
+    meaning: "Strongly advised when clarity or onboarding benefits justify authoring; MAY be omitted without blocking approval."
+  - code: "NOT_APPLICABLE_WITH_REASON"
+    meaning: "Not required under the current risk tier/signals; MUST NOT be created as an empty file, and MUST record a brief non-empty reason in capability.yaml when explicitly waived."
+
+risk_assessment:
+  tiers:
+    - tier: "LOW"
+      description: "Read-only UI/presentation components, static configuration views, internal formatting utilities, or non-sensitive read-only lookups without schema migrations, streaming mutations, external exposure changes, or agent side effects."
+      default_review_depth: "Standard peer + single accountable owner review."
+    - tier: "MEDIUM"
+      description: "Standard API endpoints, analytical query extensions, database schema changes without auth changes, batch transformations, or internal service integrations with moderate blast radius."
+      default_review_depth: "Accountable owner + cross-domain (architect/DB/QA) review."
+    - tier: "HIGH_CRITICAL"
+      description: "Authentication/RBAC/session handling, financial calculation or integrity pipelines, external internet-facing endpoints, real-time Kafka/WebSocket streaming ingestion/fan-out, write-capable AI agent tools, or multi-plane breaking changes."
+      default_review_depth: "Full RACI sign-off including mandatory Security Architect gate (QG-4) and QA verification gate (QG-6)."
+  assessment_signals:
+    - signal: "handles_auth_or_rbac"
+      minimum_tier: "HIGH_CRITICAL"
+      description: "Capability authenticates principals, validates tokens, enforces RBAC/permissions, or alters user sessions."
+    - signal: "handles_user_or_financial_data"
+      minimum_tier: "MEDIUM"
+      description: "Capability stores, computes, or exposes OHLCV market precision, user profiles, audit trails, or proprietary scores."
+    - signal: "external_exposure"
+      minimum_tier: "HIGH_CRITICAL"
+      description: "Capability exposes public/edge routes or connects directly to untrusted third-party APIs/WebSockets."
+    - signal: "schema_or_db_migration"
+      minimum_tier: "MEDIUM"
+      description: "Capability creates or modifies persistent database tables, engines, indexes, partitions, or storage schemas."
+    - signal: "realtime_or_event_streaming"
+      minimum_tier: "HIGH_CRITICAL"
+      description: "Capability produces, transforms, consumes, or streams continuous real-time Kafka/WebSocket/SSE data."
+    - signal: "agent_write_capable_tools"
+      minimum_tier: "HIGH_CRITICAL"
+      description: "Capability exposes LLM/Agent tools capable of mutating files, state, external calls, or persistent records."
+    - signal: "cross_plane_dependencies"
+      minimum_tier: "MEDIUM"
+      description: "Capability crosses or depends synchronously/asynchronously on contracts owned by another architectural plane."
+
+capability_baseline_by_tier:
+  LOW:
+    REQUIRED:
+      - "ART-CAP-MANIFEST"
+      - "ART-CAP-SPEC"
+      - "ART-COMP-DESIGN"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+    RECOMMENDED:
+      - "ART-USE-CASE"
+      - "ART-TEST-SCEN"
+    CONDITIONAL:
+      - "ART-OPENAPI"
+      - "ART-ERR-CAT"
+      - "ART-DIAG-SEQ"
+    NOT_APPLICABLE_WITH_REASON:
+      - "ART-DATA-MODEL"
+      - "ART-DB-DESIGN"
+      - "ART-DIAG-ERD"
+      - "ART-ASYNCAPI"
+      - "ART-DATA-CONTRACT"
+      - "ART-DIAG-DFD"
+      - "ART-THREAT-MODEL"
+      - "ART-SEC-REQ"
+      - "ART-AUTHZ-MATRIX"
+      - "ART-DIAG-TM"
+      - "ART-AGENT-SPEC"
+      - "ART-DIAG-AGENT"
+      - "ART-INC-REC"
+
+  MEDIUM:
+    REQUIRED:
+      - "ART-CAP-MANIFEST"
+      - "ART-CAP-SPEC"
+      - "ART-COMP-DESIGN"
+      - "ART-NFR-SPEC"
+      - "ART-TEST-PLAN"
+      - "ART-TEST-SCEN"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+      - "ART-RUNBOOK"
+    RECOMMENDED:
+      - "ART-USE-CASE"
+      - "ART-BUS-RULE"
+      - "ART-DIAG-SEQ"
+      - "ART-OBS-SLO"
+    CONDITIONAL:
+      - "ART-OPENAPI"
+      - "ART-ERR-CAT"
+      - "ART-DATA-MODEL"
+      - "ART-DB-DESIGN"
+      - "ART-DIAG-ERD"
+      - "ART-THREAT-MODEL"
+      - "ART-SEC-REQ"
+      - "ART-AUTHZ-MATRIX"
+      - "ART-DIAG-TM"
+      - "ART-DEPLOY-DESC"
+      - "ART-DIAG-DEP"
+    NOT_APPLICABLE_WITH_REASON:
+      - "ART-ASYNCAPI"
+      - "ART-DIAG-AGENT"
+      - "ART-AGENT-SPEC"
+
+  HIGH_CRITICAL:
+    REQUIRED:
+      - "ART-CAP-MANIFEST"
+      - "ART-CAP-SPEC"
+      - "ART-USE-CASE"
+      - "ART-NFR-SPEC"
+      - "ART-COMP-DESIGN"
+      - "ART-ERR-CAT"
+      - "ART-THREAT-MODEL"
+      - "ART-SEC-REQ"
+      - "ART-DIAG-TM"
+      - "ART-TEST-PLAN"
+      - "ART-TEST-SCEN"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+      - "ART-OBS-SLO"
+      - "ART-RUNBOOK"
+      - "ART-INC-REC"
+    RECOMMENDED:
+      - "ART-BUS-RULE"
+      - "ART-WORKFLOW"
+      - "ART-ADR"
+      - "ART-DIAG-C4"
+      - "ART-DIAG-SEQ"
+    CONDITIONAL:
+      - "ART-OPENAPI"
+      - "ART-ASYNCAPI"
+      - "ART-DATA-CONTRACT"
+      - "ART-DATA-MODEL"
+      - "ART-DB-DESIGN"
+      - "ART-AUTHZ-MATRIX"
+      - "ART-AGENT-SPEC"
+      - "ART-DEPLOY-DESC"
+      - "ART-DIAG-ERD"
+      - "ART-DIAG-DFD"
+      - "ART-DIAG-DEP"
+      - "ART-DIAG-AGENT"
+    NOT_APPLICABLE_WITH_REASON: []
+
+signal_overrides:
+  - signal: "handles_auth_or_rbac"
+    enforce_minimum_tier: "HIGH_CRITICAL"
+    required_artifacts:
+      - "ART-THREAT-MODEL"
+      - "ART-SEC-REQ"
+      - "ART-AUTHZ-MATRIX"
+      - "ART-DIAG-TM"
+      - "ART-OPENAPI"
+      - "ART-ERR-CAT"
+      - "ART-DIAG-SEQ"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+    rationale: "Authentication, session, JWT, and RBAC logic carry critical privilege escalation and bypass risks."
+
+  - signal: "handles_user_or_financial_data"
+    enforce_minimum_tier: "MEDIUM"
+    required_artifacts:
+      - "ART-BUS-RULE"
+      - "ART-DATA-CONTRACT"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+    rationale: "Financial market prices, OHLCV precision, and sensitive user records require strict decimal, contract, and verification traceability."
+
+  - signal: "external_exposure"
+    enforce_minimum_tier: "HIGH_CRITICAL"
+    required_artifacts:
+      - "ART-THREAT-MODEL"
+      - "ART-SEC-REQ"
+      - "ART-DIAG-TM"
+      - "ART-OPENAPI"
+      - "ART-ERR-CAT"
+      - "ART-OBS-SLO"
+    rationale: "Externally exposed endpoints and ingress adapters enlarge the untrusted attack surface."
+
+  - signal: "schema_or_db_migration"
+    enforce_minimum_tier: "MEDIUM"
+    required_artifacts:
+      - "ART-DATA-MODEL"
+      - "ART-DB-DESIGN"
+      - "ART-DIAG-ERD"
+      - "ART-RUNBOOK"
+      - "ART-INC-REC"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+    rationale: "Persistent storage changes require clear key/index contracts, safe DDL evolution, and deterministic rollback plans."
+
+  - signal: "realtime_or_event_streaming"
+    enforce_minimum_tier: "HIGH_CRITICAL"
+    required_artifacts:
+      - "ART-ASYNCAPI"
+      - "ART-DATA-CONTRACT"
+      - "ART-DIAG-DFD"
+      - "ART-ERR-CAT"
+      - "ART-OBS-SLO"
+      - "ART-INC-REC"
+      - "ART-RUNBOOK"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+    rationale: "Streaming ingestion and event pipelines require explicit envelope schemas, partitioning keys, lag/freshness SLIs, DLQ rules, and replay recovery."
+
+  - signal: "agent_write_capable_tools"
+    enforce_minimum_tier: "HIGH_CRITICAL"
+    required_artifacts:
+      - "ART-AGENT-SPEC"
+      - "ART-DIAG-AGENT"
+      - "ART-THREAT-MODEL"
+      - "ART-SEC-REQ"
+      - "ART-AUTHZ-MATRIX"
+      - "ART-DIAG-TM"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+    rationale: "Autonomous agent tools capable of state mutation require explicit human-approval rules, permission matrices, loop budgets, and evaluation harnesses."
+
+  - signal: "cross_plane_dependencies"
+    enforce_minimum_tier: "MEDIUM"
+    required_artifacts:
+      - "ART-NFR-SPEC"
+      - "ART-DIAG-C4"
+      - "ART-TRACEABILITY"
+    rationale: "Cross-plane interfaces require explicit contract ownership and dependency impact tracking."
+
+plane_overrides:
+  intelligence-plane:
+    additional_required_if_agent_capability:
+      - "ART-AGENT-SPEC"
+      - "ART-DIAG-AGENT"
+  application-plane:
+    recommended_for_http_capabilities:
+      - "ART-OPENAPI"
+      - "ART-ERR-CAT"
+  data-plane:
+    recommended_for_pipeline_capabilities:
+      - "ART-DATA-CONTRACT"
+      - "ART-DIAG-DFD"
+
+scenario_profiles:
+  - scenario_id: "SCEN-UI-READONLY"
+    description: "Simple read-only frontend UI component displaying verified read API fields."
+    expected_tier: "LOW"
+    signals:
+      handles_auth_or_rbac: false
+      handles_user_or_financial_data: false
+      external_exposure: false
+      schema_or_db_migration: false
+      realtime_or_event_streaming: false
+      agent_write_capable_tools: false
+      cross_plane_dependencies: false
+    required_artifacts:
+      - "ART-CAP-MANIFEST"
+      - "ART-CAP-SPEC"
+      - "ART-COMP-DESIGN"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+    waived_with_reason_artifacts:
+      - "ART-DATA-MODEL"
+      - "ART-DB-DESIGN"
+      - "ART-DIAG-ERD"
+      - "ART-ASYNCAPI"
+      - "ART-THREAT-MODEL"
+      - "ART-AGENT-SPEC"
+      - "ART-INC-REC"
+
+  - scenario_id: "SCEN-AUTH-RBAC"
+    description: "Authentication or authorization/RBAC change."
+    expected_tier: "HIGH_CRITICAL"
+    signals:
+      handles_auth_or_rbac: true
+      handles_user_or_financial_data: true
+      external_exposure: true
+      schema_or_db_migration: false
+      realtime_or_event_streaming: false
+      agent_write_capable_tools: false
+      cross_plane_dependencies: false
+    minimum_additional_required:
+      - "ART-THREAT-MODEL"
+      - "ART-SEC-REQ"
+      - "ART-AUTHZ-MATRIX"
+      - "ART-DIAG-TM"
+      - "ART-OPENAPI"
+      - "ART-ERR-CAT"
+      - "ART-DIAG-SEQ"
+
+  - scenario_id: "SCEN-DB-MIGRATION"
+    description: "Database schema migration across transactional or analytical storage."
+    expected_tier: "MEDIUM"
+    signals:
+      handles_auth_or_rbac: false
+      handles_user_or_financial_data: false
+      external_exposure: false
+      schema_or_db_migration: true
+      realtime_or_event_streaming: false
+      agent_write_capable_tools: false
+      cross_plane_dependencies: false
+    minimum_additional_required:
+      - "ART-DATA-MODEL"
+      - "ART-DB-DESIGN"
+      - "ART-DIAG-ERD"
+      - "ART-RUNBOOK"
+      - "ART-INC-REC"
+
+  - scenario_id: "SCEN-REALTIME-STREAMING"
+    description: "Real-time market data streaming ingestion or Kafka fan-out pipeline."
+    expected_tier: "HIGH_CRITICAL"
+    signals:
+      handles_auth_or_rbac: false
+      handles_user_or_financial_data: true
+      external_exposure: false
+      schema_or_db_migration: false
+      realtime_or_event_streaming: true
+      agent_write_capable_tools: false
+      cross_plane_dependencies: true
+    minimum_additional_required:
+      - "ART-ASYNCAPI"
+      - "ART-DATA-CONTRACT"
+      - "ART-BUS-RULE"
+      - "ART-DIAG-DFD"
+      - "ART-OBS-SLO"
+      - "ART-INC-REC"
+
+  - scenario_id: "SCEN-AGENT-WRITE-TOOL"
+    description: "AI agent tool capable of mutating state or triggering write actions."
+    expected_tier: "HIGH_CRITICAL"
+    signals:
+      handles_auth_or_rbac: false
+      handles_user_or_financial_data: false
+      external_exposure: false
+      schema_or_db_migration: false
+      realtime_or_event_streaming: false
+      agent_write_capable_tools: true
+      cross_plane_dependencies: true
+    minimum_additional_required:
+      - "ART-AGENT-SPEC"
+      - "ART-DIAG-AGENT"
+      - "ART-THREAT-MODEL"
+      - "ART-SEC-REQ"
+      - "ART-AUTHZ-MATRIX"
+      - "ART-DIAG-TM"
+
+non_capability_scope_baselines:
+  platform:
+    REQUIRED:
+      - "ART-ROOT-README"
+      - "ART-PROD-BRIEF"
+      - "ART-SYS-REQS"
+      - "ART-ARCH-DESC"
+      - "ART-DIAG-C4"
+      - "ART-DEPLOY-DESC"
+      - "ART-DIAG-DEP"
+  plane:
+    REQUIRED:
+      - "ART-ROOT-README"
+      - "ART-ARCH-DESC"
+      - "ART-DIAG-C4"
+      - "ART-TEST-PLAN"
+  domain:
+    REQUIRED:
+      - "ART-ROOT-README"
+      - "ART-DOM-SPEC"
+      - "ART-GLOSSARY"
