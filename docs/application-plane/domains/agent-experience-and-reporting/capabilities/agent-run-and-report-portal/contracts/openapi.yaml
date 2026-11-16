@@ -1,0 +1,75 @@
+openapi: "3.1.0"
+info:
+  title: "Agent Run & Report Portal API (CAP-APP-AGT-001)"
+  version: "2.0.0"
+  description: "AS-IS FastAPI routes under /api/v1/agents and /api/v1/reports (zero auth Depends AS-IS)."
+servers:
+  - url: "http://127.0.0.1:8000"
+    description: "Unified FastAPI Gateway"
+paths:
+  /api/v1/agents/runs:
+    get:
+      operationId: agents_list_runs
+      summary: "List recent investigation runs from runtime.agent_runs in reverse chronological order"
+      security: []
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 20 } }
+      responses:
+        "200": { description: "Run summary list" }
+    post:
+      operationId: agents_create_run
+      summary: "Trigger MarketInvestigationWorkflow inline (returns 202 after synchronous completion)"
+      security: []
+      parameters:
+        - { name: Idempotency-Key, in: header, required: false, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                symbol: { type: string, default: BTCUSDT }
+                prompt_summary: { type: string }
+                trigger_mode: { type: string, default: ON_DEMAND }
+      responses:
+        "202": { description: "Run acceptance and synchronous execution counts" }
+  /api/v1/agents/runs/{run_id}:
+    get:
+      operationId: agents_get_run_status
+      summary: "Retrieve full AgentWorkflowState visited nodes, token count, evidence trail, and final report"
+      security: []
+      parameters:
+        - { name: run_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Detailed run state" }
+        "404": { description: "ERR_AGENT_RUN_NOT_FOUND" }
+  /api/v1/agents/runs/{run_id}/events:
+    get:
+      operationId: agents_stream_run_events
+      summary: "Replay evidence trail as SSE tool_invocation and run_completed events"
+      security: []
+      parameters:
+        - { name: run_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "text/event-stream" }
+        "404": { description: "ERR_AGENT_RUN_NOT_FOUND" }
+  /api/v1/reports:
+    get:
+      operationId: reports_list
+      summary: "List verified structured analysis reports with optional symbol filter"
+      security: []
+      parameters:
+        - { name: symbol, in: query, schema: { type: string } }
+      responses:
+        "200": { description: "Report summary array" }
+  /api/v1/reports/{run_id}:
+    get:
+      operationId: reports_get_by_run_id
+      summary: "Retrieve full quantitative evidence, anomalies, provenance citations & disclaimer"
+      security: []
+      parameters:
+        - { name: run_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Structured analysis report" }
+        "404": { description: "ERR_REPORT_NOT_FOUND" }

@@ -1,0 +1,107 @@
+schema_version: "2.0.0"
+capability_id: "CAP-APP-AGT-001"
+name: "Agent Run & Report Portal"
+plane: "application-plane"
+domain: "agent-experience-and-reporting"
+owner_role: "fullstack-engineer"
+accountable_role: "ai-engineer"
+risk_tier: "MEDIUM"
+risk_signals:
+  handles_auth_or_rbac: false
+  handles_user_or_financial_data: false
+  external_exposure: false
+  schema_or_db_migration: false
+  realtime_or_event_streaming: false
+  agent_write_capable_tools: false
+  cross_plane_dependencies: true
+  exposes_http_api: true
+scope: "Exposes agent investigation triggers with idempotency, run history/status inspection, SSE step event replay, verified structured analysis report retrieval, and the AiWorkspaceModule UI."
+in_scope:
+  - "/api/v1/agents/runs, /runs/{run_id}, /runs/{run_id}/events"
+  - "/api/v1/reports, /reports/{run_id}"
+  - "frontend/src/modules/ai-workspace/AiWorkspaceModule.ts"
+  - "frontend/src/services/api/agent.service.ts"
+out_of_scope:
+  - "Internal 5-node AI investigation workflow & 10-tool governance (CAP-INT-ORC-001)"
+dependencies:
+  capabilities: ["CAP-INT-ORC-001"]
+  shared_contracts:
+    - "docs/application-plane/shared-contracts/error-catalog.md"
+  external_systems: []
+authoritative_documents:
+  - "README.md"
+  - "requirements/capability-specification.md"
+  - "design/component-design.md"
+related_contracts:
+  - "contracts/openapi.yaml"
+  - "contracts/error-catalog.md"
+required_artifacts:
+  - artifact_id: "ART-CAP-MANIFEST"
+    path: "capability.yaml"
+    applicability: "REQUIRED"
+    status: "PRESENT"
+  - artifact_id: "ART-CAP-SPEC"
+    path: "requirements/capability-specification.md"
+    applicability: "REQUIRED"
+    status: "PRESENT"
+  - artifact_id: "ART-NFR-SPEC"
+    path: "requirements/nfr.md"
+    applicability: "REQUIRED"
+    status: "PRESENT"
+  - artifact_id: "ART-USE-CASE"
+    path: "use-cases/uc-agt-001-trigger-and-stream-agent-run.md"
+    applicability: "RECOMMENDED"
+    status: "PRESENT"
+  - artifact_id: "ART-COMP-DESIGN"
+    path: "design/component-design.md"
+    applicability: "REQUIRED"
+    status: "PRESENT"
+  - artifact_id: "ART-OPENAPI"
+    path: "contracts/openapi.yaml"
+    applicability: "CONDITIONAL"
+    status: "PRESENT"
+  - artifact_id: "ART-ERR-CAT"
+    path: "contracts/error-catalog.md"
+    applicability: "CONDITIONAL"
+    status: "PRESENT"
+  - artifact_id: "ART-DIAG-C4"
+    path: "docs/application-plane/architecture/diagrams/application-c4-container.md"
+    applicability: "REQUIRED"
+    status: "PRESENT"
+  - artifact_id: "ART-DIAG-SEQ"
+    path: "workflows/agent-run-portal-sequence.md"
+    applicability: "RECOMMENDED"
+    status: "PRESENT"
+  - artifact_id: "ART-TEST-PLAN"
+    path: "docs/application-plane/operations/test-plan.md"
+    applicability: "REQUIRED"
+    status: "PRESENT"
+  - artifact_id: "ART-TEST-SCEN"
+    path: "quality/test-scenarios.md"
+    applicability: "REQUIRED"
+    status: "PRESENT"
+  - artifact_id: "ART-TEST-CASES"
+    path: "quality/test-cases.yaml"
+    applicability: "REQUIRED"
+    status: "PRESENT"
+  - artifact_id: "ART-TRACEABILITY"
+    path: "quality/traceability.yaml"
+    applicability: "REQUIRED"
+    status: "PRESENT"
+  - artifact_id: "ART-RUNBOOK"
+    path: "docs/application-plane/operations/runbook.md"
+    applicability: "REQUIRED"
+    status: "PRESENT"
+document_status: "IN_REVIEW"
+implementation_status: "PARTIALLY_IMPLEMENTED"
+code_paths:
+  - "src/serving/api/modules/agent_api/presentation/router.py"
+  - "src/serving/api/modules/reporting/presentation/router.py"
+  - "frontend/src/modules/ai-workspace/AiWorkspaceModule.ts"
+  - "frontend/src/services/api/agent.service.ts"
+test_paths:
+  - "tests/integration/test_three_planes_framework.py"
+open_questions:
+  - "OPEN-AGT-001: Execute agent runs in async worker queue & stream incremental SSE live instead of await-before-202."
+  - "OPEN-AGT-002: Remove hardcoded node-duration fallbacks in frontend agent.service.ts."
+updated_at: "2026-11-16"

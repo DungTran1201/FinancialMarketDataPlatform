@@ -1,0 +1,11 @@
+schema_version: "2.0.0"
+capability_id: "CAP-APP-CAT-001"
+cases:
+  - test_case_id: "TC-CAT-001"
+    title: "Upsert and list monitored instrument config and query freshness lags"
+    test_path: "tests/integration/test_three_planes_framework.py"
+    execution_mode: "IN_PROCESS_FASTAPI_TESTCLIENT"
+  - test_case_id: "TC-CAT-002"
+    title: "Trigger ad-hoc lakehouse pipeline from Catalog router"
+    test_path: "tests/integration/test_three_planes_framework.py"
+    execution_mode: "IN_PROCESS_FASTAPI_TESTCLIENT"

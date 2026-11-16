@@ -1,0 +1,64 @@
+openapi: "3.1.0"
+info:
+  title: "Instrument & Data Catalog API (CAP-APP-CAT-001)"
+  version: "2.0.0"
+  description: "AS-IS FastAPI routes under /api/v1/catalog (zero auth Depends AS-IS)."
+servers:
+  - url: "http://127.0.0.1:8000"
+    description: "Unified FastAPI Gateway"
+paths:
+  /api/v1/catalog/instruments:
+    get:
+      operationId: catalog_list_instruments
+      summary: "List monitored instruments from runtime.monitored_instruments dict"
+      security: []
+      responses:
+        "200": { description: "Array of MonitoredInstrumentConfig objects" }
+  /api/v1/catalog/instruments/{symbol}:
+    put:
+      operationId: catalog_upsert_instrument
+      summary: "Create or update monitored instrument in process memory (zero DB write AS-IS)"
+      security: []
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider: { type: string, default: binance }
+                enabled_streams: { type: array, items: { type: string }, default: ["trade", "kline_1m", "ticker"] }
+                is_active: { type: boolean, default: true }
+      responses:
+        "200": { description: "Updated instrument config" }
+  /api/v1/catalog/freshness:
+    get:
+      operationId: catalog_get_freshness
+      summary: "Report hot Redis vs ClickHouse lag across monitored instruments"
+      security: []
+      parameters:
+        - name: provider
+          in: query
+          schema: { type: string, default: binance }
+      responses:
+        "200": { description: "Freshness report list with staleness_threshold_ms meta" }
+  /api/v1/catalog/lakehouse/pipeline:
+    post:
+      operationId: catalog_run_lakehouse_pipeline
+      summary: "Run ad-hoc Bronze archive, Silver klines merge, and DQ gate check"
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                batch_id: { type: string, default: bot_batch }
+      responses:
+        "200": { description: "Pipeline execution and DQ gate summary" }

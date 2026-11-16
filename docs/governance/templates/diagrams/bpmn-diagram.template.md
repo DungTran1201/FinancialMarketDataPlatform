@@ -35,7 +35,7 @@ Use for multi-actor business or operational workflows with explicit swimlane han
 
 ---
 
-# Diagram: `<Workflow Name> (BPMN)`
+# Diagram: `<Workflow Name> (Swimlane Workflow)`
 
 ## 1. Diagram Metadata `[REQUIRED]`
 
@@ -45,7 +45,7 @@ Use for multi-actor business or operational workflows with explicit swimlane han
 | **Title & Purpose** | `<Title — One-sentence workflow scope>` |
 | **Owner Role & Scope** | `<owner-role> / <capability>` |
 | **Authoritative Source** | `[<Workflow Spec Title>](<relative/path/to/workflow.md>)` (`<DOC-ID>`) |
-| **Notation** | `Mermaid flowchart TB (BPMN 2.0.2 Swimlanes)` (Optional companion: `<workflow>.bpmn`) |
+| **Notation** | `Mermaid Swimlane-style Flowchart (flowchart TB; non-BPMN 2.0.2)` *or* `Formal BPMN 2.0.2 XML` (`<workflow>.bpmn`) |
 | **Version & Status** | `<X.Y.Z> — <DRAFT|IN_REVIEW|APPROVED|DEPRECATED>` |
 
 ## 2. Diagram `[REQUIRED]`

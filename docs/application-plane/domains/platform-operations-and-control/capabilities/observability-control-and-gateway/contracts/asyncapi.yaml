@@ -1,0 +1,66 @@
+asyncapi: "3.0.0"
+info:
+  title: "Observability Live Telemetry Stream (WebSocket & SSE)"
+  version: "2.0.0"
+  description: >
+    Bidirectional WebSocket (/ws/v1/observability/stream) and unidirectional SSE (/api/v1/observability/stream)
+    protocols implemented in src/serving/api/gateway/observability.py.
+channels:
+  observabilityWsStream:
+    address: "/ws/v1/observability/stream"
+    messages:
+      wsSnapshot: { $ref: "#/components/messages/SnapshotMsg" }
+      wsTrace: { $ref: "#/components/messages/TraceMsg" }
+      wsHeartbeat: { $ref: "#/components/messages/HeartbeatMsg" }
+      wsPing: { $ref: "#/components/messages/PingMsg" }
+      wsPong: { $ref: "#/components/messages/PongMsg" }
+  observabilitySseStream:
+    address: "/api/v1/observability/stream"
+    messages:
+      sseSnapshot: { $ref: "#/components/messages/SnapshotMsg" }
+      sseTrace: { $ref: "#/components/messages/TraceMsg" }
+      sseHeartbeat: { $ref: "#/components/messages/HeartbeatMsg" }
+operations:
+  sendStreamEvents:
+    action: send
+    channel: { $ref: "#/channels/observabilityWsStream" }
+  receiveClientPing:
+    action: receive
+    channel: { $ref: "#/channels/observabilityWsStream" }
+components:
+  messages:
+    SnapshotMsg:
+      payload:
+        type: object
+        required: [type, overview]
+        properties:
+          type: { type: string, const: "snapshot" }
+          overview: { type: object }
+    TraceMsg:
+      payload:
+        type: object
+        required: [type, trace]
+        properties:
+          type: { type: string, const: "trace" }
+          trace: { type: object }
+    HeartbeatMsg:
+      payload:
+        type: object
+        required: [type, overview]
+        properties:
+          type: { type: string, const: "heartbeat" }
+          overview: { type: object }
+    PingMsg:
+      payload:
+        type: object
+        required: [type]
+        properties:
+          type: { type: string, const: "ping" }
+          timestamp: { type: string }
+    PongMsg:
+      payload:
+        type: object
+        required: [type]
+        properties:
+          type: { type: string, const: "pong" }
+          timestamp: { type: string }

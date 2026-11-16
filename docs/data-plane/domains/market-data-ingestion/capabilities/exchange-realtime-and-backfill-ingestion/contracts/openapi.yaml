@@ -1,0 +1,76 @@
+openapi: "3.1.0"
+info:
+  title: "Binance Spot Public Client Contract (Consumed by CAP-DP-ING-001)"
+  version: "1.0.0"
+  description: >
+    Documents the exact upstream Binance Spot v3 HTTP contract consumed by
+    ProductionExchangeHistoricalCollector (src/ingestion/providers/binance/rest_client.py)
+    and mirrored by build_deterministic_exchange_asgi_app().
+servers:
+  - url: "https://api.binance.com"
+    description: "TARGET production Binance REST base URL (used only when use_embedded_asgi_transport=False)."
+  - url: "asgi://embedded-exchange-simulator"
+    description: "AS-IS default in-memory FastAPI exchange simulator (rest_client.py:22-99)."
+paths:
+  /api/v3/exchangeInfo:
+    get:
+      operationId: binance_get_exchange_info
+      summary: "Discover monitored trading pair filters (PRICE_FILTER, LOT_SIZE, NOTIONAL)"
+      security: []
+      responses:
+        "200":
+          description: "Exchange metadata with X-MBX-USED-WEIGHT-1M header (+10 weight)"
+          headers:
+            X-MBX-USED-WEIGHT-1M:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [symbols]
+                properties:
+                  symbols:
+                    type: array
+                    items: { type: object }
+  /api/v3/klines:
+    get:
+      operationId: binance_get_historical_klines
+      summary: "Fetch paginated OHLCV candlestick tuples [open_ts, o, h, l, c, v, close_ts, q_vol, trades, ...]"
+      security: []
+      parameters:
+        - name: symbol
+          in: query
+          required: true
+          schema: { type: string, example: "BTCUSDT" }
+        - name: interval
+          in: query
+          required: true
+          schema: { type: string, example: "1m" }
+        - name: startTime
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+        - name: endTime
+          in: query
+          required: true
+          schema: { type: integer, format: int64 }
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, maximum: 500, default: 500 }
+      responses:
+        "200":
+          description: "Array of 12-element Binance kline tuples (+2 weight)"
+          headers:
+            X-MBX-USED-WEIGHT-1M:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+        "429":
+          description: "Exchange rate limit exceeded; honors Retry-After header."
+        "418":
+          description: "IP auto-ban rate limit response."

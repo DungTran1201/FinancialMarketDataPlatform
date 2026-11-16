@@ -1,0 +1,272 @@
+schema_version: "2.0.0"
+doc_id: "GOV-MIG-INV2-001"
+title: "Phase 2 Verified Implementation Inventory"
+baseline_branch: "docs-v2/phase-2-project-documentation"
+baseline_commit: "7880c85"
+audited_at: "2026-11-16"
+
+components:
+  - component_id: "CMP-SHD-001"
+    name: "Shared Config, Domain Primitives, Event Contracts & Observability"
+    plane: "platform"
+    domain: "cross-plane-foundation"
+    responsibility: "Provides environment settings, immutable value objects (InstrumentKey, DecimalPrice, BoundedTimeRange), quant math, canonical EventEnvelopeV1/KafkaTopic/dataset contracts, crypto/WAF/rate-limiter primitives, Prometheus metrics, and 10-timestamp tracing."
+    source_paths:
+      - "src/shared/config/settings.py"
+      - "src/shared/domain/primitives.py"
+      - "src/shared/domain/quant.py"
+      - "src/shared/contracts/events/market_events.py"
+      - "src/shared/contracts/schemas/datasets.py"
+      - "src/shared/security/primitives.py"
+      - "src/shared/observability/metrics.py"
+      - "src/shared/observability/tracing.py"
+    entrypoint: "Imported by all planes as shared kernel (no standalone process)"
+    inputs: ["Environment variables", "Raw market decimals/timestamps", "IP addresses & URLs"]
+    outputs: ["PlatformConfig", "EventEnvelopeV1", "AES-256-GCM/HMAC tokens", "OpenMetrics text", "EventLifecycleTrace"]
+    dependencies: ["pydantic/stdlib/cryptography/prometheus_client"]
+    external_integrations: []
+    persistence: "In-memory deque (max_traces=2000) & sliding-window rate-limit buckets"
+    test_coverage:
+      - "tests/architecture/test_clean_architecture_boundaries.py"
+      - "tests/unit/test_domain_and_quant.py"
+      - "tests/unit/test_security_and_defense.py"
+      - "tests/contract/test_contracts_and_guardrails.py"
+      - "tests/contract/test_topic_and_dataset_contracts.py"
+    runtime_mode: "IN_PROCESS_PURE_LIBRARY"
+    error_handling: "Raises DomainError, QueryRangeExceededError, StaleDataError, SecurityViolationError, RateLimitExceededError, ValueError"
+    security_boundaries: ["DomainHttpsEndpointPolicy allowed hosts", "Hardcoded default jwt_secret_key fallback in settings.py:34", "WAF regexes inspect path+query only"]
+    implementation_status: "IMPLEMENTED"
+    evidence: "src/shared/*.py; verified by in-process unit, contract & AST tests"
+
+  - component_id: "CMP-DP-ING-001"
+    name: "Exchange Normalizer, REST Backfill & WebSocket Gap Collector"
+    plane: "data-plane"
+    domain: "market-data-ingestion"
+    responsibility: "Normalizes Binance JSON trade/kline/ticker/depth20 payloads into EventEnvelopeV1 or DeadLetterEnvelopeV1, executes paginated REST kline backfill with weight rate limiting, detects WS kline gaps, and persists watermarks."
+    source_paths:
+      - "src/ingestion/domain/models.py"
+      - "src/ingestion/domain/ports.py"
+      - "src/ingestion/application/rate_limiter.py"
+      - "src/ingestion/application/backfill_service.py"
+      - "src/ingestion/application/ws_service.py"
+      - "src/ingestion/infrastructure/watermark_store.py"
+      - "src/ingestion/providers/binance/normalizer.py"
+      - "src/ingestion/providers/binance/rest_client.py"
+      - "src/ingestion/entrypoints/ws_collector.py"
+      - "src/ingestion/entrypoints/rest_backfill.py"
+    entrypoint: "Called in-process via DataPlatformV01Pipeline & PlatformRuntimeContainer (ws_collector.py & rest_backfill.py main() exit immediately)"
+    inputs: ["Raw Binance WS dict frames", "Backfill request parameters (symbol, interval, time window)"]
+    outputs: ["EventEnvelopeV1", "DeadLetterEnvelopeV1", "ExchangeSymbolMetadata", "SQLite ingestion_watermarks rows"]
+    dependencies: ["CMP-SHD-001", "CMP-DP-STR-001"]
+    external_integrations:
+      - "Binance REST https://api.binance.com (embedded ASGI sim active by default; live HTTP unused unless use_embedded_asgi_transport=False)"
+      - "Binance WS wss://stream.binance.com:9443/ws (NOT_IMPLEMENTED in src/)"
+    persistence: "SQLite WAL file .local_storage/control_watermarks.db (schema differs from deploy/postgres/init/01_schema.sql)"
+    test_coverage:
+      - "tests/unit/test_domain_and_quant.py"
+      - "tests/resilience/test_gap_recovery_and_dlq.py"
+      - "tests/e2e/test_data_platform_v01_e2e.py"
+    runtime_mode: "EMBEDDED_ASGI_SIMULATOR + LOCAL_SQLITE + STUB_WORKER_ENTRYPOINTS"
+    error_handling: "Routes normalization errors to DeadLetterEnvelopeV1; REST retries HTTP 429/418/>=500 with backoff; SequenceAndGapDetector triggers BACKFILLING watermark"
+    security_boundaries: ["Outbound HTTPS Binance public endpoints only (no authenticated private exchange endpoints implemented)"]
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    evidence: "src/ingestion/providers/binance/rest_client.py:108-120; entrypoints/{ws_collector,rest_backfill}.py; watermark_store.py"
+
+  - component_id: "CMP-DP-STR-001"
+    name: "Kafka Partitioned Event Broker & DLQ Bus"
+    plane: "data-plane"
+    domain: "event-streaming"
+    responsibility: "Routes EventEnvelopeV1 events across 6 canonical topics partitioned by provider:symbol with manual per-consumer-group offset commits and DeadLetterEnvelopeV1 isolation."
+    source_paths:
+      - "src/streaming/contracts/topics.py"
+      - "src/streaming/infrastructure/kafka_broker.py"
+      - "deploy/kafka/topics-init.sh"
+    entrypoint: "PartitionedEventStreamingBroker invoked in-process by ingestion, streaming consumers & lakehouse orchestration"
+    inputs: ["EventEnvelopeV1", "DeadLetterEnvelopeV1", "Consumer group poll/commit calls"]
+    outputs: ["Partitioned topic records", "Consumer lag metrics", "Cluster snapshot"]
+    dependencies: ["CMP-SHD-001"]
+    external_integrations:
+      - "Apache Kafka kafka:9092 (ConfluentKafkaStreamingAdapter lazy producer exists but uninstantiated in src/; zero confluent_kafka Consumer loops)"
+    persistence: "In-memory _topics lists + optional JSON committed-offset file"
+    test_coverage:
+      - "tests/contract/test_topic_and_dataset_contracts.py"
+      - "tests/integration/test_three_planes_framework.py"
+      - "tests/resilience/test_gap_recovery_and_dlq.py"
+    runtime_mode: "IN_PROCESS_PARTITIONED_BROKER"
+    error_handling: "Drops duplicate event_ids when deduplicate_events=True; routes malformed messages to market.dlq.v1 partition 0"
+    security_boundaries: ["Internal data_plane_net plaintext Kafka listener defined in compose; not active in runtime"]
+    implementation_status: "SIMULATED"
+    evidence: "src/streaming/infrastructure/kafka_broker.py:64-370"
+
+  - component_id: "CMP-DP-STR-002"
+    name: "Hot Redis Projector, ClickHouse Batch Sink & Statistical Anomaly Detector"
+    plane: "data-plane"
+    domain: "event-streaming"
+    responsibility: "Maintains monotonic latest price/snapshot/orderbook hot state, deduplicating OHLCV/trade/ticker OLAP tables & quant stats, and evaluates rolling z-score anomalies with 15m cooldown."
+    source_paths:
+      - "src/streaming/consumers/hot_redis.py"
+      - "src/streaming/consumers/analytics_ch.py"
+      - "src/streaming/consumers/anomaly_detector.py"
+      - "deploy/clickhouse/init/01_schema.sql"
+    entrypoint: "Called in-process by DataPlatformV01Pipeline & PlatformRuntimeContainer (hot_redis.py & analytics_ch.py main() exit immediately)"
+    inputs: ["EventEnvelopeV1 records", "Numeric price/return series"]
+    outputs: ["Hot price/snapshot/orderbook dicts", "Aggregated stats & rolled-up klines", "DetectedMarketAnomaly -> market.anomalies.v1"]
+    dependencies: ["CMP-SHD-001", "CMP-DP-STR-001"]
+    external_integrations:
+      - "Redis 7 (Lua script defined; _redis_client always None in runtime; snapshot/orderbook keys un-synced)"
+      - "ClickHouse 24.3 (_clickhouse_client stored but unused anywhere)"
+    persistence: "Python in-memory dicts + optional JSON snapshots (.klines only in ClickHouseBatchSink)"
+    test_coverage:
+      - "tests/integration/test_three_planes_framework.py"
+      - "tests/integration/test_realtime_observability_dashboard.py"
+      - "tests/resilience/test_gap_recovery_and_dlq.py"
+    runtime_mode: "IN_PROCESS_MEMORY_SIMULATION + STUB_WORKER_ENTRYPOINTS"
+    error_handling: "HotStateProjector drops stale timestamps; AnomalyDetector suppresses alerts inside 900s cooldown; ClickHouse sink deduplicates by ReplacingMergeTree version"
+    security_boundaries: ["Least-privilege ClickHouse/Redis roles configured in .env.example & deploy SQL; unenforced in Python sim"]
+    implementation_status: "SIMULATED"
+    evidence: "src/streaming/consumers/{hot_redis,analytics_ch,anomaly_detector}.py"
+
+  - component_id: "CMP-DP-LAK-001"
+    name: "Medallion Lakehouse (Bronze/Silver/Gold), DQ Gates, Lineage & 12-Stage Pipeline"
+    plane: "data-plane"
+    domain: "lakehouse-analytics"
+    responsibility: "Writes atomic ZSTD Bronze Parquet, merges into deduplicated Silver Parquet with hand-rolled Iceberg v2 manifests, runs blocking DQ rules, computes Gold Decimal marts, tracks 12-node lineage, and orchestrates DataPlatformV01Pipeline."
+    source_paths:
+      - "src/lakehouse/bronze/archiver.py"
+      - "src/lakehouse/bronze/consumer.py"
+      - "src/lakehouse/silver/merge_engine.py"
+      - "src/lakehouse/gold/mart_engine.py"
+      - "src/lakehouse/gold/dbt/models/marts/fct_daily_market_summary.sql"
+      - "src/lakehouse/quality/gates.py"
+      - "src/lakehouse/catalog/lineage.py"
+      - "src/lakehouse/orchestration/pipeline.py"
+    entrypoint: "DataPlatformV01Pipeline.run_end_to_end_pipeline() / step_realtime_tick_and_collect_telemetry() (bronze/consumer.py main() stub exits)"
+    inputs: ["Polled Kafka EventEnvelopeV1 batches", "Silver klines/trades Parquet"]
+    outputs: ["Local ZSTD Parquet files (.local_lakehouse/)", "Custom Iceberg JSON manifests & version-hint.text", "DQ validation report", "Lineage catalog"]
+    dependencies: ["CMP-SHD-001", "CMP-DP-ING-001", "CMP-DP-STR-001", "CMP-DP-STR-002"]
+    external_integrations:
+      - "MinIO S3 / Iceberg REST catalog / PySpark / Great Expectations / live dbt runtime (NOT_IMPLEMENTED in Python runtime)"
+    persistence: "Local filesystem .local_lakehouse/{bronze,silver,gold}/"
+    test_coverage:
+      - "tests/data_quality/test_medallion_quality_gates.py"
+      - "tests/e2e/test_data_platform_v01_e2e.py"
+    runtime_mode: "LOCAL_DISK_PARQUET_AND_CUSTOM_JSON_MANIFESTS"
+    error_handling: "Atomic temp-file + replace() writes; QualityGateBlockedError / can_promote_to_gold=False blocks Gold promotion on DQ failures"
+    security_boundaries: ["Filesystem path construction only; MINIO_ENDPOINT vs MINIO_ENDPOINT_URL env mismatch in compose"]
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    evidence: "src/lakehouse/{bronze,silver,gold,quality,catalog,orchestration}/*.py"
+
+  - component_id: "CMP-APP-IAM-001"
+    name: "IAM Security, JWT/API Key Issuance & Edge Defense Middleware"
+    plane: "application-plane"
+    domain: "identity-and-access"
+    responsibility: "Provides defense-in-depth HTTP middleware (Host check, path/query WAF, sliding-window rate limit, IP HMAC/AES-GCM headers, security headers) and IAM auth routes (/auth/{token,verify,revoke,api-keys,domains})."
+    source_paths:
+      - "src/serving/api/modules/iam/domain/ports.py"
+      - "src/serving/api/modules/iam/domain/security.py"
+      - "src/serving/api/modules/iam/presentation/router.py"
+      - "src/serving/api/services/iam.py"
+      - "deploy/nginx/nginx.conf"
+      - "deploy/postgres/init/01_schema.sql"
+    entrypoint: "install_security_defense_middleware() & build_iam_security_router() mounted at /api/v1/auth"
+    inputs: ["HTTP requests", "POST /auth/token credentials", "POST /auth/verify token", "POST /auth/revoke hash"]
+    outputs: ["HS256 JWT bundle", "SHA-256 ephemeral API keys", "Security headers", "400/401/403/429 error envelopes"]
+    dependencies: ["CMP-SHD-001"]
+    external_integrations: ["PostgreSQL users table declared in DDL but unqueried in code"]
+    persistence: "In-memory _revoked_token_hashes set and _buckets rate-limit dict; API keys unpersisted"
+    test_coverage:
+      - "tests/unit/test_security_and_defense.py"
+    runtime_mode: "IN_MEMORY_STATELESS_NO_USER_DB"
+    error_handling: "400 untrusted host, 403 WAF regex, 429 rate limit, 422 invalid input, 401 verify failure"
+    security_boundaries: ["CRITICAL GAPS SEC-AUDIT-001..005: self-verified /auth/token, unguarded /api-keys & /revoke, zero Depends auth on all API routes, XFF IP spoofing, default JWT secret"]
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    evidence: "src/serving/api/modules/iam/presentation/router.py:28-307; domain/{ports,security}.py"
+
+  - component_id: "CMP-APP-API-001"
+    name: "FastAPI Monolith Gateway, Domain Modules, Observability & Microservice Wrappers"
+    plane: "application-plane"
+    domain: "market-experience-and-catalog / platform-operations-and-control"
+    responsibility: "Exposes HTTP REST/SSE/WS endpoints for Market, Historical, Analytics, Catalog, Platform Config, Agent API, Reporting, Data Platform v0.1, Observability, and Microservice Registry dispatch backed by PlatformRuntimeContainer."
+    source_paths:
+      - "src/serving/api/main.py"
+      - "src/serving/infrastructure/runtime.py"
+      - "src/serving/api/gateway/service.py"
+      - "src/serving/api/gateway/registry.py"
+      - "src/serving/api/gateway/observability.py"
+      - "src/serving/api/services/*.py"
+      - "src/serving/api/modules/{market,historical,analytics,catalog,platform_config,agent_api,reporting}/**"
+    entrypoint: "uvicorn src.serving.api.main:app (port 8000) or 7 create_*_microservice_app factories (ports 8001-8007)"
+    inputs: ["HTTP/REST JSON payloads & query/path params", "WS frames on /ws/v1/observability/stream"]
+    outputs: ["JSON data/meta envelopes", "SSE streams", "Prometheus /metrics text", "WS trace/heartbeat frames"]
+    dependencies: ["CMP-SHD-001", "CMP-DP-ING-001", "CMP-DP-STR-001", "CMP-DP-STR-002", "CMP-DP-LAK-001", "CMP-APP-IAM-001", "CMP-INT-ORC-001"]
+    external_integrations: ["TCP port probes in runtime.probe_external_infrastructure()"]
+    persistence: "In-memory dicts on PlatformRuntimeContainer + delegates SQLite watermarks & local lakehouse"
+    test_coverage:
+      - "tests/contract/test_contracts_and_guardrails.py"
+      - "tests/integration/test_realtime_observability_dashboard.py"
+      - "tests/integration/test_three_planes_framework.py"
+      - "tests/e2e/test_data_platform_v01_e2e.py"
+      - "tests/performance/test_100_bots_data_plane_swarm.py"
+    runtime_mode: "IN_PROCESS_MODULAR_MONOLITH (+ OPTIONAL ISOLATED ASGI WRAPPERS)"
+    error_handling: "Explicit 404/422 JSON detail dicts; HTTP 202 routes execute synchronously via await; orderbook missing returns static bids/asks; unguarded datetime.fromisoformat in historical/klines"
+    security_boundaries: ["All domain & gateway endpoints lack Bearer/API-key auth guards (SEC-AUDIT-003)"]
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    evidence: "src/serving/api/main.py:51-206; gateway/*.py; modules/*/presentation/router.py; infrastructure/runtime.py"
+
+  - component_id: "CMP-APP-FE-001"
+    name: "Frontend Experience SPA (Vite + TypeScript)"
+    plane: "application-plane"
+    domain: "market-experience-and-catalog / platform-operations-and-control / agent-experience-and-reporting"
+    responsibility: "Hash-routed SPA providing 6 screens (#/dashboard, #/data-flow, #/market-analytics, #/data-management, #/ai-workspace, #/administration) consuming REST APIs and SSE/WS observability streams."
+    source_paths:
+      - "frontend/package.json"
+      - "frontend/vite.config.ts"
+      - "frontend/index.html"
+      - "frontend/src/main.ts"
+      - "frontend/src/app/**"
+      - "frontend/src/modules/**"
+      - "frontend/src/components/**"
+      - "frontend/src/services/**"
+      - "frontend/src/stores/**"
+      - "deploy/docker/Dockerfile.frontend"
+    entrypoint: "Vite dev server (:3000) or Nginx SPA image (:3000, mapped :3001 in compose)"
+    inputs: ["User UI interactions", "FastAPI REST JSON", "SSE /api/v1/observability/stream"]
+    outputs: ["Interactive charts/DAGs/tables/drawers", "HTTP REST API calls"]
+    dependencies: ["CMP-APP-API-001", "CMP-APP-IAM-001"]
+    external_integrations: ["Edge Nginx / Vite proxy to backend-api:8000"]
+    persistence: "localStorage fmdp_access_token & fmdp_user_profile (defaults to client-side quant_admin persona)"
+    test_coverage:
+      - "frontend/tests/formatters.test.js (local copy only, zero src/ imports)"
+      - "frontend/tests/router.test.js (local array only, zero src/ imports)"
+    runtime_mode: "BROWSER_SPA_WITH_PARTIAL_FALLBACKS"
+    error_handling: "Try/catch in several loaders swallows errors silently; no unauthorized UI state or login modal; AuthService getApiKeys/revokeApiKey mismatch backend routes"
+    security_boundaries: ["Client-side default ADMIN profile without server session; SSE/WS connect without Authorization header"]
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    evidence: "frontend/src/**; frontend/vite.config.ts; frontend/tests/*.test.js"
+
+  - component_id: "CMP-INT-ORC-001"
+    name: "Intelligence Plane Workflow Orchestrator, Tool Gateway & Citation Validator"
+    plane: "intelligence-plane"
+    domain: "agent-orchestration-and-tools"
+    responsibility: "Executes deterministic 5-node investigation workflow, enforces 10-tool RBAC whitelist/bounds/timeouts with UUID provenance, validates report citations, and persists in-memory reports."
+    source_paths:
+      - "src/intelligence/workflows/investigation.py"
+      - "src/intelligence/orchestrator/graph.py"
+      - "src/intelligence/tools/contracts.py"
+      - "src/intelligence/tools/gateway.py"
+      - "src/intelligence/reporting/validator.py"
+      - "src/intelligence/main.py"
+    entrypoint: "PlatformRuntimeContainer.execute_agent_investigation() (src/intelligence/main.py worker stub exits immediately)"
+    inputs: ["AgentWorkflowState (symbol, prompt_summary, trigger_mode)", "Tool execution requests"]
+    outputs: ["Completed AgentWorkflowState", "ToolExecutionEnvelope provenance records", "StructuredAnalysisReport"]
+    dependencies: ["CMP-SHD-001", "CMP-DP-STR-002"]
+    external_integrations: ["Real LangGraph/OpenAI/LLM providers NOT_IMPLEMENTED (DeterministicMockLLMAdapter only)"]
+    persistence: "In-memory runtime.agent_runs & runtime.reports dicts (Postgres agent_runs/agent_tool_invocations DDL unused)"
+    test_coverage:
+      - "tests/contract/test_contracts_and_guardrails.py"
+      - "tests/integration/test_three_planes_framework.py"
+    runtime_mode: "IN_PROCESS_DETERMINISTIC_MOCK_LLM"
+    error_handling: "Whitelist & RBAC raise UnauthorizedToolAccessError; row cap raises ToolQueryLimitExceededError; unmonitored symbol sets status=FAILED; invalid citation raises ReportProvenanceError"
+    security_boundaries: ["ControlledToolGateway RBAC & row limits implemented; DETECT_ANOMALIES & GENERATE_ANALYSIS_REPORT cause in-memory write side effects while contract leaves is_read_only_market_data=True"]
+    implementation_status: "PARTIALLY_IMPLEMENTED"
+    evidence: "src/intelligence/{workflows,orchestrator,tools,reporting}/*.py; src/serving/infrastructure/runtime.py:401-589"

@@ -43,7 +43,7 @@ Authors MUST NOT generate every diagram type for every feature. Diagram selectio
 | **C4 Container** | C4 Level 2 | `flowchart TB` / `C4Container` | Plane runtime processes, stores, and protocol boundaries | `<plane>/architecture/` |
 | **C4 Component** | C4 Level 3 | `flowchart TB` / `C4Component` | Complex capabilities with >=3 internal modules or strict DAG layers | `<capability>/design/` |
 | **Deployment** | C4 Deployment / Topology | `flowchart TB` | Capabilities adding containers, network zones, ports, or infra tiers | `<plane>/operations/` or `<capability>/operations/` |
-| **BPMN Swimlane** | BPMN 2.0.2 | `flowchart TB` (actor subgraphs) or BPMN 2.0 XML | Multi-actor workflows with handoffs, gateways, or SLA boundaries | `<capability>/workflows/` |
+| **Workflow Swimlane / BPMN** | Formal BPMN 2.0.2 XML *or* Mermaid Swimlane-style Flowchart | `.bpmn` XML (strict BPMN 2.0.2) or `flowchart TB` with actor subgraphs (MUST explicitly label notation as `Mermaid Swimlane-style Flowchart`, NOT full BPMN 2.0.2 compliance) | Multi-actor workflows with handoffs, gateways, or SLA boundaries | `<capability>/workflows/` |
 | **UML Use Case** | UML 2.5.1 | `flowchart LR` | Capabilities with multiple human/system actor roles & boundary scopes | `<capability>/use-cases/` |
 | **UML Sequence** | UML 2.5.1 | `sequenceDiagram` | Multi-step sync/async runtime calls, retries, fallbacks, or auth flows | `<capability>/design/` or `workflows/` |
 | **UML State Machine** | UML 2.5.1 | `stateDiagram-v2` | Entities/jobs/runs with >=3 stateful transitions or failure states | `<capability>/design/` |
@@ -61,7 +61,7 @@ Every diagram file MUST contain YAML frontmatter plus a Diagram Metadata table s
 2. **Diagram ID**: Unique `DIAG-<SCOPE>-NNN` matching `^[A-Z][A-Z0-9-]*[A-Z0-9]$`.
 3. **Owner & Scope**: `owner_role` and `scope_level` (`platform | plane | domain | capability`).
 4. **Authoritative Source Document (`source_of_truth.authoritative_source`)**: Exact file path(s) and `doc_id` from which the diagram is derived.
-5. **Notation**: Exact notation (`Mermaid flowchart`, `Mermaid sequenceDiagram`, `Mermaid stateDiagram-v2`, `Mermaid erDiagram`, or `BPMN 2.0.2 XML`).
+5. **Notation**: Exact notation (`Mermaid Swimlane-style Flowchart`, `Mermaid flowchart`, `Mermaid sequenceDiagram`, `Mermaid stateDiagram-v2`, `Mermaid erDiagram`, or `Formal BPMN 2.0.2 XML` — never label a Mermaid subgraph flowchart as full BPMN 2.0.2 compliance).
 6. **Legend**: Explicit legend defining node shapes, line styles (sync vs. async, `AS-IS` vs. `TARGET`), and trust boundary boxes whenever mixed states or edge types appear.
 7. **Version & Status**: Must match frontmatter `version` and `status` (`DRAFT | IN_REVIEW | APPROVED | DEPRECATED`).
 

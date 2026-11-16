@@ -1,0 +1,132 @@
+openapi: "3.1.0"
+info:
+  title: "IAM & Edge Security API (CAP-APP-IAM-001)"
+  version: "2.0.0"
+  description: >
+    Exact AS-IS FastAPI routes under /api/v1/auth (src/serving/api/modules/iam/presentation/router.py).
+    Note: Bearer authentication dependencies are NOT_IMPLEMENTED AS-IS on any route below.
+servers:
+  - url: "http://127.0.0.1:8000"
+    description: "Unified FastAPI Gateway (main.py)"
+  - url: "http://127.0.0.1:8005"
+    description: "Standalone IAM Microservice (services/iam.py)"
+paths:
+  /api/v1/auth/token:
+    post:
+      operationId: iam_issue_jwt_access_token
+      summary: "Issue HS256 IP-bound JWT access token (AS-IS self-hashes input password without DB lookup)"
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string, minLength: 3 }
+                password: { type: string, minLength: 8 }
+                role: { type: string, enum: [viewer, analyst, operator, admin, service], default: analyst }
+      responses:
+        "200":
+          description: "Token bundle with SHA-256 hash and IP HMAC binding"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      access_token: { type: string }
+                      token_type: { type: string, example: "bearer" }
+                      expires_in: { type: integer }
+                      jti: { type: string }
+                      token_sha256_hash: { type: string }
+                      bound_ip_hash: { type: string }
+                      issuer: { type: string }
+                  meta: { type: object }
+        "401":
+          description: "Credential verification failed"
+        "422":
+          description: "Invalid username/password length or UserRole enum"
+        "429":
+          description: "AUTH rate limit exceeded (10 req/min)"
+  /api/v1/auth/verify:
+    post:
+      operationId: iam_verify_jwt_access_token
+      summary: "Verify JWT signature, expiry, in-memory revocation set, and client IP binding"
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [access_token]
+              properties:
+                access_token: { type: string }
+      responses:
+        "200":
+          description: "Verified token claims and role capabilities"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      valid: { type: boolean }
+                      subject: { type: string }
+                      role: { type: string }
+                      capabilities: { type: array, items: { type: string } }
+                      jti: { type: string }
+                      token_sha256_hash: { type: string }
+                      ip_hash: { type: string }
+                      expires_at: { type: integer }
+        "401":
+          description: "Invalid signature, expired, revoked, or IP mismatch"
+  /api/v1/auth/revoke:
+    post:
+      operationId: iam_revoke_jwt_token
+      summary: "Revoke JWT token or SHA-256 hash in ephemeral process memory (AS-IS: unauthenticated)"
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token_or_sha256_hash]
+              properties:
+                token_or_sha256_hash: { type: string }
+      responses:
+        "200":
+          description: "Token SHA-256 hash added to in-memory revocation set"
+  /api/v1/auth/api-keys:
+    post:
+      operationId: iam_create_scoped_api_key
+      summary: "Generate transient fmdp_live_* API key (AS-IS: unauthenticated & unpersisted; GET/DELETE unimplemented)"
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role: { type: string, enum: [viewer, analyst, operator, admin, service], default: service }
+      responses:
+        "200":
+          description: "One-time API key metadata (unpersisted AS-IS)"
+        "422":
+          description: "Invalid UserRole enum"
+  /api/v1/auth/domains:
+    get:
+      operationId: iam_get_https_domain_topology
+      summary: "Return configured HTTPS origins and HMAC-masked internal container endpoints"
+      security: []
+      responses:
+        "200":
+          description: "Public HTTPS URLs and masked backend bindings"

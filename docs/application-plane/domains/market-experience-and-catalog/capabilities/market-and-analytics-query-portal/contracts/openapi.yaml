@@ -1,0 +1,237 @@
+openapi: "3.1.0"
+info:
+  title: "Market, Historical & Quantitative Analytics API (CAP-APP-MKT-001)"
+  version: "2.0.0"
+  description: "AS-IS endpoints mounted at /api/v1/market, /api/v1/historical, and /api/v1/analytics (zero auth Depends AS-IS)."
+servers:
+  - url: "http://127.0.0.1:8000"
+    description: "Unified FastAPI Gateway"
+paths:
+  /api/v1/market/prices/{symbol}:
+    get:
+      operationId: market_get_symbol_price
+      summary: "Get latest price from Redis hot state with ClickHouse OLAP fallback"
+      security: []
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema: { type: string }
+        - name: provider
+          in: query
+          schema: { type: string, default: binance }
+      responses:
+        "200": { description: "Quote DTO with Decimal string price, age_ms, is_stale" }
+        "404": { description: "ERR_SYMBOL_NOT_FOUND" }
+  /api/v1/market/prices:
+    get:
+      operationId: market_get_batch_prices
+      summary: "Batch latest prices for comma-separated symbols"
+      security: []
+      parameters:
+        - name: symbols
+          in: query
+          schema: { type: string, default: "BTCUSDT,ETHUSDT,SOLUSDT" }
+        - name: provider
+          in: query
+          schema: { type: string, default: binance }
+      responses:
+        "200": { description: "Array of quote DTOs" }
+  /api/v1/market/snapshots/{symbol}:
+    get:
+      operationId: market_get_symbol_snapshot
+      summary: "24h ticker snapshot from Redis or ClickHouse fallback"
+      security: []
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema: { type: string }
+        - name: provider
+          in: query
+          schema: { type: string, default: binance }
+      responses:
+        "200": { description: "Snapshot payload and meta.source" }
+        "404": { description: "ERR_SNAPSHOT_NOT_FOUND" }
+  /api/v1/market/orderbook/{symbol}:
+    get:
+      operationId: market_get_symbol_orderbook
+      summary: "L2 depth (AS-IS returns static bids/asks when missing from hot cache)"
+      security: []
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema: { type: string }
+        - name: provider
+          in: query
+          schema: { type: string, default: binance }
+        - name: depth
+          in: query
+          schema: { type: integer, minimum: 5, maximum: 20, default: 20 }
+      responses:
+        "200": { description: "Orderbook bids/asks" }
+  /api/v1/market/ingest:
+    post:
+      operationId: market_ingest_raw_event
+      summary: "Synchronously normalize, validate DLQ, and write Kafka/Redis/ClickHouse before 202"
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object }
+      responses:
+        "202": { description: "INGESTED or ROUTED_TO_DLQ" }
+  /api/v1/market/evict/{symbol}:
+    post:
+      operationId: market_evict_hot_symbol
+      summary: "Evict symbol keys from hot cache to test OLAP fallback (unauthenticated AS-IS)"
+      security: []
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema: { type: string }
+        - name: provider
+          in: query
+          schema: { type: string, default: binance }
+      responses:
+        "200": { description: "EVICTED_FROM_HOT_REDIS" }
+  /api/v1/historical/klines/{symbol}:
+    get:
+      operationId: historical_get_klines
+      summary: "Query ClickHouse OHLCV candles bounded by BoundedTimeRange"
+      security: []
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema: { type: string }
+        - name: provider
+          in: query
+          schema: { type: string, default: binance }
+        - name: interval
+          in: query
+          schema: { type: string, default: "1m" }
+        - name: start_time
+          in: query
+          schema: { type: string }
+        - name: end_time
+          in: query
+          schema: { type: string }
+        - name: max_window_days
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 365, default: 30 }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 100 }
+      responses:
+        "200": { description: "Decimal-string kline records" }
+        "422": { description: "ERR_INVALID_TIME_RANGE" }
+  /api/v1/historical/trades/{symbol}:
+    get:
+      operationId: historical_get_trades
+      summary: "Query historical trades (reads private clickhouse_sink._trades_table)"
+      security: []
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 100 }
+      responses:
+        "200": { description: "Trade array" }
+  /api/v1/historical/backfill-jobs:
+    post:
+      operationId: historical_trigger_backfill_job
+      summary: "Synchronously execute backfill collector and return 202 COMPLETED (hardcoded MOCKED_SIMULATED_EXCHANGE_REST)"
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                symbol: { type: string, default: BTCUSDT }
+                provider: { type: string, default: binance }
+                interval: { type: string, default: "1m" }
+                candle_count: { type: integer, default: 10 }
+                start_time: { type: string }
+      responses:
+        "202": { description: "Backfill job record" }
+  /api/v1/historical/backfill-jobs/{job_id}:
+    get:
+      operationId: historical_get_backfill_job
+      summary: "Retrieve in-memory backfill job record"
+      security: []
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: "Job metadata" }
+        "404": { description: "ERR_JOB_NOT_FOUND" }
+  /api/v1/analytics/statistics/{symbol}:
+    get:
+      operationId: analytics_get_symbol_statistics
+      summary: "Retrieve VWAP, realized volatility & volumes (window echoed but ignored by OLAP compute)"
+      security: []
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema: { type: string }
+        - name: provider
+          in: query
+          schema: { type: string, default: binance }
+        - name: window
+          in: query
+          schema: { type: string, default: "24h" }
+      responses:
+        "200": { description: "Quant summary" }
+        "404": { description: "ERR_ANALYTICS_NOT_FOUND" }
+  /api/v1/analytics/correlations:
+    get:
+      operationId: analytics_get_correlations
+      summary: "Compute pairwise Pearson correlation matrix across close price arrays"
+      security: []
+      parameters:
+        - name: symbols
+          in: query
+          schema: { type: string, default: "BTCUSDT,ETHUSDT,SOLUSDT" }
+      responses:
+        "200": { description: "Pairwise correlation matrix" }
+  /api/v1/analytics/anomalies:
+    get:
+      operationId: analytics_list_anomalies
+      summary: "List detected anomalies from ephemeral in-memory queue"
+      security: []
+      parameters:
+        - name: symbol
+          in: query
+          schema: { type: string }
+      responses:
+        "200": { description: "Anomaly items" }
+  /api/v1/analytics/anomalies/evaluate:
+    post:
+      operationId: analytics_evaluate_anomalies
+      summary: "Evaluate numeric series for Z-score spikes and publish if triggered"
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider: { type: string, default: binance }
+                symbol: { type: string, default: BTCUSDT }
+                values: { type: array, items: { type: number } }
+                detector_name: { type: string, default: return_zscore }
+      responses:
+        "200": { description: "Evaluation summary" }
