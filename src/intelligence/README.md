@@ -1,14 +1,15 @@
 # Intelligence Subsystem (`src/intelligence/`)
 
-Owns **Plane C (Isolated Agentic Intelligence)**: read-only quantitative investigation orchestration, governance policies, workflow state machines, and provenance-enforced report validation (`ADR-006`).
+Owns **Plane C (Intelligence Plane)**: quantitative market investigation orchestration, workflow state schema, deterministic `ControlledToolGateway` mediation, and citation provenance validation (`ADR-INT-0001`, `ADR-OVR-003`).
+
+> **`AS-IS` Runtime Note**: `MarketIntelligenceGraph` executes a pure Python `while` loop (no `langgraph` imports) using `DeterministicMockLLMAdapter`, invoked synchronously inline by `PlatformRuntimeContainer.execute_agent_investigation()` with in-memory state. `main.py` (`agent-worker`) currently logs configuration and exits without polling PostgreSQL or Kafka.
 
 ## Subpackages
 
 | Directory | Responsibility | Key Invariants |
 |---|---|---|
-| `orchestrator/` | `MarketIntelligenceGraph` and `DeterministicMockLLMAdapter` | Drives structured 5-node analytical execution. |
-| `workflows/` | `WORKFLOW_NODES` and `AgentWorkflowState` | Tracks step transitions and collected evidence envelopes. |
-| `tools/` | `ApprovedAgentTool`, `ToolGovernancePolicy`, and `ControlledToolGateway` (`BR-004`, `CTRL-001`) | Whitelist-only, read-only tool dispatch, RBAC, and bounded row limits. |
-| `reporting/` | `ReportValidator` and `ReportProvenanceError` (`CTRL-002`) | Rejects reports citing unverified or fabricated `invocation_id`s. |
-| `main.py` | `agent-worker` background service entrypoint | Polls control queue & writes provenance-audited reports. |
-
+| `orchestrator/` | `MarketIntelligenceGraph` and `DeterministicMockLLMAdapter` | Drives 5-node investigation loop (`AS-IS` pure Python + mock LLM). |
+| `workflows/` | `WORKFLOW_NODES` and `AgentWorkflowState` | Tracks step transitions, `can_continue_planning()` budgets, and `evidence_trail`. |
+| `tools/` | `ApprovedAgentTool`, `APPROVED_TOOL_POLICIES`, and `ControlledToolGateway` | Whitelist-only 10-tool dispatch, RBAC, row limits, `asyncio.wait_for` timeouts, and in-memory `_audit_log`. |
+| `reporting/` | `ReportValidator` and `ReportProvenanceError` | Rejects reports with empty citations or fabricated `invocation_id`s. |
+| `main.py` | `agent-worker` CLI entrypoint | Logs `PlatformConfig` agent settings and exits (`AS-IS` stub). |

@@ -1,0 +1,309 @@
+schema_version: "2.0.0"
+contract_id: "INT-CTR-TOOLS-001"
+title: "Controlled Tool Gateway — 10 Approved Agent Tool Contracts"
+plane: "intelligence-plane"
+owner_role: "ai-engineer"
+accountable_role: "security-architect"
+document_status: "DRAFT"
+implementation_status: "PARTIALLY_IMPLEMENTED"
+updated_at: "2026-11-16"
+source_code_references:
+  - "src/intelligence/tools/contracts.py"
+  - "src/intelligence/tools/gateway.py"
+  - "src/serving/infrastructure/runtime.py"
+
+provenance_metadata_schema:
+  fields:
+    invocation_id: "string (UUIDv4 generated per gateway call)"
+    tool_name: "ApprovedAgentTool enum string"
+    source_store: "string (policy.backing_store)"
+    symbol: "string (upper-cased params.symbol or MULTI)"
+    window_start: "ISO-8601 UTC datetime (params.start_time or now_utc)"
+    window_end: "ISO-8601 UTC datetime (params.end_time or now_utc)"
+    row_count: "integer (result_data.row_count, default 1)"
+    executed_at: "ISO-8601 UTC datetime"
+
+tools:
+  - tool_name: "get_latest_price"
+    purpose: "Retrieve latest spot price and staleness status for a symbol."
+    permission: "market:read"
+    declared_backing_store: "redis_with_clickhouse_fallback"
+    actual_backing_store: "PlatformRuntimeContainer.latest_price_handler (in-memory HotStateProjector with ClickHouseBatchSink fallback)"
+    read_write_classification: "READ"
+    max_rows_or_periods: 1
+    timeout_seconds: 1.5
+    side_effects: "None"
+    idempotency_requirement: "Inherently idempotent read"
+    input_schema:
+      type: "object"
+      properties:
+        symbol: { type: "string", default: "BTCUSDT" }
+    output_schema:
+      type: "object"
+      required: ["symbol", "last_price", "is_stale", "row_count"]
+      properties:
+        symbol: { type: "string" }
+        last_price: { type: "string" }
+        source: { type: "string" }
+        is_stale: { type: "boolean" }
+        age_ms: { type: "integer" }
+        row_count: { type: "integer" }
+    error_conditions:
+      - "UnauthorizedToolAccessError (missing market:read)"
+      - "ToolQueryLimitExceededError (limit > 1)"
+      - "asyncio.TimeoutError (> 1.5s)"
+
+  - tool_name: "get_market_snapshot"
+    purpose: "Retrieve 24h market ticker snapshot from hot cache."
+    permission: "market:read"
+    declared_backing_store: "redis_with_clickhouse_fallback"
+    actual_backing_store: "PlatformRuntimeContainer.hot_redis_projector.get_hot_snapshot() (in-memory dict; no ClickHouse fallback in handler)"
+    read_write_classification: "READ"
+    max_rows_or_periods: 1
+    timeout_seconds: 2.0
+    side_effects: "None"
+    idempotency_requirement: "Inherently idempotent read"
+    input_schema:
+      type: "object"
+      properties:
+        symbol: { type: "string", default: "BTCUSDT" }
+    output_schema:
+      type: "object"
+      required: ["symbol", "snapshot", "row_count"]
+      properties:
+        symbol: { type: "string" }
+        snapshot: { type: "object" }
+        row_count: { type: "integer" }
+    error_conditions:
+      - "UnauthorizedToolAccessError (missing market:read)"
+      - "ToolQueryLimitExceededError (limit > 1)"
+      - "asyncio.TimeoutError (> 2.0s)"
+
+  - tool_name: "get_historical_candles"
+    purpose: "Retrieve bounded OHLCV historical candles over a 7-day lookback window."
+    permission: "historical:read"
+    declared_backing_store: "clickhouse_agent_ro"
+    actual_backing_store: "PlatformRuntimeContainer.clickhouse_sink.query_klines() (in-memory OLAP sink)"
+    read_write_classification: "READ"
+    max_rows_or_periods: 500
+    timeout_seconds: 5.0
+    side_effects: "None"
+    idempotency_requirement: "Inherently idempotent read"
+    input_schema:
+      type: "object"
+      properties:
+        symbol: { type: "string", default: "BTCUSDT" }
+        interval: { type: "string", default: "1m" }
+        limit: { type: "integer", default: 60, maximum: 500 }
+    output_schema:
+      type: "object"
+      required: ["symbol", "interval", "candle_count", "latest_close", "row_count"]
+      properties:
+        symbol: { type: "string" }
+        interval: { type: "string" }
+        candle_count: { type: "integer" }
+        latest_close: { type: "string" }
+        row_count: { type: "integer" }
+    error_conditions:
+      - "UnauthorizedToolAccessError (missing historical:read)"
+      - "ToolQueryLimitExceededError (limit > 500)"
+      - "asyncio.TimeoutError (> 5.0s)"
+
+  - tool_name: "get_market_statistics"
+    purpose: "Retrieve aggregated VWAP, base volume, and trade count for a symbol."
+    permission: "analytics:read"
+    declared_backing_store: "clickhouse_mv_agent_ro"
+    actual_backing_store: "PlatformRuntimeContainer.clickhouse_sink.compute_aggregated_statistics()"
+    read_write_classification: "READ"
+    max_rows_or_periods: 1
+    timeout_seconds: 5.0
+    side_effects: "None"
+    idempotency_requirement: "Inherently idempotent read"
+    input_schema:
+      type: "object"
+      properties:
+        symbol: { type: "string", default: "BTCUSDT" }
+    output_schema:
+      type: "object"
+      required: ["symbol", "vwap", "total_base_volume", "trade_count", "row_count"]
+      properties:
+        symbol: { type: "string" }
+        vwap: { type: "string" }
+        total_base_volume: { type: "string" }
+        trade_count: { type: "integer" }
+        row_count: { type: "integer" }
+    error_conditions:
+      - "UnauthorizedToolAccessError (missing analytics:read)"
+      - "ToolQueryLimitExceededError (limit > 1)"
+      - "asyncio.TimeoutError (> 5.0s)"
+
+  - tool_name: "calculate_returns"
+    purpose: "Compute deterministic cumulative and mean log returns over close prices."
+    permission: "analytics:read"
+    declared_backing_store: "clickhouse_agent_ro_deterministic_math"
+    actual_backing_store: "clickhouse_sink.compute_aggregated_statistics() + shared.domain.quant.compute_deterministic_log_returns() (falls back to static 3-price list if empty)"
+    read_write_classification: "READ"
+    max_rows_or_periods: 720
+    timeout_seconds: 5.0
+    side_effects: "None"
+    idempotency_requirement: "Deterministic pure math over input series"
+    input_schema:
+      type: "object"
+      properties:
+        symbol: { type: "string", default: "BTCUSDT" }
+        lookback_periods: { type: "integer", maximum: 720 }
+    output_schema:
+      type: "object"
+      required: ["symbol", "sample_size", "cumulative_log_return", "mean_log_return", "row_count"]
+      properties:
+        symbol: { type: "string" }
+        sample_size: { type: "integer" }
+        cumulative_log_return: { type: "number" }
+        mean_log_return: { type: "number" }
+        row_count: { type: "integer" }
+    error_conditions:
+      - "UnauthorizedToolAccessError (missing analytics:read)"
+      - "ToolQueryLimitExceededError (lookback_periods > 720)"
+      - "asyncio.TimeoutError (> 5.0s)"
+
+  - tool_name: "calculate_volatility"
+    purpose: "Compute deterministic annualized realized volatility over close prices."
+    permission: "analytics:read"
+    declared_backing_store: "clickhouse_agent_ro_deterministic_math"
+    actual_backing_store: "clickhouse_sink.compute_aggregated_statistics() + shared.domain.quant.compute_deterministic_realized_volatility()"
+    read_write_classification: "READ"
+    max_rows_or_periods: 720
+    timeout_seconds: 5.0
+    side_effects: "None"
+    idempotency_requirement: "Deterministic pure math over input series"
+    input_schema:
+      type: "object"
+      properties:
+        symbol: { type: "string", default: "BTCUSDT" }
+        lookback_periods: { type: "integer", maximum: 720 }
+    output_schema:
+      type: "object"
+      required: ["symbol", "realized_volatility_annualized", "row_count"]
+      properties:
+        symbol: { type: "string" }
+        realized_volatility_annualized: { type: "number" }
+        row_count: { type: "integer" }
+    error_conditions:
+      - "UnauthorizedToolAccessError (missing analytics:read)"
+      - "ToolQueryLimitExceededError (lookback_periods > 720)"
+      - "asyncio.TimeoutError (> 5.0s)"
+
+  - tool_name: "calculate_correlation"
+    purpose: "Compute deterministic Pearson correlation between two symbols."
+    permission: "analytics:read"
+    declared_backing_store: "clickhouse_agent_ro_deterministic_math"
+    actual_backing_store: "clickhouse_sink.compute_aggregated_statistics() + shared.domain.quant.compute_deterministic_pearson_correlation()"
+    read_write_classification: "READ"
+    max_rows_or_periods: 2160
+    timeout_seconds: 8.0
+    side_effects: "None"
+    idempotency_requirement: "Deterministic pure math over symbol pair"
+    input_schema:
+      type: "object"
+      properties:
+        symbols:
+          type: "array"
+          items: { type: "string" }
+          default: ["BTCUSDT", "ETHUSDT"]
+    output_schema:
+      type: "object"
+      required: ["pair", "pearson_correlation", "row_count"]
+      properties:
+        pair: { type: "string" }
+        pearson_correlation: { type: "number" }
+        row_count: { type: "integer" }
+    error_conditions:
+      - "UnauthorizedToolAccessError (missing analytics:read)"
+      - "ToolQueryLimitExceededError (limit > 2160)"
+      - "asyncio.TimeoutError (> 8.0s)"
+
+  - tool_name: "detect_anomalies"
+    purpose: "Evaluate Z-score price anomaly for a symbol and record detected anomalies."
+    permission: "analytics:read"
+    declared_backing_store: "clickhouse_agent_ro_deterministic_math"
+    actual_backing_store: "clickhouse_sink + PlatformRuntimeContainer.anomaly_detector.evaluate_series() + self.detected_anomalies.append()"
+    read_write_classification: "READ_WITH_STATEFUL_SIDE_EFFECT"
+    max_rows_or_periods: 168
+    timeout_seconds: 5.0
+    side_effects: "Appends AnomalyEvent to runtime.detected_anomalies and mutates anomaly_detector cooldown map when triggered."
+    idempotency_requirement: "Cooldown-throttled (900s) in anomaly_detector; no explicit idempotency key"
+    input_schema:
+      type: "object"
+      properties:
+        symbol: { type: "string", default: "BTCUSDT" }
+        lookback_periods: { type: "integer", maximum: 168 }
+    output_schema:
+      type: "object"
+      required: ["symbol", "anomaly_detected", "z_score", "row_count"]
+      properties:
+        symbol: { type: "string" }
+        anomaly_detected: { type: "boolean" }
+        z_score: { type: "number" }
+        row_count: { type: "integer" }
+    error_conditions:
+      - "UnauthorizedToolAccessError (missing analytics:read)"
+      - "ToolQueryLimitExceededError (lookback_periods > 168)"
+      - "asyncio.TimeoutError (> 5.0s)"
+
+  - tool_name: "get_data_freshness"
+    purpose: "Check Redis/ClickHouse staleness lag against market_staleness_threshold_ms."
+    permission: "market:read"
+    declared_backing_store: "redis_and_clickhouse_metadata"
+    actual_backing_store: "PlatformRuntimeContainer.latest_price_handler.handle() age_ms check"
+    read_write_classification: "READ"
+    max_rows_or_periods: 1
+    timeout_seconds: 3.0
+    side_effects: "None"
+    idempotency_requirement: "Inherently idempotent read"
+    input_schema:
+      type: "object"
+      properties:
+        symbol: { type: "string", default: "BTCUSDT" }
+    output_schema:
+      type: "object"
+      required: ["symbol", "redis_lag_ms", "clickhouse_lag_ms", "is_healthy", "row_count"]
+      properties:
+        symbol: { type: "string" }
+        redis_lag_ms: { type: "integer" }
+        clickhouse_lag_ms: { type: "integer" }
+        is_healthy: { type: "boolean" }
+        row_count: { type: "integer" }
+    error_conditions:
+      - "UnauthorizedToolAccessError (missing market:read)"
+      - "ToolQueryLimitExceededError (limit > 1)"
+      - "asyncio.TimeoutError (> 3.0s)"
+
+  - tool_name: "generate_analysis_report"
+    purpose: "Persist a citation-validated StructuredAnalysisReport keyed by run_id."
+    permission: "agent:trigger"
+    declared_backing_store: "postgres_agent_rw"
+    actual_backing_store: "PlatformRuntimeContainer.reports[run_id] (in-memory dict)"
+    read_write_classification: "WRITE"
+    max_rows_or_periods: 1
+    timeout_seconds: 3.0
+    side_effects: "Mutates runtime.reports[run_id] (overwrites if run_id already exists). Note: ToolGovernancePolicy.is_read_only_market_data erroneously defaults to True."
+    idempotency_requirement: "Keyed by run_id (last-write-wins overwrite in dict; TARGET requires PostgreSQL UPSERT or insert-once guard)"
+    input_schema:
+      type: "object"
+      required: ["symbol", "report"]
+      properties:
+        symbol: { type: "string" }
+        report: { type: "object" }
+    output_schema:
+      type: "object"
+      required: ["persisted_run_id", "citation_count", "row_count"]
+      properties:
+        persisted_run_id: { type: "string" }
+        citation_count: { type: "integer" }
+        row_count: { type: "integer" }
+    error_conditions:
+      - "UnauthorizedToolAccessError (missing agent:trigger)"
+      - "ToolQueryLimitExceededError (limit > 1)"
+      - "KeyError / ValueError on malformed provenance_citations"
+      - "asyncio.TimeoutError (> 3.0s)"
+

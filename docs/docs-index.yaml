@@ -1,6 +1,6 @@
 schema_version: "2.0.0"
-documentation_phase: "PHASE_1_FOUNDATION"
-phase_2_started: false
+documentation_phase: "PHASE_2_ACTIVE"
+phase_2_started: true
 repository: "DungTran1201/FinancialMarketDataPlatform"
 updated_at: "2026-11-16"
 root_entrypoint: "docs/README.md"
@@ -20,7 +20,7 @@ governance:
 
 planes:
   - id: "data-plane"
-    status: "RESERVED_PHASE_2"
+    status: "ACTIVE"
     target_root: "docs/data-plane"
     owner_role: "data-architect"
     code_roots:
@@ -29,7 +29,7 @@ planes:
       - "src/lakehouse"
       - "src/shared/contracts"
   - id: "application-plane"
-    status: "RESERVED_PHASE_2"
+    status: "ACTIVE"
     target_root: "docs/application-plane"
     owner_role: "system-architect"
     code_roots:
@@ -37,14 +37,14 @@ planes:
       - "frontend"
       - "src/shared/security"
   - id: "intelligence-plane"
-    status: "RESERVED_PHASE_2"
+    status: "ACTIVE"
     target_root: "docs/intelligence-plane"
     owner_role: "ai-engineer"
     code_roots:
       - "src/intelligence"
 
 overview:
-  status: "RESERVED_PHASE_2"
+  status: "ACTIVE"
   target_root: "docs/overview"
   owner_role: "system-architect"
 

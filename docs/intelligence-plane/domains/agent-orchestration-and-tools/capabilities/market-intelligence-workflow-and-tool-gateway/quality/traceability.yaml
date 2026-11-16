@@ -1,0 +1,94 @@
+schema_version: "2.0.0"
+capability_id: "CAP-INT-ORC-001"
+owner_role: "qa-lead"
+document_status: "DRAFT"
+links:
+  - business_need_id: "BR-INT-001"
+    requirement_id: "FR-INT-001"
+    rule_or_use_case_ids:
+      - "UC-INT-001"
+    design_doc_ids:
+      - "CAP-INT-ORC-COMP-001"
+      - "DIAG-INT-ORC-FLOW-001"
+      - "DIAG-INT-ORC-SEQ-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/data-contract.yaml"
+    implementation_paths:
+      - "src/intelligence/orchestrator/graph.py"
+      - "src/intelligence/workflows/investigation.py"
+    test_case_ids:
+      - "TC-INT-001"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Test code inspected (run_investigation 5-node loop); pytest not executed in local sandbox (missing pytest)."
+
+  - business_need_id: "BR-INT-003"
+    requirement_id: "FR-INT-002"
+    rule_or_use_case_ids:
+      - "UC-INT-002"
+    design_doc_ids:
+      - "INT-ARCH-GW-001"
+      - "DIAG-INT-GW-001"
+      - "DIAG-INT-ORC-TOOL-SEQ-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/tool-contracts.yaml"
+    implementation_paths:
+      - "src/intelligence/tools/gateway.py"
+      - "src/intelligence/tools/contracts.py"
+    test_case_ids:
+      - "TC-INT-002"
+      - "TC-INT-003"
+    test_paths:
+      - "tests/contract/test_contracts_and_guardrails.py"
+    verification_evidence: "Test code inspected (whitelist, RBAC, row cap assertions); pytest not executed in local sandbox."
+
+  - business_need_id: "BR-INT-004"
+    requirement_id: "FR-INT-003"
+    rule_or_use_case_ids:
+      - "UC-INT-003"
+      - "UC-INT-004"
+    design_doc_ids:
+      - "INT-ARCH-EVAL-001"
+      - "DIAG-INT-ORC-PROV-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/data-contract.yaml"
+    implementation_paths:
+      - "src/intelligence/reporting/validator.py"
+    test_case_ids:
+      - "TC-INT-004"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Test code inspected (ReportProvenanceError on fabricated invocation_id); pytest not executed in local sandbox."
+
+  - business_need_id: "BR-INT-001"
+    requirement_id: "FR-INT-005"
+    rule_or_use_case_ids:
+      - "UC-INT-005"
+    design_doc_ids:
+      - "DIAG-INT-ORC-STATE-001"
+    contract_paths:
+      - "docs/intelligence-plane/domains/agent-orchestration-and-tools/capabilities/market-intelligence-workflow-and-tool-gateway/contracts/error-catalog.md"
+    implementation_paths:
+      - "src/intelligence/orchestrator/graph.py"
+    test_case_ids:
+      - "TC-INT-005"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Test code inspected (DOGEFAKEUSDT sets status=FAILED); pytest not executed in local sandbox."
+
+  - business_need_id: "BR-INT-002"
+    requirement_id: "NFR-INT-005"
+    rule_or_use_case_ids:
+      - "UC-INT-002"
+    design_doc_ids:
+      - "DIAG-INT-DEP-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/tool-contracts.yaml"
+    implementation_paths:
+      - "src/intelligence/tools/gateway.py"
+    test_case_ids:
+      - "TC-INT-006"
+    test_paths:
+      - "tests/architecture/test_clean_architecture_boundaries.py"
+    verification_evidence: "AST boundary test code inspected; pytest not executed in local sandbox."
+

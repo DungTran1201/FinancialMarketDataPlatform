@@ -1,0 +1,66 @@
+schema_version: "2.0.0"
+contract_id: "INT-CTR-DATA-001"
+title: "Intelligence Plane Workflow State & Report Data Contract"
+plane: "intelligence-plane"
+owner_role: "ai-engineer"
+accountable_role: "data-architect"
+document_status: "DRAFT"
+implementation_status: "PARTIALLY_IMPLEMENTED"
+updated_at: "2026-11-16"
+source_code_references:
+  - "src/intelligence/workflows/investigation.py"
+  - "src/intelligence/tools/contracts.py"
+  - "src/serving/api/modules/reporting/domain/ports.py"
+  - "deploy/postgres/init/01_schema.sql"
+
+datasets:
+  - name: "AgentWorkflowState"
+    storage_as_is: "In-memory PlatformRuntimeContainer.agent_runs[run_id]"
+    storage_target: "PostgreSQL agent_runs table (deploy/postgres/init/01_schema.sql)"
+    natural_key: ["run_id"]
+    fields:
+      run_id: "string (run_<12 hex> AS-IS; UUID TARGET)"
+      trigger_mode: "enum (ON_DEMAND | EVENT_TRIGGERED)"
+      symbol: "string (uppercase instrument symbol)"
+      prompt_summary: "string"
+      max_iterations: "integer (default 6)"
+      token_budget: "integer (default 8000)"
+      current_iteration: "integer"
+      tokens_consumed: "integer"
+      planned_tools: "list[dict]"
+      evidence_trail: "list[ToolExecutionEnvelope]"
+      visited_nodes: "list[string]"
+      final_report: "dict | null"
+      status: "enum (QUEUED | RUNNING | COMPLETED | FAILED; CANCELLED in Postgres DDL)"
+
+  - name: "ToolExecutionEnvelope"
+    storage_as_is: "In-memory ControlledToolGateway._audit_log and AgentWorkflowState.evidence_trail"
+    storage_target: "PostgreSQL agent_tool_invocations table (deploy/postgres/init/01_schema.sql)"
+    natural_key: ["provenance.invocation_id"]
+    fields:
+      status: "string (SUCCESS emitted AS-IS; TIMEOUT | VALIDATION_ERROR | PERMISSION_DENIED reserved)"
+      data: "dict[str, Any]"
+      provenance:
+        invocation_id: "string (UUIDv4)"
+        tool_name: "ApprovedAgentTool"
+        source_store: "string"
+        symbol: "string"
+        window_start: "datetime (UTC)"
+        window_end: "datetime (UTC)"
+        row_count: "integer"
+        executed_at: "datetime (UTC)"
+
+  - name: "StructuredAnalysisReport"
+    storage_as_is: "In-memory PlatformRuntimeContainer.reports[run_id]"
+    storage_target: "PostgreSQL agent_runs.structured_report JSONB"
+    natural_key: ["run_id"]
+    fields:
+      run_id: "string"
+      symbol: "string"
+      summary: "string"
+      quantitative_evidence: "dict[str, Any]"
+      anomalies_detected: "tuple[str, ...]"
+      data_quality_status: "string"
+      provenance_citations: "tuple[ProvenanceCitation, ...] (non-empty required by ReportValidator)"
+      limitations_disclaimer: "string"
+
