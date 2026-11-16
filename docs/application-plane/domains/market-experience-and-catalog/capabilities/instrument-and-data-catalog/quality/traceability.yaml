@@ -1,0 +1,38 @@
+schema_version: "2.0.0"
+capability_id: "CAP-APP-CAT-001"
+owner_role: "fullstack-engineer"
+document_status: "IN_REVIEW"
+links:
+  - business_need_id: "BR-SYS-003"
+    requirement_id: "FR-CAT-001"
+    rule_or_use_case_ids:
+      - "UC-CAT-001"
+    design_doc_ids:
+      - "CAP-APP-CAT-COMP-001"
+      - "CAP-APP-CAT-DB-001"
+      - "DIAG-APP-CAT-ERD-001"
+    contract_paths:
+      - "docs/application-plane/domains/market-experience-and-catalog/capabilities/instrument-and-data-catalog/contracts/openapi.yaml"
+    implementation_paths:
+      - "src/serving/api/modules/catalog/presentation/router.py"
+    test_case_ids:
+      - "TC-CAT-001"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Verified in-process memory upsert; Postgres monitored_instruments DDL UNWIRED."
+  - business_need_id: "BR-SYS-003"
+    requirement_id: "FR-CAT-003"
+    rule_or_use_case_ids:
+      - "UC-CAT-002"
+    design_doc_ids:
+      - "CAP-APP-CAT-COMP-001"
+    contract_paths:
+      - "docs/application-plane/domains/market-experience-and-catalog/capabilities/instrument-and-data-catalog/contracts/openapi.yaml"
+    implementation_paths:
+      - "src/serving/api/modules/catalog/presentation/router.py"
+      - "frontend/src/modules/data-management/DataManagementModule.ts"
+    test_case_ids:
+      - "TC-CAT-002"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Catalog pipeline API verified in-process; UI lineage fallback noted in COMPAT-007."

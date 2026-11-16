@@ -1,0 +1,11 @@
+schema_version: "2.0.0"
+capability_id: "CAP-APP-AGT-001"
+cases:
+  - test_case_id: "TC-AGT-001"
+    title: "Agent run trigger with Idempotency-Key deduplication, status lookup & SSE replay"
+    test_path: "tests/integration/test_three_planes_framework.py"
+    execution_mode: "IN_PROCESS_FASTAPI_TESTCLIENT"
+  - test_case_id: "TC-AGT-002"
+    title: "Verified structured report listing and detail retrieval with provenance citations"
+    test_path: "tests/integration/test_three_planes_framework.py"
+    execution_mode: "IN_PROCESS_FASTAPI_TESTCLIENT"

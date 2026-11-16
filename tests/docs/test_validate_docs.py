@@ -23,7 +23,10 @@ def _make_clean_sandbox(tmp_dir: Path) -> Path:
     shutil.copytree(REPO_ROOT / "docs" / "governance", docs_dir / "governance")
     shutil.copy2(REPO_ROOT / "docs" / "README.md", docs_dir / "README.md")
     shutil.copy2(REPO_ROOT / "docs" / "docs-index.yaml", docs_dir / "docs-index.yaml")
+    shutil.copy2(REPO_ROOT / "docker-compose.yml", tmp_dir / "docker-compose.yml")
+    shutil.copy2(REPO_ROOT / "pyproject.toml", tmp_dir / "pyproject.toml")
 
+    
     # Minimal stub migration disposition if test runs prior to cleanup or on subset
     mig_disp = docs_dir / "governance" / "migration" / "legacy-disposition.md"
     if not mig_disp.exists():

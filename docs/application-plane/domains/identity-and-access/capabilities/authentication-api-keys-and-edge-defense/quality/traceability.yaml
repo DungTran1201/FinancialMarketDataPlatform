@@ -1,0 +1,58 @@
+schema_version: "2.0.0"
+capability_id: "CAP-APP-IAM-001"
+owner_role: "security-architect"
+document_status: "DRAFT"
+links:
+  - business_need_id: "BR-SYS-003"
+    requirement_id: "FR-IAM-001"
+    rule_or_use_case_ids:
+      - "UC-IAM-001"
+      - "RULE-IAM-001"
+    design_doc_ids:
+      - "CAP-APP-IAM-COMP-001"
+      - "DIAG-APP-IAM-SEQ-001"
+    contract_paths:
+      - "docs/application-plane/domains/identity-and-access/capabilities/authentication-api-keys-and-edge-defense/contracts/openapi.yaml"
+    implementation_paths:
+      - "src/serving/api/modules/iam/presentation/router.py"
+      - "src/serving/api/modules/iam/domain/security.py"
+    test_case_ids:
+      - "TC-IAM-001"
+    test_paths:
+      - "tests/unit/test_security_and_defense.py"
+    verification_evidence: "In-process TestClient passes PBKDF2/JWT/IP-check; Postgres users verification BLOCKED (SEC-AUDIT-001)."
+  - business_need_id: "BR-SYS-003"
+    requirement_id: "FR-IAM-004"
+    rule_or_use_case_ids:
+      - "UC-IAM-003"
+      - "RULE-IAM-003"
+    design_doc_ids:
+      - "CAP-APP-IAM-COMP-001"
+      - "DIAG-APP-IAM-FLOW-001"
+    contract_paths:
+      - "docs/application-plane/domains/identity-and-access/capabilities/authentication-api-keys-and-edge-defense/contracts/error-catalog.md"
+    implementation_paths:
+      - "src/serving/api/modules/iam/presentation/router.py"
+      - "src/shared/security/primitives.py"
+    test_case_ids:
+      - "TC-IAM-002"
+    test_paths:
+      - "tests/unit/test_security_and_defense.py"
+    verification_evidence: "Verified Host/WAF/RateLimit on main.py gateway; standalone ports 8001..8004/8006/8007 unprotected."
+  - business_need_id: "BR-SYS-003"
+    requirement_id: "SEC-IAM-002"
+    rule_or_use_case_ids:
+      - "UC-IAM-002"
+      - "RULE-IAM-002"
+    design_doc_ids:
+      - "CAP-APP-IAM-TM-001"
+      - "DIAG-APP-IAM-TM-001"
+    contract_paths:
+      - "docs/application-plane/domains/identity-and-access/capabilities/authentication-api-keys-and-edge-defense/security/authorization-matrix.yaml"
+    implementation_paths:
+      - "src/serving/api/modules/iam/presentation/router.py"
+    test_case_ids:
+      - "TC-IAM-005"
+    test_paths:
+      - "tests/unit/test_security_and_defense.py"
+    verification_evidence: "BLOCKED (SEC-AUDIT-003): RBAC Depends enforcement & TC-IAM-005 negative suite not implemented."

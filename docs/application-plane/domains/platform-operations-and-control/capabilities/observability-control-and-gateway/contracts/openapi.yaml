@@ -1,0 +1,181 @@
+openapi: "3.1.0"
+info:
+  title: "Observability, Platform Config, DataPlatformV01 & Microservice Gateway API (CAP-APP-OPS-001)"
+  version: "2.0.0"
+  description: "AS-IS flat telemetry and control endpoints (zero auth Depends AS-IS)."
+servers:
+  - url: "http://127.0.0.1:8000"
+    description: "Unified FastAPI Gateway"
+paths:
+  /api/v1/health/live:
+    get:
+      operationId: health_live
+      summary: "Liveness probe"
+      security: []
+      responses: { "200": { description: "Alive" } }
+  /api/v1/health/ready:
+    get:
+      operationId: health_ready
+      summary: "Readiness response (always ready without live DB checks; masks dependency addresses)"
+      security: []
+      responses: { "200": { description: "Static readiness JSON" } }
+  /metrics:
+    get:
+      operationId: prometheus_metrics
+      summary: "Prometheus exposition text (fmdp_* metrics)"
+      security: []
+      responses: { "200": { description: "text/plain" } }
+  /api/v1/platform/config:
+    get:
+      operationId: platform_get_config
+      summary: "Return runtime PlatformConfig, active symbols, and watermarks"
+      security: []
+      responses: { "200": { description: "Platform configuration payload" } }
+  /api/v1/observability/overview:
+    get:
+      operationId: obs_get_overview
+      summary: "Platform KPIs, freshness & execution context"
+      security: []
+      parameters:
+        - { name: window, in: query, schema: { type: string, default: all } }
+        - { name: force_probe, in: query, schema: { type: boolean, default: false } }
+      responses: { "200": { description: "Overview KPI payload" } }
+  /api/v1/observability/topology:
+    get:
+      operationId: obs_get_topology
+      summary: "12-node DAG status, edge activation & Kafka single-node KRaft broker status"
+      security: []
+      responses: { "200": { description: "DAG nodes and edges" } }
+  /api/v1/observability/kafka:
+    get:
+      operationId: obs_get_kafka
+      summary: "Kafka topic partitions, consumer group lag and DLQ counts"
+      security: []
+      responses: { "200": { description: "Kafka snapshot" } }
+  /api/v1/observability/storage:
+    get:
+      operationId: obs_get_storage
+      summary: "Redis/ClickHouse/Medallion storage stats, 6 DQ rules & architecture comparison"
+      security: []
+      responses: { "200": { description: "Storage & DQ snapshot" } }
+  /api/v1/observability/latency:
+    get:
+      operationId: obs_get_latency
+      summary: "Stage/branch latency p50/p95/p99 analytics"
+      security: []
+      responses: { "200": { description: "Latency stats" } }
+  /api/v1/observability/traces:
+    get:
+      operationId: obs_list_traces
+      summary: "List per-event EventLifecycleTrace items from trace_registry"
+      security: []
+      responses: { "200": { description: "Trace array" } }
+  /api/v1/observability/traces/{event_id}:
+    get:
+      operationId: obs_get_trace_detail
+      summary: "Single event lifecycle trace breakdown"
+      security: []
+      parameters:
+        - { name: event_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Event trace detail" }
+        "404": { description: "Trace not found" }
+  /api/v1/observability/candles:
+    get:
+      operationId: obs_get_candles
+      summary: "Stored ClickHouse OHLCV bars (no_fake_candles_policy: true)"
+      security: []
+      responses: { "200": { description: "Candle floats + exact string mirrors + statistics" } }
+  /api/v1/observability/live/probe:
+    post:
+      operationId: obs_trigger_live_probe
+      summary: "Execute TCP probes + optional HTTPS Binance klines fetch (unauthenticated AS-IS)"
+      security: []
+      responses: { "200": { description: "Infra probe & optional Binance pull result" } }
+  /api/v1/observability/demo/emit:
+    post:
+      operationId: obs_trigger_demo_emit
+      summary: "Execute emit_batch, inject_dlq, flush_lakehouse or run_full_pipeline (unauthenticated AS-IS)"
+      security: []
+      responses: { "200": { description: "Action execution result" } }
+  /api/v1/observability/stream:
+    get:
+      operationId: obs_sse_stream
+      summary: "Server-Sent Events live trace & 2.5s heartbeat stream"
+      security: []
+      responses: { "200": { description: "text/event-stream" } }
+  /api/v1/microservices/topology:
+    get:
+      operationId: ms_get_topology
+      summary: "Canonical 8-service topology manifest (lists nonexistent /ui/data-flow and /ws/v1/market)"
+      security: []
+      responses: { "200": { description: "Service mesh topology" } }
+  /api/v1/microservices/health:
+    get:
+      operationId: ms_check_health
+      summary: "Probe /api/v1/health/live across all 7 svc-* microservices"
+      security: []
+      responses: { "200": { description: "Aggregated microservice health" } }
+  /api/v1/microservices/dispatch/{service_id}:
+    post:
+      operationId: ms_dispatch_internal
+      summary: "Forward internal ASGI request to named svc-* container (unauthenticated AS-IS)"
+      security: []
+      parameters:
+        - { name: service_id, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: "Dispatched response" }
+        "404": { description: "Unknown service_id" }
+  /api/v1/data-platform/v01/run:
+    post:
+      operationId: dp_v01_run_pipeline
+      summary: "Run full 12-stage EndToEndDataPlatformService pipeline"
+      security: []
+      responses: { "200": { description: "EndToEndExecutionReport dict" } }
+  /api/v1/data-platform/v01/status:
+    get:
+      operationId: dp_v01_status
+      summary: "Latest v01 run status, discovered symbols, RL weight & watermark counts"
+      security: []
+      responses: { "200": { description: "Pipeline status" } }
+  /api/v1/data-platform/v01/gold/{mart_name}:
+    get:
+      operationId: dp_v01_query_gold
+      summary: "Query materialized Gold marts (fct_daily_market_summary, fct_realized_volatility, fct_orderbook_liquidity)"
+      security: []
+      parameters:
+        - { name: mart_name, in: path, required: true, schema: { type: string } }
+        - { name: symbol, in: query, schema: { type: string } }
+      responses:
+        "200": { description: "Gold mart rows" }
+        "404": { description: "Unknown Gold mart" }
+  /api/v1/data-platform/v01/compaction:
+    post:
+      operationId: dp_v01_compaction
+      summary: "Trigger Iceberg v2 Parquet compaction and snapshot manifest"
+      security: []
+      responses: { "200": { description: "Compaction report" } }
+  /api/v1/data-platform/v01/lineage:
+    get:
+      operationId: dp_v01_lineage
+      summary: "Return 12-node lineage governance catalog"
+      security: []
+      responses: { "200": { description: "Lineage graph JSON" } }
+  /api/v1/data-platform/v01/watermarks:
+    get:
+      operationId: dp_v01_watermarks
+      summary: "List durable SQLite ingestion watermarks"
+      security: []
+      responses: { "200": { description: "Watermarks array" } }
+  /api/v1/data-platform/v01/metrics:
+    get:
+      operationId: dp_v01_metrics
+      summary: "Export OpenMetrics text from DataPlatformV01"
+      security: []
+      responses: { "200": { description: "text/plain" } }
+  /api/v1/data-platform/v01/telemetry:
+    get:
+      operationId: dp_v01_telemetry
+      summary: "Step realtime tick and emit 12-stage telemetry summary"
+      security: []
+      responses: { "200": { description: "Step telemetry JSON" } }

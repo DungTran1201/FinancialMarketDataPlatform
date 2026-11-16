@@ -1,0 +1,84 @@
+schema_version: "2.0.0"
+contract_id: "DC-INT-STATE-001"
+title: "Intelligence Plane Workflow State, Audit & Report Data Contracts"
+status: "DRAFT"
+implementation_status: "SIMULATED"
+owner_role: "ai-engineer"
+accountable_role: "database-architect"
+source_code_refs:
+  - "src/intelligence/workflows/investigation.py"
+  - "src/intelligence/tools/contracts.py"
+  - "src/serving/api/modules/reporting/domain/ports.py"
+  - "src/serving/infrastructure/runtime.py"
+  - "deploy/postgres/init/01_schema.sql"
+
+datasets:
+  - dataset_name: "intelligence.agent_workflow_state"
+    layer: "RUNTIME_STATE"
+    owner_capability: "CAP-INT-ORC-001"
+    natural_key: ["run_id"]
+    as_is_storage: "In-memory Python dict PlatformRuntimeContainer.agent_runs (AgentWorkflowState dataclass)"
+    target_storage: "PostgreSQL 16 table market/control DB agent_runs + LangGraph state checkpoints"
+    schema_fields:
+      run_id: "str (AS-IS format 'run_<12hex>'; TARGET Postgres DDL requires UUID)"
+      trigger_mode: "ON_DEMAND | EVENT_TRIGGERED"
+      symbol: "str (uppercase spot pair)"
+      prompt_summary: "str"
+      max_iterations: "int (default 6)"
+      token_budget: "int (default 8000)"
+      current_iteration: "int"
+      tokens_consumed: "int"
+      planned_tools: "list[dict[str, Any]]"
+      evidence_trail: "list[ToolExecutionEnvelope]"
+      visited_nodes: "list[str] subset of WORKFLOW_NODES"
+      final_report: "dict[str, Any] | None"
+      status: "QUEUED | RUNNING | COMPLETED | FAILED (TARGET adds CANCELLED)"
+    known_drift:
+      - "AS-IS run_id ('run_<hex12>') is incompatible with Postgres agent_runs.run_id UUID PK."
+      - "Postgres agent_runs DDL lacks idempotency_key, visited_nodes, current_iteration, and max_iterations columns."
+    retention_policy: "OPEN (ephemeral process lifetime AS-IS)"
+
+  - dataset_name: "intelligence.tool_execution_envelope"
+    layer: "AUDIT_LOG"
+    owner_capability: "CAP-INT-ORC-001"
+    natural_key: ["provenance.invocation_id"]
+    as_is_storage: "In-memory list ControlledToolGateway._audit_log & AgentWorkflowState.evidence_trail"
+    target_storage: "PostgreSQL 16 table agent_tool_invocations (ON DELETE CASCADE -> agent_runs)"
+    schema_fields:
+      status: "SUCCESS (comment lists TIMEOUT | VALIDATION_ERROR | PERMISSION_DENIED — unimplemented)"
+      data: "dict[str, Any] normalized handler output"
+      provenance.invocation_id: "UUIDv4 string"
+      provenance.tool_name: "ApprovedAgentTool"
+      provenance.source_store: "str (from ToolGovernancePolicy.backing_store)"
+      provenance.symbol: "str"
+      provenance.window_start: "datetime (UTC)"
+      provenance.window_end: "datetime (UTC)"
+      provenance.row_count: "int"
+      provenance.executed_at: "datetime (UTC)"
+    known_drift:
+      - "Failed/denied/timed-out tool attempts raise exceptions and are never persisted to _audit_log or agent_tool_invocations."
+      - "Postgres agent_tool_invocations DDL has status CHECK ('SUCCESS', 'TIMEOUT', 'VALIDATION_ERROR', 'SOURCE_ERROR') vs code comment 'PERMISSION_DENIED'."
+    retention_policy: "OPEN"
+
+  - dataset_name: "intelligence.structured_analysis_report"
+    layer: "SERVING_REPORT"
+    owner_capability: "CAP-INT-ORC-001"
+    shared_consumer_capability: "CAP-APP-AGT-001"
+    natural_key: ["run_id"]
+    as_is_storage: "In-memory Python dict PlatformRuntimeContainer.reports (StructuredAnalysisReport dataclass)"
+    target_storage: "PostgreSQL 16 agent_runs.structured_report JSONB column"
+    schema_fields:
+      run_id: "str"
+      symbol: "str"
+      summary: "str"
+      quantitative_evidence: "dict[str, Any]"
+      anomalies_detected: "tuple[str, ...]"
+      data_quality_status: "str ('HEALTHY' hardcoded in mock adapter)"
+      provenance_citations: "tuple[ProvenanceCitation, ...] (non-empty, validated against evidence_trail)"
+      limitations_disclaimer: "str"
+    retention_policy: "OPEN"
+
+compatibility_and_evolution:
+  pii_classification: "LOW (requested_by UUID in Postgres users FK; AS-IS contains zero user/PII fields)"
+  breaking_change_policy: "Changes to ToolProvenanceMetadata or StructuredAnalysisReport fields require coordinated update across CAP-INT-ORC-001 and CAP-APP-AGT-001."
+

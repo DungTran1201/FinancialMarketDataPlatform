@@ -1,0 +1,171 @@
+schema_version: "2.0.0"
+capability_id: "CAP-INT-ORC-001"
+owner_role: "qa-lead"
+document_status: "DRAFT"
+test_cases:
+  - test_case_id: "TC-INT-001"
+    title: "5-node workflow execution completes for monitored symbol with 8 evidence envelopes"
+    scenario_id: "TS-INT-001"
+    test_type: "integration"
+    severity: "HIGH"
+    priority: "P0"
+    verifies_ids:
+      - "FR-INT-001"
+      - "FR-INT-002"
+      - "FR-INT-005"
+      - "AC-INT-001"
+      - "AC-INT-004"
+    preconditions:
+      - "PlatformRuntimeContainer initialized with seeded market state and DeterministicMockLLMAdapter."
+    test_data_spec: "Synthetic AgentWorkflowState(run_id='run_test_001', trigger_mode='ON_DEMAND', symbol='BTCUSDT')."
+    steps:
+      - "Invoke await runtime.intelligence_graph.run_investigation(state)."
+    expected_result: "status == 'COMPLETED', len(evidence_trail) == 8 (7 tools + 1 persist), len(final_report['provenance_citations']) == 7."
+    automated_test_path: "tests/integration/test_three_planes_framework.py"
+    environment_mode: "in-process"
+    last_verified_status: "NOT_RUN"
+
+  - test_case_id: "TC-INT-002"
+    title: "Node 1 guardrail rejects unmonitored symbol cleanly"
+    scenario_id: "TS-INT-002"
+    test_type: "integration"
+    severity: "HIGH"
+    priority: "P0"
+    verifies_ids:
+      - "FR-INT-001"
+      - "RULE-INT-001"
+      - "AC-INT-005"
+    preconditions:
+      - "MarketIntelligenceGraph initialized with baseline 5 monitored symbols."
+    test_data_spec: "AgentWorkflowState with symbol='DOGEFAKEUSDT'."
+    steps:
+      - "Invoke await runtime.intelligence_graph.run_investigation(rejected_state)."
+    expected_result: "status == 'FAILED', len(evidence_trail) == 0, final_report contains error string."
+    automated_test_path: "tests/integration/test_three_planes_framework.py"
+    environment_mode: "in-process"
+    last_verified_status: "NOT_RUN"
+
+  - test_case_id: "TC-INT-003"
+    title: "ControlledToolGateway blocks unwhitelisted tools, missing RBAC scope, and excessive limits"
+    scenario_id: "TS-INT-003"
+    test_type: "contract"
+    severity: "CRITICAL"
+    priority: "P0"
+    verifies_ids:
+      - "FR-INT-003"
+      - "RULE-INT-004"
+      - "SEC-INT-002"
+      - "AC-INT-002"
+    preconditions:
+      - "ControlledToolGateway instantiated (standalone stub mode and wired runtime)."
+    test_data_spec: "tool_name='execute_raw_sql'; tool=GENERATE_ANALYSIS_REPORT with only {'market:read'}; tool=GET_HISTORICAL_CANDLES with limit=5000/999999."
+    steps:
+      - "Call await gateway.execute_tool(...) for each violation case."
+    expected_result: "Raises UnauthorizedToolAccessError for unknown tool and missing scope; raises ToolQueryLimitExceededError for oversized limit."
+    automated_test_path: "tests/contract/test_contracts_and_guardrails.py"
+    environment_mode: "in-process"
+    last_verified_status: "NOT_RUN"
+
+  - test_case_id: "TC-INT-004"
+    title: "Deterministic Python quant calculations match analytical formulas"
+    scenario_id: "TS-INT-004"
+    test_type: "unit"
+    severity: "HIGH"
+    priority: "P0"
+    verifies_ids:
+      - "FR-INT-004"
+      - "RULE-INT-005"
+      - "NFR-INT-004"
+    preconditions:
+      - "None (pure Python math functions)."
+    test_data_spec: "Synthetic positive float price lists [100.0, 105.0, 110.25]."
+    steps:
+      - "Invoke compute_deterministic_log_returns, compute_deterministic_realized_volatility, and compute_deterministic_pearson_correlation."
+    expected_result: "Exact return counts, positive volatility, and correlation ~ 1.0 for linearly scaled series."
+    automated_test_path: "tests/contract/test_contracts_and_guardrails.py"
+    environment_mode: "in-process"
+    last_verified_status: "NOT_RUN"
+
+  - test_case_id: "TC-INT-005"
+    title: "ReportValidator rejects fabricated invocation_id in provenance_citations"
+    scenario_id: "TS-INT-005"
+    test_type: "security"
+    severity: "CRITICAL"
+    priority: "P0"
+    verifies_ids:
+      - "FR-INT-005"
+      - "RULE-INT-006"
+      - "SEC-INT-004"
+      - "AC-INT-003"
+    preconditions:
+      - "Completed evidence_trail from valid investigation run."
+    test_data_spec: "Report dict replacing provenance_citations with invocation_id='inv_fabricated_999999'."
+    steps:
+      - "Invoke ReportValidator.validate_report(bad_report, completed.evidence_trail)."
+    expected_result: "Raises ReportProvenanceError."
+    automated_test_path: "tests/integration/test_three_planes_framework.py"
+    environment_mode: "in-process"
+    last_verified_status: "NOT_RUN"
+
+  - test_case_id: "TC-INT-006"
+    title: "Clean Architecture AST test enforces acyclic src/intelligence isolation"
+    scenario_id: "TS-INT-001"
+    test_type: "architecture"
+    severity: "HIGH"
+    priority: "P0"
+    verifies_ids:
+      - "CON-SYS-001"
+      - "FR-INT-003"
+    preconditions:
+      - "Repository source tree present."
+    test_data_spec: "AST scan across src/intelligence/**/*.py."
+    steps:
+      - "Inspect all Import / ImportFrom nodes in src/intelligence/."
+    expected_result: "Zero imports of src.ingestion, src.streaming, src.lakehouse, or src.serving."
+    automated_test_path: "tests/architecture/test_clean_architecture_boundaries.py"
+    environment_mode: "in-process"
+    last_verified_status: "NOT_RUN"
+
+  - test_case_id: "TC-INT-007"
+    title: "Gateway timeout, negative/zero bounds, and unregistered handler fail-closed checks (MISSING TEST)"
+    scenario_id: "TS-INT-006"
+    test_type: "resilience"
+    severity: "HIGH"
+    priority: "P1"
+    verifies_ids:
+      - "NFR-INT-001"
+      - "SEC-INT-002"
+      - "SEC-INT-005"
+    preconditions:
+      - "Requires gateway schema validation & timeout envelope wrapping remediation."
+    test_data_spec: "Slow handler sleeping > timeout_seconds; limit=-5; unregistered tool handler."
+    steps:
+      - "Invoke execute_tool against sleeping handler, negative limit, and unregistered tool."
+    expected_result: "Timeout cleanly caught/audited; limit <= 0 rejected; missing handler fails closed."
+    automated_test_path: null
+    environment_mode: "in-process"
+    last_verified_status: "NOT_RUN"
+
+  - test_case_id: "TC-INT-008"
+    title: "Caller RBAC enforcement, side-effect isolation, async worker & numeric consistency checks (MISSING TEST)"
+    scenario_id: "TS-INT-007"
+    test_type: "security"
+    severity: "CRITICAL"
+    priority: "P0"
+    verifies_ids:
+      - "FR-INT-006"
+      - "FR-INT-007"
+      - "SEC-INT-001"
+      - "SEC-INT-003"
+      - "SEC-INT-006"
+      - "SEC-INT-007"
+    preconditions:
+      - "Requires removing hardcoded _agent_permissions, wiring Postgres & async worker, and extending ReportValidator."
+    test_data_spec: "VIEWER JWT caller; detect_anomalies called repeatedly; Postgres agent_runs verification; numeric mismatch in report summary."
+    steps:
+      - "Execute authenticated run as VIEWER (expect 403) and ANALYST (expect 202 queued); check Postgres persistence and numeric summary mismatch rejection."
+    expected_result: "VIEWER denied; worker completes run asynchronously in Postgres; detect_anomalies does not suppress Data Plane cooldown; numeric discrepancy rejected."
+    automated_test_path: null
+    environment_mode: "live-containers"
+    last_verified_status: "NOT_RUN"
+

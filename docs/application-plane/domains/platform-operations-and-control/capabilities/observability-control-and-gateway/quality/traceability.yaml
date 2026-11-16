@@ -1,0 +1,57 @@
+schema_version: "2.0.0"
+capability_id: "CAP-APP-OPS-001"
+owner_role: "fullstack-engineer"
+document_status: "DRAFT"
+links:
+  - business_need_id: "BR-SYS-003"
+    requirement_id: "FR-OPS-001"
+    rule_or_use_case_ids:
+      - "UC-OPS-001"
+      - "RULE-OPS-001"
+    design_doc_ids:
+      - "CAP-APP-OPS-COMP-001"
+      - "DIAG-APP-OPS-STATE-001"
+    contract_paths:
+      - "docs/application-plane/domains/platform-operations-and-control/capabilities/observability-control-and-gateway/contracts/openapi.yaml"
+    implementation_paths:
+      - "src/serving/api/gateway/observability.py"
+      - "src/serving/infrastructure/runtime.py"
+    test_case_ids:
+      - "TC-OPS-001"
+    test_paths:
+      - "tests/integration/test_realtime_observability_dashboard.py"
+    verification_evidence: "Verified 12-node DAG & single-node Kafka honesty via TestClient; UI 5/5 card defect logged (COMPAT-005)."
+  - business_need_id: "BR-SYS-003"
+    requirement_id: "FR-OPS-002"
+    rule_or_use_case_ids:
+      - "UC-OPS-001"
+      - "RULE-OPS-003"
+    design_doc_ids:
+      - "DIAG-APP-OPS-SEQ-001"
+      - "DIAG-APP-OPS-DFD-001"
+    contract_paths:
+      - "docs/application-plane/domains/platform-operations-and-control/capabilities/observability-control-and-gateway/contracts/asyncapi.yaml"
+    implementation_paths:
+      - "src/serving/api/gateway/observability.py"
+    test_case_ids:
+      - "TC-OPS-002"
+    test_paths:
+      - "tests/integration/test_realtime_observability_dashboard.py"
+    verification_evidence: "Verified SSE & WS ping/pong in-process; /stream/control unimplemented (COMPAT-004)."
+  - business_need_id: "BR-SYS-003"
+    requirement_id: "FR-OPS-003"
+    rule_or_use_case_ids:
+      - "UC-OPS-003"
+    design_doc_ids:
+      - "CAP-APP-OPS-TM-001"
+      - "DIAG-APP-OPS-FLOW-001"
+    contract_paths:
+      - "docs/application-plane/domains/platform-operations-and-control/capabilities/observability-control-and-gateway/contracts/openapi.yaml"
+    implementation_paths:
+      - "src/serving/api/services/data_plane.py"
+      - "src/serving/api/gateway/service.py"
+    test_case_ids:
+      - "TC-OPS-003"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Verified DataPlatformV01 & dispatch in-process; SEC-OPS-001 RBAC enforcement BLOCKED."

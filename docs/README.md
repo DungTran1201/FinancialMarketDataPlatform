@@ -32,8 +32,7 @@ revision_history:
 
 # FinancialMarketDataPlatform — Documentation V2
 
-**Current Documentation Phase**: **Phase 1 — Documentation Foundation** (Complete & Validated).
-**Phase 2 Status**: **Not Started** (`overview/`, `data-plane/`, `application-plane/`, and `intelligence-plane/` are reserved in [documentation-architecture.md](governance/documentation-architecture.md) and MUST NOT be populated until Phase 2 is explicitly authorized).
+**Current Documentation Phase**: **Phase 2 — Active** (`DRAFT` / `IN_REVIEW` across `overview/`, `data-plane/`, `application-plane/`, and `intelligence-plane/`; not yet formally accepted as `APPROVED`).
 
 ## 1. Entrypoints
 

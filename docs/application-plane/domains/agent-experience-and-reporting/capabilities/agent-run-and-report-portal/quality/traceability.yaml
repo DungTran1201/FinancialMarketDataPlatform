@@ -1,0 +1,38 @@
+schema_version: "2.0.0"
+capability_id: "CAP-APP-AGT-001"
+owner_role: "fullstack-engineer"
+document_status: "IN_REVIEW"
+links:
+  - business_need_id: "BR-SYS-004"
+    requirement_id: "FR-AGT-001"
+    rule_or_use_case_ids:
+      - "UC-AGT-001"
+    design_doc_ids:
+      - "CAP-APP-AGT-COMP-001"
+      - "DIAG-APP-AGT-SEQ-001"
+      - "DIAG-APP-AGT-STATE-001"
+    contract_paths:
+      - "docs/application-plane/domains/agent-experience-and-reporting/capabilities/agent-run-and-report-portal/contracts/openapi.yaml"
+    implementation_paths:
+      - "src/serving/api/modules/agent_api/presentation/router.py"
+    test_case_ids:
+      - "TC-AGT-001"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Verified idempotent 202 run trigger & SSE replay via TestClient (synchronous inline await)."
+  - business_need_id: "BR-SYS-004"
+    requirement_id: "FR-AGT-003"
+    rule_or_use_case_ids:
+      - "UC-AGT-002"
+    design_doc_ids:
+      - "CAP-APP-AGT-COMP-001"
+    contract_paths:
+      - "docs/application-plane/domains/agent-experience-and-reporting/capabilities/agent-run-and-report-portal/contracts/openapi.yaml"
+    implementation_paths:
+      - "src/serving/api/modules/reporting/presentation/router.py"
+      - "frontend/src/modules/ai-workspace/AiWorkspaceModule.ts"
+    test_case_ids:
+      - "TC-AGT-002"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Verified citation report API via TestClient; UI synthetic node durations noted."

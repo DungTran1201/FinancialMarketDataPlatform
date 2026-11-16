@@ -1,0 +1,54 @@
+schema_version: "2.0.0"
+capability_id: "CAP-DP-STR-002"
+owner_role: "data-architect"
+document_status: "IN_REVIEW"
+links:
+  - business_need_id: "BR-SYS-001"
+    requirement_id: "FR-STR2-001"
+    rule_or_use_case_ids:
+      - "UC-STR2-001"
+      - "RULE-STR2-001"
+    design_doc_ids:
+      - "CAP-DP-STR2-COMP-001"
+    contract_paths:
+      - "docs/data-plane/shared-contracts/asyncapi.yaml"
+    implementation_paths:
+      - "src/streaming/consumers/hot_redis.py"
+    test_case_ids:
+      - "TC-STR2-001"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Verified in-memory & _FakeRedis Lua ARGV alignment."
+  - business_need_id: "BR-SYS-001"
+    requirement_id: "FR-STR2-002"
+    rule_or_use_case_ids:
+      - "UC-STR2-001"
+      - "RULE-STR2-002"
+    design_doc_ids:
+      - "CAP-DP-STR2-DB-001"
+    contract_paths:
+      - "docs/data-plane/shared-contracts/data-contract.yaml"
+    implementation_paths:
+      - "src/streaming/consumers/analytics_ch.py"
+      - "deploy/clickhouse/init/01_schema.sql"
+    test_case_ids:
+      - "TC-STR2-002"
+    test_paths:
+      - "tests/integration/test_realtime_observability_dashboard.py"
+    verification_evidence: "Verified in-memory OLAP dedup & 5m OHLCV rollup; live ClickHouse unverified."
+  - business_need_id: "BR-SYS-001"
+    requirement_id: "FR-STR2-003"
+    rule_or_use_case_ids:
+      - "UC-STR2-001"
+      - "RULE-STR2-003"
+    design_doc_ids:
+      - "CAP-DP-STR2-COMP-001"
+    contract_paths:
+      - "docs/data-plane/shared-contracts/asyncapi.yaml"
+    implementation_paths:
+      - "src/streaming/consumers/anomaly_detector.py"
+    test_case_ids:
+      - "TC-STR2-003"
+    test_paths:
+      - "tests/resilience/test_gap_recovery_and_dlq.py"
+    verification_evidence: "Verified z-score emission & 900s cooldown suppression."

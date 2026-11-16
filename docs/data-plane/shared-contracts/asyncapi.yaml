@@ -1,0 +1,198 @@
+asyncapi: "3.1.0"
+info:
+  title: "FMDP Data Plane Event Streaming Contract"
+  version: "1.0.0"
+  description: >
+    Canonical asynchronous event channels matching src/shared/contracts/events/market_events.py,
+    src/streaming/contracts/topics.py, and deploy/kafka/topics-init.sh. Note: AS-IS execution uses
+    in-memory PartitionedEventStreamingBroker (ConfluentKafkaStreamingAdapter unused by default).
+defaultContentType: application/json
+servers:
+  in_process_sim:
+    host: "in-memory://PartitionedEventStreamingBroker"
+    protocol: kafka
+    description: "AS-IS default in-process 6-partition Python broker (kafka_broker.py:64-370)."
+  docker_kraft:
+    host: "kafka:9092"
+    protocol: kafka
+    description: "TARGET single-node Apache Kafka 3.7.0 KRaft container (docker-compose.yml:67-94)."
+channels:
+  marketRawTradesV1:
+    address: market.raw.trades.v1
+    description: "Raw normalized Binance trade events partitioned by {provider}:{symbol}. Compose topics-init.sh sets 6 partitions and 7d retention."
+    messages:
+      tradeEnvelope:
+        $ref: "#/components/messages/EventEnvelopeTrade"
+  marketRawKlinesV1:
+    address: market.raw.klines.v1
+    description: "Normalized OHLCV kline bars partitioned by {provider}:{symbol} (6 partitions, 7d retention)."
+    messages:
+      klineEnvelope:
+        $ref: "#/components/messages/EventEnvelopeKline"
+  marketRawTickersV1:
+    address: market.raw.tickers.v1
+    description: "Normalized 24hr rolling ticker snapshots partitioned by {provider}:{symbol} (6 partitions, 7d retention)."
+    messages:
+      tickerEnvelope:
+        $ref: "#/components/messages/EventEnvelopeTicker"
+  marketRawOrderbookV1:
+    address: market.raw.orderbook.v1
+    description: "Normalized top-20 depth snapshots partitioned by {provider}:{symbol} (6 partitions, 7d retention)."
+    messages:
+      orderbookEnvelope:
+        $ref: "#/components/messages/EventEnvelopeOrderBook"
+  marketAnomaliesV1:
+    address: market.anomalies.v1
+    description: "Statistical rolling z-score anomaly triggers (topics-init.sh: 3 partitions, 30d retention)."
+    messages:
+      anomalyEnvelope:
+        $ref: "#/components/messages/EventEnvelopeAnomaly"
+  marketDlqV1:
+    address: market.dlq.v1
+    description: "Poison/malformed message dead-letter channel (topics-init.sh: 3 partitions, 30d retention; in-process writes partition 0)."
+    messages:
+      dlqEnvelope:
+        $ref: "#/components/messages/DeadLetterMessage"
+operations:
+  publishMarketTrades:
+    action: send
+    channel:
+      $ref: "#/channels/marketRawTradesV1"
+    summary: "Normalizer & WebSocket/API ingestion publishes normalized trades."
+  consumeMarketTradesHot:
+    action: receive
+    channel:
+      $ref: "#/channels/marketRawTradesV1"
+    summary: "HotStateProjector (cg.hot.redis.v1), ClickHouseBatchSink (cg.analytics.clickhouse.v1), BronzeParquetArchiver (cg.lakehouse.bronze.v1)."
+  publishMarketKlines:
+    action: send
+    channel:
+      $ref: "#/channels/marketRawKlinesV1"
+    summary: "WS collector & HistoricalRestBackfillWorker publish kline bars."
+  consumeMarketKlines:
+    action: receive
+    channel:
+      $ref: "#/channels/marketRawKlinesV1"
+    summary: "Consumed by hot cache, OLAP sink, and Bronze archiver."
+  publishMarketTickers:
+    action: send
+    channel:
+      $ref: "#/channels/marketRawTickersV1"
+    summary: "Ingestion publishes normalized 24h tickers."
+  consumeMarketTickers:
+    action: receive
+    channel:
+      $ref: "#/channels/marketRawTickersV1"
+    summary: "Consumed by HotStateProjector & ClickHouseBatchSink."
+  publishMarketOrderbook:
+    action: send
+    channel:
+      $ref: "#/channels/marketRawOrderbookV1"
+    summary: "Ingestion publishes top-20 depth updates."
+  consumeMarketOrderbook:
+    action: receive
+    channel:
+      $ref: "#/channels/marketRawOrderbookV1"
+    summary: "Consumed by HotStateProjector & BronzeParquetArchiver."
+  publishAnomalyAlert:
+    action: send
+    channel:
+      $ref: "#/channels/marketAnomaliesV1"
+    summary: "StatisticalAnomalyDetector (cg.anomaly.detector.v1) & POST /analytics/anomalies/evaluate emit anomaly alerts."
+  receiveAnomalyAlert:
+    action: receive
+    channel:
+      $ref: "#/channels/marketAnomaliesV1"
+    summary: "TARGET consumer: Intelligence Plane agent-worker triggers EVENT_TRIGGERED run (stub main() in AS-IS)."
+  publishDeadLetter:
+    action: send
+    channel:
+      $ref: "#/channels/marketDlqV1"
+    summary: "BinancePayloadNormalizer.normalize_or_route_dlq routes malformed payloads to DLQ."
+components:
+  schemas:
+    EventEnvelopeBase:
+      type: object
+      required:
+        - event_id
+        - schema_version
+        - event_type
+        - provider
+        - symbol
+        - exchange_event_time
+        - ingested_at
+        - natural_key
+        - payload
+      properties:
+        event_id:
+          type: string
+          format: uuid
+          description: "Deterministic UUIDv5 derived from provider:event_type:symbol:natural_key."
+        schema_version:
+          type: string
+          const: "1.0.0"
+        event_type:
+          type: string
+          enum: ["TRADE", "KLINE", "TICKER", "ORDER_BOOK", "ANOMALY"]
+        provider:
+          type: string
+          example: "binance"
+        symbol:
+          type: string
+          example: "BTCUSDT"
+        exchange_event_time:
+          type: string
+          format: date-time
+        ingested_at:
+          type: string
+          format: date-time
+        natural_key:
+          type: string
+        payload:
+          type: object
+    DeadLetterEnvelope:
+      type: object
+      required:
+        - dlq_id
+        - source_topic
+        - provider
+        - error_type
+        - error_message
+        - raw_payload
+        - failed_at
+      properties:
+        dlq_id:
+          type: string
+          format: uuid
+        source_topic:
+          type: string
+        provider:
+          type: string
+        error_type:
+          type: string
+        error_message:
+          type: string
+        raw_payload:
+          type: object
+        failed_at:
+          type: string
+          format: date-time
+  messages:
+    EventEnvelopeTrade:
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+    EventEnvelopeKline:
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+    EventEnvelopeTicker:
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+    EventEnvelopeOrderBook:
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+    EventEnvelopeAnomaly:
+      payload:
+        $ref: "#/components/schemas/EventEnvelopeBase"
+    DeadLetterMessage:
+      payload:
+        $ref: "#/components/schemas/DeadLetterEnvelope"

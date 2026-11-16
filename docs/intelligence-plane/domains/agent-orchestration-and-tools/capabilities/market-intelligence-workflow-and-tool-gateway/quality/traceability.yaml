@@ -1,0 +1,210 @@
+schema_version: "2.0.0"
+capability_id: "CAP-INT-ORC-001"
+owner_role: "business-analyst"
+document_status: "DRAFT"
+links:
+  - business_need_id: "BR-INT-001"
+    requirement_id: "FR-INT-001"
+    rule_or_use_case_ids:
+      - "UC-INT-001"
+      - "UC-INT-005"
+      - "RULE-INT-001"
+    design_doc_ids:
+      - "CAP-INT-ORC-COMP-001"
+      - "CAP-INT-ORC-AGT-001"
+      - "DIAG-INT-ORC-AGT-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/data-contract.yaml"
+    implementation_paths:
+      - "src/intelligence/orchestrator/graph.py"
+      - "src/serving/infrastructure/runtime.py"
+    test_case_ids:
+      - "TC-INT-001"
+      - "TC-INT-002"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Code inspected (test_langgraph_five_node_workflow_and_citation_verification); NOT executed in current workspace (missing pytest)."
+
+  - business_need_id: "BR-INT-001"
+    requirement_id: "FR-INT-002"
+    rule_or_use_case_ids:
+      - "UC-INT-001"
+      - "RULE-INT-002"
+      - "RULE-INT-003"
+    design_doc_ids:
+      - "INT-ARCH-RT-001"
+      - "CAP-INT-ORC-WF-001"
+      - "DIAG-INT-ORC-STATE-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/data-contract.yaml"
+    implementation_paths:
+      - "src/intelligence/orchestrator/graph.py"
+      - "src/intelligence/workflows/investigation.py"
+    test_case_ids:
+      - "TC-INT-001"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Pure Python while loop inspected; zero langgraph imports; PlatformConfig caps unwired."
+
+  - business_need_id: "BR-INT-002"
+    requirement_id: "FR-INT-003"
+    rule_or_use_case_ids:
+      - "UC-INT-002"
+      - "RULE-INT-004"
+    design_doc_ids:
+      - "INT-ARCH-GW-001"
+      - "ADR-INT-0001"
+      - "DIAG-INT-GW-001"
+      - "DIAG-INT-ORC-SEQ-002"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/tool-contracts.yaml"
+      - "docs/intelligence-plane/domains/agent-orchestration-and-tools/capabilities/market-intelligence-workflow-and-tool-gateway/contracts/error-catalog.md"
+    implementation_paths:
+      - "src/intelligence/tools/gateway.py"
+      - "src/intelligence/tools/contracts.py"
+    test_case_ids:
+      - "TC-INT-003"
+      - "TC-INT-006"
+    test_paths:
+      - "tests/contract/test_contracts_and_guardrails.py"
+      - "tests/architecture/test_clean_architecture_boundaries.py"
+    verification_evidence: "Whitelist, RBAC scope check, and upper limit tested in test_contracts_and_guardrails.py (not executed here); schema validation & fail-closed handler gaps open."
+
+  - business_need_id: "BR-INT-001"
+    requirement_id: "FR-INT-004"
+    rule_or_use_case_ids:
+      - "UC-INT-002"
+      - "RULE-INT-005"
+    design_doc_ids:
+      - "INT-ARCH-GW-001"
+      - "CAP-INT-ORC-COMP-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/tool-contracts.yaml"
+    implementation_paths:
+      - "src/serving/infrastructure/runtime.py"
+      - "src/shared/domain/quant.py"
+      - "src/streaming/consumers/anomaly_detector.py"
+    test_case_ids:
+      - "TC-INT-004"
+    test_paths:
+      - "tests/contract/test_contracts_and_guardrails.py"
+    verification_evidence: "Deterministic quant math verified by inspection; runtime handlers use in-memory dicts and static fallback arrays."
+
+  - business_need_id: "BR-INT-001"
+    requirement_id: "FR-INT-005"
+    rule_or_use_case_ids:
+      - "UC-INT-003"
+      - "UC-INT-004"
+      - "RULE-INT-006"
+    design_doc_ids:
+      - "INT-ARCH-EVAL-001"
+      - "CAP-INT-ORC-DM-001"
+      - "DIAG-INT-ORC-DFD-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/tool-contracts.yaml"
+      - "docs/intelligence-plane/shared-contracts/data-contract.yaml"
+    implementation_paths:
+      - "src/intelligence/reporting/validator.py"
+      - "src/intelligence/orchestrator/graph.py"
+      - "src/serving/infrastructure/runtime.py"
+    test_case_ids:
+      - "TC-INT-001"
+      - "TC-INT-005"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "ReportValidator invocation_id rejection inspected in test_three_planes_framework.py; numeric prose verification & Postgres persistence unimplemented."
+
+  - business_need_id: "BR-INT-002"
+    requirement_id: "FR-INT-006"
+    rule_or_use_case_ids:
+      - "UC-INT-001"
+    design_doc_ids:
+      - "INT-ARCH-RT-001"
+      - "CAP-INT-ORC-DB-001"
+      - "DIAG-INT-C4-001"
+      - "DIAG-INT-ORC-ERD-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/data-contract.yaml"
+      - "docs/data-plane/shared-contracts/asyncapi.yaml"
+    implementation_paths:
+      - "src/intelligence/main.py"
+      - "deploy/postgres/init/01_schema.sql"
+    test_case_ids:
+      - "TC-INT-008"
+    test_paths: []
+    verification_evidence: "NOT_IMPLEMENTED: main.py logs and exits; zero Postgres driver queries or market.anomalies.v1 Kafka consumer exist."
+
+  - business_need_id: "BR-INT-001"
+    requirement_id: "FR-INT-007"
+    rule_or_use_case_ids:
+      - "UC-INT-001"
+      - "UC-INT-004"
+    design_doc_ids:
+      - "INT-ARCH-LLM-001"
+      - "CAP-INT-ORC-AGT-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/tool-contracts.yaml"
+    implementation_paths:
+      - "src/intelligence/orchestrator/graph.py"
+      - "src/shared/config/settings.py"
+    test_case_ids:
+      - "TC-INT-008"
+    test_paths: []
+    verification_evidence: "SIMULATED: DeterministicMockLLMAdapter only; external LLM SDKs and config keys unwired."
+
+  - business_need_id: "BR-INT-002"
+    requirement_id: "NFR-INT-001"
+    rule_or_use_case_ids:
+      - "UC-INT-002"
+    design_doc_ids:
+      - "INT-ARCH-GW-001"
+      - "CAP-INT-ORC-NFR-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/tool-contracts.yaml"
+    implementation_paths:
+      - "src/intelligence/tools/gateway.py"
+    test_case_ids:
+      - "TC-INT-007"
+    test_paths: []
+    verification_evidence: "asyncio.wait_for inspected in gateway.py:79; timeout handling test NOT_IMPLEMENTED."
+
+  - business_need_id: "BR-INT-002"
+    requirement_id: "SEC-INT-001"
+    rule_or_use_case_ids:
+      - "UC-INT-001"
+      - "UC-INT-002"
+    design_doc_ids:
+      - "INT-ARCH-SEC-001"
+      - "CAP-INT-ORC-TM-001"
+      - "CAP-INT-ORC-POL-001"
+      - "DIAG-INT-ORC-TM-001"
+      - "DIAG-INT-ORC-AUTHZ-001"
+    contract_paths:
+      - "docs/intelligence-plane/domains/agent-orchestration-and-tools/capabilities/market-intelligence-workflow-and-tool-gateway/security/authorization-matrix.yaml"
+    implementation_paths:
+      - "src/intelligence/orchestrator/graph.py"
+      - "src/serving/api/modules/agent_api/presentation/router.py"
+    test_case_ids:
+      - "TC-INT-008"
+    test_paths: []
+    verification_evidence: "BLOCKED (SEC-AUDIT-003 / GAP-INT-004): hardcoded _agent_permissions and unauthenticated HTTP ingress."
+
+  - business_need_id: "BR-INT-002"
+    requirement_id: "SEC-INT-003"
+    rule_or_use_case_ids:
+      - "RULE-INT-007"
+      - "UC-INT-004"
+    design_doc_ids:
+      - "CAP-INT-ORC-TM-001"
+      - "CAP-INT-ORC-POL-001"
+    contract_paths:
+      - "docs/intelligence-plane/shared-contracts/tool-contracts.yaml"
+      - "docs/intelligence-plane/domains/agent-orchestration-and-tools/capabilities/market-intelligence-workflow-and-tool-gateway/security/authorization-matrix.yaml"
+    implementation_paths:
+      - "src/intelligence/tools/contracts.py"
+      - "src/serving/infrastructure/runtime.py"
+    test_case_ids:
+      - "TC-INT-008"
+    test_paths: []
+    verification_evidence: "OPEN (GAP-INT-005): is_read_only_market_data=True default on write/mutating tools; no side-effect isolation test."
+

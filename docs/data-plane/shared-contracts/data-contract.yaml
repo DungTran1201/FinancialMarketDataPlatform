@@ -1,0 +1,85 @@
+schema_version: "2.0.0"
+contract_id: "DC-DP-ALL-001"
+title: "FMDP Canonical Event & Medallion Dataset Contracts"
+status: "IN_REVIEW"
+owner_role: "data-architect"
+accountable_role: "data-architect"
+source_code_refs:
+  - "src/shared/contracts/events/market_events.py"
+  - "src/shared/contracts/schemas/datasets.py"
+  - "src/lakehouse/quality/gates.py"
+
+event_envelope:
+  schema_version: "1.0.0"
+  idempotency_key: "event_id (UUIDv5 via PLATFORM_EVENT_NAMESPACE d8f7c9d2-415e-4e43-8a27-99f77b2401a1)"
+  partition_key: "{provider.lower()}:{symbol.upper()}"
+  delivery_semantics:
+    as_is: "In-process at-least-once broker list poll + sink natural-key deduplication (plus optional broker event_id drop when deduplicate_events=true)."
+    target: "At-least-once Kafka consumption with manual commits after sink persistence + idempotent sinks (Redis Lua monotonic check, ClickHouse ReplacingMergeTree, Silver MERGE INTO)."
+  numeric_precision_rules:
+    prices_and_quantities: "Exact finite non-negative Decimal serialized as string (never IEEE-754 float in persisted Silver/Gold prices or CH Decimal128(18))."
+  timestamp_rules:
+    timezone: "UTC timezone-aware ISO-8601 DateTime"
+    known_code_defect: "DeadLetterEnvelopeV1.failed_at defaults to static import-time datetime.now(UTC) in market_events.py:139 when omitted."
+
+datasets:
+  - dataset_name: "silver.market_klines"
+    layer: "SILVER"
+    owner_capability: "CAP-DP-LAK-001"
+    natural_key: ["provider", "symbol", "interval", "open_time"]
+    version_column: "exchange_event_time"
+    as_is_storage: "Local ZSTD Parquet (.local_lakehouse/silver/market_klines/*.parquet) + JSON Iceberg v2 manifests"
+    target_storage: "ICEBERG_V2 on MinIO s3a://lakehouse-silver/iceberg + ClickHouse market_data.market_klines"
+    blocking_quality_rules: ["DQ-KLINE-001", "DQ-KLINE-002", "DQ-KLINE-003", "DQ-KLINE-004"]
+    warning_quality_rules: ["DQ-KLINE-005"]
+    retention_policy: "OPEN (ClickHouse klines DDL defines no TTL; Silver Iceberg snapshots keep 5 local vs 10 in catalog-config.yaml)"
+
+  - dataset_name: "silver.market_trades"
+    layer: "SILVER"
+    owner_capability: "CAP-DP-LAK-001"
+    natural_key: ["provider", "symbol", "trade_id"]
+    version_column: "ingested_at"
+    as_is_storage: "Local ZSTD Parquet (.local_lakehouse/silver/market_trades/*.parquet) + JSON Iceberg v2 manifests"
+    target_storage: "ICEBERG_V2 + ClickHouse market_data.market_trades (90 DAY TTL)"
+    blocking_quality_rules: ["DQ-TRADE-001", "DQ-TRADE-002", "DQ-TRADE-003"]
+    retention_policy: "90 DAY ClickHouse TTL in DDL; Silver snapshot retention OPEN"
+
+  - dataset_name: "silver.order_book_snapshots"
+    layer: "SILVER"
+    owner_capability: "CAP-DP-LAK-001"
+    natural_key: ["provider", "symbol", "exchange_event_time"]
+    catalog_yaml_conflict: "deploy/iceberg/catalog-config.yaml:27 declares primary_key last_update_id; Silver merge method not yet implemented for orderbook."
+    as_is_storage: "Bronze Parquet archived for ORDER_BOOK; Silver orderbook merge NOT_IMPLEMENTED in merge_engine.py"
+    target_storage: "ICEBERG_V2"
+    retention_policy: "OPEN"
+
+  - dataset_name: "gold.fct_daily_market_summary"
+    layer: "GOLD"
+    owner_capability: "CAP-DP-LAK-001"
+    natural_key: ["provider", "symbol", "trading_day"]
+    as_is_storage: "Local ZSTD Parquet (.local_lakehouse/gold/fct_daily_market_summary/gold_fct_daily_market_summary.parquet)"
+    target_storage: "ClickHouse dbt incremental ReplacingMergeTree + Gold Iceberg/Parquet"
+    dbt_model_present: true
+    retention_policy: "OPEN"
+
+  - dataset_name: "gold.fct_realized_volatility"
+    layer: "GOLD"
+    owner_capability: "CAP-DP-LAK-001"
+    natural_key: ["provider", "symbol", "window_end"]
+    as_is_storage: "Local ZSTD Parquet (.local_lakehouse/gold/fct_realized_volatility/gold_fct_realized_volatility.parquet)"
+    target_storage: "ClickHouse / Gold Parquet (no dbt SQL model implemented yet)"
+    dbt_model_present: false
+    retention_policy: "OPEN"
+
+  - dataset_name: "gold.fct_orderbook_liquidity"
+    layer: "GOLD"
+    owner_capability: "CAP-DP-LAK-001"
+    natural_key: ["provider", "symbol", "window_end"]
+    as_is_storage: "Local ZSTD Parquet (.local_lakehouse/gold/fct_orderbook_liquidity/gold_fct_orderbook_liquidity.parquet)"
+    target_storage: "ClickHouse / Gold Parquet (no dbt SQL model implemented yet)"
+    dbt_model_present: false
+    retention_policy: "OPEN"
+
+compatibility_and_evolution:
+  breaking_change_policy: "Additive nullable fields allowed; renames/removals or natural-key changes require versioned topic (.v2) or dataset table version."
+  pii_classification: "NONE (Public exchange spot market data only; zero PII)."

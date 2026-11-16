@@ -1,0 +1,56 @@
+schema_version: "2.0.0"
+capability_id: "CAP-APP-MKT-001"
+owner_role: "fullstack-engineer"
+document_status: "IN_REVIEW"
+links:
+  - business_need_id: "BR-SYS-003"
+    requirement_id: "FR-MKT-001"
+    rule_or_use_case_ids:
+      - "UC-MKT-001"
+      - "RULE-MKT-001"
+    design_doc_ids:
+      - "CAP-APP-MKT-COMP-001"
+      - "DIAG-APP-MKT-SEQ-001"
+    contract_paths:
+      - "docs/application-plane/domains/market-experience-and-catalog/capabilities/market-and-analytics-query-portal/contracts/openapi.yaml"
+    implementation_paths:
+      - "src/serving/api/modules/market/presentation/router.py"
+    test_case_ids:
+      - "TC-MKT-001"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Verified hot quote & OLAP fallback via TestClient; static orderbook fallback defect logged."
+  - business_need_id: "BR-SYS-003"
+    requirement_id: "FR-MKT-002"
+    rule_or_use_case_ids:
+      - "UC-MKT-002"
+      - "RULE-MKT-002"
+    design_doc_ids:
+      - "CAP-APP-MKT-COMP-001"
+      - "DIAG-APP-MKT-STATE-001"
+    contract_paths:
+      - "docs/application-plane/domains/market-experience-and-catalog/capabilities/market-and-analytics-query-portal/contracts/data-contract.yaml"
+    implementation_paths:
+      - "src/serving/api/modules/historical/presentation/router.py"
+    test_case_ids:
+      - "TC-MKT-002"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Verified BoundedTimeRange 422 in-process; malformed ISO 500 bug documented."
+  - business_need_id: "BR-SYS-003"
+    requirement_id: "FR-MKT-004"
+    rule_or_use_case_ids:
+      - "UC-MKT-003"
+      - "RULE-MKT-001"
+    design_doc_ids:
+      - "CAP-APP-MKT-COMP-001"
+    contract_paths:
+      - "docs/application-plane/domains/market-experience-and-catalog/capabilities/market-and-analytics-query-portal/contracts/openapi.yaml"
+    implementation_paths:
+      - "src/serving/api/modules/analytics/presentation/router.py"
+      - "frontend/src/modules/market-analytics/MarketAnalyticsModule.ts"
+    test_case_ids:
+      - "TC-MKT-003"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Backend quant endpoints verified in-process; MarketAnalyticsModule UI defects logged in COMPAT-008."

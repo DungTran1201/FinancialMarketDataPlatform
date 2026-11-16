@@ -1,0 +1,56 @@
+schema_version: "2.0.0"
+capability_id: "CAP-DP-STR-001"
+owner_role: "data-architect"
+document_status: "IN_REVIEW"
+links:
+  - business_need_id: "BR-SYS-001"
+    requirement_id: "FR-STR1-001"
+    rule_or_use_case_ids:
+      - "UC-STR1-001"
+      - "RULE-STR1-001"
+    design_doc_ids:
+      - "CAP-DP-STR1-COMP-001"
+    contract_paths:
+      - "docs/data-plane/shared-contracts/asyncapi.yaml"
+    implementation_paths:
+      - "src/streaming/infrastructure/kafka_broker.py"
+      - "src/streaming/contracts/topics.py"
+    test_case_ids:
+      - "TC-STR1-001"
+      - "TC-STR1-003"
+    test_paths:
+      - "tests/contract/test_topic_and_dataset_contracts.py"
+      - "tests/e2e/test_data_platform_v01_e2e.py"
+    verification_evidence: "Verified in-process partition & contract checks; live Kafka KRaft unverified."
+  - business_need_id: "BR-SYS-001"
+    requirement_id: "FR-STR1-002"
+    rule_or_use_case_ids:
+      - "UC-STR1-001"
+      - "RULE-STR1-002"
+    design_doc_ids:
+      - "CAP-DP-STR1-COMP-001"
+    contract_paths:
+      - "docs/data-plane/shared-contracts/asyncapi.yaml"
+    implementation_paths:
+      - "src/streaming/infrastructure/kafka_broker.py"
+    test_case_ids:
+      - "TC-STR1-002"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Verified in-process offset commit & lag calculation."
+  - business_need_id: "BR-SYS-001"
+    requirement_id: "FR-STR1-003"
+    rule_or_use_case_ids:
+      - "UC-STR1-001"
+      - "RULE-STR1-002"
+    design_doc_ids:
+      - "CAP-DP-STR1-TM-001"
+    contract_paths:
+      - "docs/data-plane/shared-contracts/data-contract.yaml"
+    implementation_paths:
+      - "src/streaming/infrastructure/kafka_broker.py"
+    test_case_ids:
+      - "TC-STR1-002"
+    test_paths:
+      - "tests/integration/test_three_planes_framework.py"
+    verification_evidence: "Verified in-process DLQ quarantine."

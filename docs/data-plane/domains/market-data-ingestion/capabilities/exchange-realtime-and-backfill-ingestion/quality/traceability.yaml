@@ -1,0 +1,75 @@
+schema_version: "2.0.0"
+capability_id: "CAP-DP-ING-001"
+owner_role: "data-architect"
+document_status: "IN_REVIEW"
+links:
+  - business_need_id: "BR-SYS-001"
+    requirement_id: "FR-ING-001"
+    rule_or_use_case_ids:
+      - "UC-ING-001"
+      - "RULE-ING-001"
+    design_doc_ids:
+      - "CAP-DP-ING-COMP-001"
+    contract_paths:
+      - "docs/data-plane/shared-contracts/asyncapi.yaml"
+      - "docs/data-plane/shared-contracts/data-contract.yaml"
+    implementation_paths:
+      - "src/ingestion/providers/binance/normalizer.py"
+      - "src/ingestion/application/ws_service.py"
+    test_case_ids:
+      - "TC-ING-002"
+    test_paths:
+      - "tests/resilience/test_gap_recovery_and_dlq.py"
+    verification_evidence: "Verified in-process via pytest tests/resilience/test_gap_recovery_and_dlq.py (live Binance WS NOT_IMPLEMENTED)."
+  - business_need_id: "BR-SYS-001"
+    requirement_id: "FR-ING-002"
+    rule_or_use_case_ids:
+      - "UC-ING-001"
+      - "RULE-ING-002"
+    design_doc_ids:
+      - "CAP-DP-ING-COMP-001"
+    contract_paths:
+      - "docs/data-plane/domains/market-data-ingestion/capabilities/exchange-realtime-and-backfill-ingestion/contracts/openapi.yaml"
+    implementation_paths:
+      - "src/ingestion/providers/binance/rest_client.py"
+      - "src/ingestion/application/rate_limiter.py"
+    test_case_ids:
+      - "TC-ING-003"
+      - "TC-ING-004"
+    test_paths:
+      - "tests/e2e/test_data_platform_v01_e2e.py"
+      - "tests/unit/test_domain_and_quant.py"
+    verification_evidence: "Verified via embedded ASGI exchange simulator (live HTTPS unused by default)."
+  - business_need_id: "BR-SYS-001"
+    requirement_id: "FR-ING-003"
+    rule_or_use_case_ids:
+      - "UC-ING-001"
+      - "RULE-ING-003"
+    design_doc_ids:
+      - "CAP-DP-ING-COMP-001"
+      - "DIAG-DP-ING-SEQ-001"
+    contract_paths:
+      - "docs/data-plane/shared-contracts/asyncapi.yaml"
+    implementation_paths:
+      - "src/ingestion/application/ws_service.py"
+      - "src/ingestion/application/backfill_service.py"
+    test_case_ids:
+      - "TC-ING-001"
+    test_paths:
+      - "tests/resilience/test_gap_recovery_and_dlq.py"
+    verification_evidence: "Verified in-process gap recovery test."
+  - business_need_id: "BR-SYS-001"
+    requirement_id: "SEC-ING-001"
+    rule_or_use_case_ids:
+      - "RULE-ING-001"
+    design_doc_ids:
+      - "CAP-DP-ING-TM-001"
+    contract_paths:
+      - "docs/data-plane/shared-contracts/data-contract.yaml"
+    implementation_paths:
+      - "src/ingestion/providers/binance/normalizer.py"
+    test_case_ids:
+      - "TC-ING-002"
+    test_paths:
+      - "tests/resilience/test_gap_recovery_and_dlq.py"
+    verification_evidence: "Verified poison-frame rejection in-process; HTTP endpoint RBAC SEC-ING-002 BLOCKED."
