@@ -5,7 +5,9 @@ export class MarketService {
   constructor(private client = defaultApiClient) {}
 
   public async getLatestPrice(symbol: string, provider = 'binance'): Promise<PriceQuote> {
-    const data = await this.client.get('/market/price', { symbol, provider });
+    const res = await this.client.get(`/market/prices/${encodeURIComponent(symbol.toUpperCase())}`, { provider });
+    const data = res?.data ?? res ?? {};
+    const meta = res?.meta ?? {};
     return {
       provider: data.provider || provider,
       symbol: data.symbol || symbol,
@@ -16,17 +18,19 @@ export class MarketService {
       high_24h: String(data.high_24h || '0'),
       low_24h: String(data.low_24h || '0'),
       change_24h_percent: String(data.change_24h_percent || '0'),
-      event_time: data.event_time || data.timestamp || new Date().toISOString(),
-      source: data.source || 'REDIS_HOT'
+      event_time: data.exchange_event_time || data.event_time || data.timestamp || new Date().toISOString(),
+      source: data.source || meta.source || 'REDIS_HOT'
     };
   }
 
   public async getOrderBook(symbol: string, limit = 20): Promise<OrderBookSnapshot> {
-    const data = await this.client.get('/market/orderbook', { symbol, limit });
+    const depth = Math.max(5, Math.min(20, limit));
+    const res = await this.client.get(`/market/orderbook/${encodeURIComponent(symbol.toUpperCase())}`, { depth });
+    const data = res?.data ?? res ?? {};
     return {
       provider: data.provider || 'binance',
       symbol: data.symbol || symbol,
-      timestamp: data.timestamp || new Date().toISOString(),
+      timestamp: data.exchange_event_time || data.timestamp || new Date().toISOString(),
       bids: (data.bids || []).map((b: any) => ({
         price: Array.isArray(b) ? String(b[0]) : String(b.price),
         quantity: Array.isArray(b) ? String(b[1]) : String(b.quantity)
@@ -44,7 +48,10 @@ export class MarketService {
     interval: TimeInterval = '1m',
     limit = 60
   ): Promise<KlineCandle[]> {
-    const res = await this.client.get('/historical/klines', { symbol, interval, limit });
+    const res = await this.client.get(`/historical/klines/${encodeURIComponent(symbol.toUpperCase())}`, {
+      interval,
+      limit
+    });
     const items = Array.isArray(res) ? res : res.candles || res.data || [];
     return items.map((c: any) => ({
       symbol: c.symbol || symbol,
@@ -55,8 +62,8 @@ export class MarketService {
       high: parseFloat(c.high || c.high_price || '0'),
       low: parseFloat(c.low || c.low_price || '0'),
       close: parseFloat(c.close || c.close_price || '0'),
-      volume: parseFloat(c.volume || '0'),
-      trades_count: c.trades_count || c.count || 0,
+      volume: parseFloat(c.volume || c.base_volume || '0'),
+      trades_count: c.trades_count || c.trade_count || c.count || 0,
       is_closed: c.is_closed ?? true
     }));
   }

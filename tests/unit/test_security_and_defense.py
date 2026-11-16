@@ -233,6 +233,18 @@ class TestFastApiDefenseInDepthGatewayAndAuthEndpoints(unittest.TestCase):
         self.assertEqual(verify_after_revoke.status_code, 401)
 
     def test_untrusted_host_waf_403_and_rate_limit_429(self) -> None:
+        # 0. Root index returns 200 JSON service discovery with hardened headers
+        root_resp = self.client.get("/", headers={"Host": "api.fmdp.local"})
+        self.assertEqual(root_resp.status_code, 200)
+        self.assertEqual(root_resp.json()["status"], "alive")
+        self.assertEqual(root_resp.json()["endpoints"]["swagger_docs"], "/api/docs")
+        self.assertIn("max-age=63072000", root_resp.headers["Strict-Transport-Security"])
+
+        # Internal Docker service host for Prometheus scraping is allowed
+        prom_scrape = self.client.get("/metrics", headers={"Host": "backend-api:8000"})
+        self.assertEqual(prom_scrape.status_code, 200)
+        self.assertIn("fmdp_ingested_events_total", prom_scrape.text)
+
         # 1. Untrusted Host Header -> 400
         bad_host = self.client.get("/api/v1/health/live", headers={"Host": "phishing.attacker.org"})
         self.assertEqual(bad_host.status_code, 400)

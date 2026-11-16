@@ -113,6 +113,7 @@ class TestDataPlatformV01AndMicroservices(unittest.TestCase):
             self.assertIsNotNone(wm)
             assert wm is not None
             self.assertEqual(wm.status, "SYNCED")
+            wm_store.close()
 
         asyncio.run(_scenario())
 
@@ -165,6 +166,7 @@ class TestDataPlatformV01AndMicroservices(unittest.TestCase):
                 lineage = pipeline.lineage_registry.export_lineage_catalog()
                 self.assertEqual(lineage["total_datasets"], 12)
                 self.assertGreaterEqual(lineage["total_lineage_edges"], 10)
+                pipeline.watermark_store.close()
 
         asyncio.run(_scenario())
 
@@ -266,6 +268,7 @@ class TestDataPlatformV01AndMicroservices(unittest.TestCase):
                 root_metrics = await client.get("/metrics")
                 self.assertEqual(root_metrics.status_code, 200)
                 self.assertIn("fmdp_ingested_events_total", root_metrics.text)
+            rt.close()
 
         asyncio.run(_scenario())
 

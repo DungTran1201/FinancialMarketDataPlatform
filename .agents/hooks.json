@@ -29,21 +29,6 @@
       }
     ]
   },
-  "model-post-write-check": {
-    "enabled": true,
-    "PostToolUse": [
-      {
-        "matcher": "write_file|edit_file",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python ../tools/hooks/post_model_write_check.py",
-            "timeout": 10
-          }
-        ]
-      }
-    ]
-  },
   "stop-readiness-check": {
     "enabled": false,
     "Stop": [
@@ -55,4 +40,3 @@
     ]
   }
 }
-

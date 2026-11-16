@@ -1,0 +1,707 @@
+# Documentation V2 Artifact Catalog
+# Validated against docs/governance/schemas/artifact-catalog.schema.json
+schema_version: "2.0.0"
+doc_id: "GOV-CAT-ART-001"
+title: "Documentation V2 Canonical Artifact Catalog"
+status: "APPROVED"
+owner_role: "documentation-architect"
+accountable_role: "documentation-architect"
+updated_at: "2026-11-16"
+
+artifacts:
+  - artifact_id: "ART-ROOT-README"
+    name: "Scoped Directory README Index"
+    purpose: "Defines scope, ownership, navigation links, and entrypoints for a plane, domain, capability, or subsystem directory."
+    owner_role: "documentation-architect"
+    accountable_role: "documentation-architect"
+    template_path: "docs/governance/templates/common/readme.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane", "domain", "capability", "governance"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane", "governance"]
+    applicable_work_types: ["new-capability", "plane-architecture", "doc-refactoring"]
+    preconditions: ["Target directory exists cleanly without empty speculative subtrees."]
+    required_related_artifacts: []
+    validation_rules: ["VAL-FM-001", "VAL-LINK-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-1-SCOPE"
+      approvers: ["documentation-architect"]
+
+  - artifact_id: "ART-GLOSSARY"
+    name: "Domain & Platform Ubiquitous Glossary Entry"
+    purpose: "Establishes unambiguous domain terminology, code symbol alignment, and disallowed synonyms."
+    owner_role: "business-analyst"
+    accountable_role: "documentation-architect"
+    template_path: "docs/governance/templates/common/glossary-entry.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane", "domain"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "domain-modeling", "doc-refactoring"]
+    preconditions: ["Authoritative domain terms extracted from verified code or stakeholder input."]
+    required_related_artifacts: ["ART-DOM-SPEC"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-2-REQS"
+      approvers: ["business-analyst"]
+
+  - artifact_id: "ART-CAP-MANIFEST"
+    name: "Capability Manifest (capability.yaml)"
+    purpose: "Machine-readable declaration of capability ownership, risk tier, technical signals, applicability decisions, code/test paths, and blockers."
+    owner_role: "business-analyst"
+    accountable_role: "business-analyst"
+    template_path: "docs/governance/templates/product-and-requirements/capability.template.yaml"
+    schema_path: "docs/governance/schemas/capability-manifest.schema.json"
+    scope_levels: ["capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "feature-enhancement", "security-change", "schema-migration", "api-contract-change", "data-pipeline-change", "agent-tool-change"]
+    preconditions: ["Parent domain exists and capability ownership is assigned."]
+    required_related_artifacts: ["ART-CAP-SPEC"]
+    validation_rules: ["VAL-CAP-SCHEMA-001", "VAL-CAP-MATRIX-001", "VAL-CAP-REASON-001"]
+    approval_requirements:
+      gate: "QG-1-SCOPE"
+      approvers: ["business-analyst"]
+
+  - artifact_id: "ART-PROD-BRIEF"
+    name: "Product Brief & System Scope"
+    purpose: "Captures top-level problem statement, business outcomes, in/out-of-scope boundaries, constraints, and unresolved scope questions."
+    owner_role: "business-analyst"
+    accountable_role: "business-analyst"
+    template_path: "docs/governance/templates/product-and-requirements/product-brief.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform"]
+    applicable_planes: ["platform"]
+    applicable_work_types: ["platform-baseline", "major-scope-change"]
+    preconditions: ["Repository AS-IS audit completed."]
+    required_related_artifacts: ["ART-SYS-REQS"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001", "VAL-TBD-001"]
+    approval_requirements:
+      gate: "QG-2-REQS"
+      approvers: ["business-analyst"]
+
+  - artifact_id: "ART-SYS-REQS"
+    name: "System Business & Quality Requirements Index"
+    purpose: "Records cross-platform BR/FR/NFR index linking down to owning plane and capability specifications."
+    owner_role: "business-analyst"
+    accountable_role: "business-analyst"
+    template_path: "docs/governance/templates/product-and-requirements/system-requirements.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["platform-baseline", "major-scope-change", "plane-architecture"]
+    preconditions: ["Product Brief or Plane scope approved."]
+    required_related_artifacts: ["ART-PROD-BRIEF"]
+    validation_rules: ["VAL-FM-001", "VAL-ID-UNIQUE-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-2-REQS"
+      approvers: ["business-analyst"]
+
+  - artifact_id: "ART-DOM-SPEC"
+    name: "Domain Boundary Specification"
+    purpose: "Defines bounded domain context, core concepts, cross-domain events, and owned capability inventory."
+    owner_role: "business-analyst"
+    accountable_role: "business-analyst"
+    template_path: "docs/governance/templates/product-and-requirements/domain-specification.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["domain"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["domain-modeling", "new-capability"]
+    preconditions: ["Owning plane architecture defined."]
+    required_related_artifacts: ["ART-ARCH-DESC"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-2-REQS"
+      approvers: ["business-analyst", "system-architect"]
+
+  - artifact_id: "ART-CAP-SPEC"
+    name: "Capability Specification"
+    purpose: "Authoritative requirement specification for a single capability: BR/FR links, AS-IS vs. TARGET behavior, AC, dependencies, and open questions."
+    owner_role: "business-analyst"
+    accountable_role: "business-analyst"
+    template_path: "docs/governance/templates/product-and-requirements/capability-specification.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "feature-enhancement", "security-change", "data-pipeline-change", "agent-tool-change"]
+    preconditions: ["ART-CAP-MANIFEST exists cleanly."]
+    required_related_artifacts: ["ART-CAP-MANIFEST", "ART-TRACEABILITY"]
+    validation_rules: ["VAL-FM-001", "VAL-ID-UNIQUE-001", "VAL-SEC-REQ-001", "VAL-TBD-001"]
+    approval_requirements:
+      gate: "QG-2-REQS"
+      approvers: ["business-analyst"]
+
+  - artifact_id: "ART-USE-CASE"
+    name: "Actor-Goal Use Case Specification"
+    purpose: "Specifies triggers, preconditions, main flow, alternative flows, exception paths, and postconditions for actor interactions."
+    owner_role: "business-analyst"
+    accountable_role: "business-analyst"
+    template_path: "docs/governance/templates/product-and-requirements/use-case.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["capability", "use-case"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "feature-enhancement", "agent-tool-change"]
+    preconditions: ["Parent capability FR IDs assigned."]
+    required_related_artifacts: ["ART-CAP-SPEC"]
+    validation_rules: ["VAL-FM-001", "VAL-ID-UNIQUE-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-2-REQS"
+      approvers: ["business-analyst"]
+
+  - artifact_id: "ART-BUS-RULE"
+    name: "Domain Business Rules & Constraints Catalog"
+    purpose: "Documents deterministic formulas, decision tables, compliance invariants, and violation responses."
+    owner_role: "business-analyst"
+    accountable_role: "business-analyst"
+    template_path: "docs/governance/templates/product-and-requirements/business-rules.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["domain", "capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "feature-enhancement", "data-pipeline-change", "security-change"]
+    preconditions: ["Invariants identified from requirements or verified financial formulas."]
+    required_related_artifacts: ["ART-CAP-SPEC"]
+    validation_rules: ["VAL-FM-001", "VAL-ID-UNIQUE-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-2-REQS"
+      approvers: ["business-analyst"]
+
+  - artifact_id: "ART-WORKFLOW"
+    name: "Cross-Actor Workflow Specification"
+    purpose: "Models multi-step orchestration handoffs, decision gateways, compensating branches, and SLA/retry boundaries."
+    owner_role: "business-analyst"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/product-and-requirements/workflow-specification.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "data-pipeline-change", "agent-tool-change"]
+    preconditions: ["Parent capability requirements or plane flows defined."]
+    required_related_artifacts: ["ART-CAP-SPEC"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["business-analyst", "system-architect"]
+
+  - artifact_id: "ART-NFR-SPEC"
+    name: "Non-Functional Requirements & Quality Targets"
+    purpose: "Specifies measurable latency, throughput, availability, consistency, durability, and verification methods without unconfirmed SLA invention."
+    owner_role: "business-analyst"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/product-and-requirements/nfr.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane", "capability"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "data-pipeline-change", "agent-tool-change", "plane-architecture"]
+    preconditions: ["Capability scope and runtime constraints identified."]
+    required_related_artifacts: ["ART-CAP-SPEC"]
+    validation_rules: ["VAL-FM-001", "VAL-ID-UNIQUE-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-2-REQS"
+      approvers: ["system-architect", "devops-sre"]
+
+  - artifact_id: "ART-ARCH-DESC"
+    name: "Scoped Architecture Description (arc42-Adapted)"
+    purpose: "Documents platform or plane context, building block dependency rules, runtime concepts, AS-IS vs. TARGET, and technical risks."
+    owner_role: "system-architect"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/architecture/architecture-description.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["platform-baseline", "plane-architecture", "major-scope-change"]
+    preconditions: ["Codebase and deployment configs inspected for AS-IS state."]
+    required_related_artifacts: ["ART-DIAG-C4"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001", "VAL-TBD-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["system-architect"]
+
+  - artifact_id: "ART-COMP-DESIGN"
+    name: "Capability Component & Interface Design"
+    purpose: "Translates capability requirements into module decomposition, Clean Architecture port boundaries, state transitions, and error handling."
+    owner_role: "fullstack-engineer"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/architecture/component-design.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["capability", "component"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "feature-enhancement", "api-contract-change", "data-pipeline-change"]
+    preconditions: ["ART-CAP-SPEC authored."]
+    required_related_artifacts: ["ART-CAP-SPEC"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["system-architect"]
+
+  - artifact_id: "ART-ADR"
+    name: "Architecture Decision Record (MADR 4.0)"
+    purpose: "Captures significant architectural decisions, drivers, evaluated alternatives, consequences, and compliance impact."
+    owner_role: "system-architect"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/architecture/adr.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane", "capability"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["platform-baseline", "plane-architecture", "major-scope-change", "security-change", "schema-migration"]
+    preconditions: ["Material decision with alternatives and long-lived trade-offs identified."]
+    required_related_artifacts: []
+    validation_rules: ["VAL-FM-001", "VAL-ID-UNIQUE-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["system-architect"]
+
+  - artifact_id: "ART-AGENT-SPEC"
+    name: "AI Agent Runtime & Tool Contract Specification"
+    purpose: "Documents Intelligence Plane graph state, LLM interaction constraints, read/write tool permissions, human approvals, budgets, and eval gates."
+    owner_role: "ai-engineer"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/architecture/agent-specification.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["intelligence-plane"]
+    applicable_work_types: ["new-capability", "agent-tool-change", "security-change"]
+    preconditions: ["Agent runtime module or workflow identified in Intelligence Plane."]
+    required_related_artifacts: ["ART-CAP-SPEC", "ART-DIAG-AGENT"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001", "VAL-TBD-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["system-architect", "security-architect"]
+
+  - artifact_id: "ART-OPENAPI"
+    name: "OpenAPI 3.1.0 HTTP Contract"
+    purpose: "Machine-readable synchronous HTTP/REST contract specifying endpoints, auth schemes, schemas, and deterministic error envelopes."
+    owner_role: "fullstack-engineer"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/interfaces-and-data/openapi.template.yaml"
+    schema_path: null
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "api-contract-change", "feature-enhancement"]
+    preconditions: ["Capability exposes or modifies HTTP API routes."]
+    required_related_artifacts: ["ART-COMP-DESIGN", "ART-ERR-CAT"]
+    validation_rules: ["VAL-OPENAPI-001", "VAL-LINK-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["system-architect"]
+
+  - artifact_id: "ART-ASYNCAPI"
+    name: "AsyncAPI 3.1.0 Event & Stream Contract"
+    purpose: "Machine-readable asynchronous contract specifying Kafka/WebSocket/SSE channels, operations, headers, partitioning keys, and envelopes."
+    owner_role: "data-architect"
+    accountable_role: "data-architect"
+    template_path: "docs/governance/templates/interfaces-and-data/asyncapi.template.yaml"
+    schema_path: null
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["data-plane", "application-plane"]
+    applicable_work_types: ["new-capability", "data-pipeline-change", "api-contract-change"]
+    preconditions: ["Capability produces or consumes asynchronous Kafka, WebSocket, or SSE messages."]
+    required_related_artifacts: ["ART-DATA-CONTRACT", "ART-DIAG-DFD"]
+    validation_rules: ["VAL-ASYNCAPI-001", "VAL-LINK-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["data-architect"]
+
+  - artifact_id: "ART-ERR-CAT"
+    name: "Canonical API & Pipeline Error Catalog"
+    purpose: "Standardizes stable error codes, HTTP status or DLQ classifications, retry semantics, and remediation guidance."
+    owner_role: "fullstack-engineer"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/interfaces-and-data/error-catalog.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "api-contract-change", "data-pipeline-change"]
+    preconditions: ["Interface or pipeline errors defined."]
+    required_related_artifacts: []
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["system-architect"]
+
+  - artifact_id: "ART-DATA-CONTRACT"
+    name: "Dataset & Schema Evolution Contract"
+    purpose: "Defines dataset ownership, field types (Decimal rules), PII classification, SLA, quality gates, schema evolution compatibility, and retention."
+    owner_role: "data-architect"
+    accountable_role: "data-architect"
+    template_path: "docs/governance/templates/interfaces-and-data/data-contract.template.yaml"
+    schema_path: null
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["data-plane", "application-plane"]
+    applicable_work_types: ["new-capability", "data-pipeline-change", "schema-migration"]
+    preconditions: ["Persistent dataset, lakehouse table, or shared stream schema defined."]
+    required_related_artifacts: ["ART-DATA-MODEL"]
+    validation_rules: ["VAL-YAML-001", "VAL-LINK-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["data-architect"]
+
+  - artifact_id: "ART-DATA-MODEL"
+    name: "Conceptual & Logical Data Model"
+    purpose: "Captures domain entities, attributes, natural/surrogate keys, invariants, temporal precision, and decimal rules independent of physical engine."
+    owner_role: "database-architect"
+    accountable_role: "database-architect"
+    template_path: "docs/governance/templates/interfaces-and-data/data-model.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["domain", "capability"]
+    applicable_planes: ["data-plane", "application-plane"]
+    applicable_work_types: ["new-capability", "schema-migration", "data-pipeline-change"]
+    preconditions: ["Persistent state or analytical dataset identified."]
+    required_related_artifacts: ["ART-CAP-SPEC"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["database-architect"]
+
+  - artifact_id: "ART-DB-DESIGN"
+    name: "Physical Database Design & Migration Specification"
+    purpose: "Defines physical engines, table DDL/engines, partitions, sort keys, indexes, locking, transactionality, migrations, and rollback scripts."
+    owner_role: "database-architect"
+    accountable_role: "database-architect"
+    template_path: "docs/governance/templates/interfaces-and-data/database-design.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["capability"]
+    applicable_planes: ["data-plane", "application-plane"]
+    applicable_work_types: ["new-capability", "schema-migration", "data-pipeline-change"]
+    preconditions: ["ART-DATA-MODEL defined."]
+    required_related_artifacts: ["ART-DATA-MODEL", "ART-DIAG-ERD"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001", "VAL-TBD-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["database-architect"]
+
+  - artifact_id: "ART-THREAT-MODEL"
+    name: "Security Threat Model Specification"
+    purpose: "Documents assets, trust boundaries, entry points, abuse scenarios, inherent/residual risks, mitigations, and AS-IS vulnerability gaps."
+    owner_role: "security-architect"
+    accountable_role: "security-architect"
+    template_path: "docs/governance/templates/security/threat-model.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane", "capability"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "security-change", "api-contract-change", "agent-tool-change"]
+    preconditions: ["HIGH_CRITICAL risk tier OR handles auth/external exposure/write tools."]
+    required_related_artifacts: ["ART-SEC-REQ", "ART-DIAG-TM"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001", "VAL-TBD-001"]
+    approval_requirements:
+      gate: "QG-4-SECURITY"
+      approvers: ["security-architect"]
+
+  - artifact_id: "ART-SEC-REQ"
+    name: "Security & Privacy Control Requirements"
+    purpose: "Maps ASVS/SSDF-informed controls (`SEC-...`) to testable verification cases, secret hygiene rules, and audit logging."
+    owner_role: "security-architect"
+    accountable_role: "security-architect"
+    template_path: "docs/governance/templates/security/security-requirements.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "security-change", "agent-tool-change"]
+    preconditions: ["Threat scenarios or auth/data controls identified."]
+    required_related_artifacts: ["ART-CAP-SPEC", "ART-TEST-CASES"]
+    validation_rules: ["VAL-FM-001", "VAL-ID-UNIQUE-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-4-SECURITY"
+      approvers: ["security-architect"]
+
+  - artifact_id: "ART-AUTHZ-MATRIX"
+    name: "RBAC / Scope Authorization Matrix"
+    purpose: "Machine-readable subject x resource x action x condition permission rules aligned to least privilege."
+    owner_role: "security-architect"
+    accountable_role: "security-architect"
+    template_path: "docs/governance/templates/security/authorization-matrix.template.yaml"
+    schema_path: null
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "security-change", "agent-tool-change"]
+    preconditions: ["Operations, endpoints, or tools enforce or require role/scope control."]
+    required_related_artifacts: ["ART-SEC-REQ"]
+    validation_rules: ["VAL-YAML-001", "VAL-LINK-001"]
+    approval_requirements:
+      gate: "QG-4-SECURITY"
+      approvers: ["security-architect"]
+
+  - artifact_id: "ART-TEST-PLAN"
+    name: "Quality & Verification Test Plan"
+    purpose: "Defines verification scope, test levels, test data strategy, entry/exit criteria, and environment constraints."
+    owner_role: "qa-lead"
+    accountable_role: "qa-lead"
+    template_path: "docs/governance/templates/quality/test-plan.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane", "capability"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "plane-architecture", "security-change"]
+    preconditions: ["Scope and NFR/FR baselines drafted."]
+    required_related_artifacts: ["ART-TEST-SCEN", "ART-TRACEABILITY"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-6-VERIFY"
+      approvers: ["qa-lead"]
+
+  - artifact_id: "ART-TEST-SCEN"
+    name: "Behavioral & Fault Test Scenarios"
+    purpose: "Lists human-readable positive, negative, boundary, replay, security, and failure scenarios linked to requirements."
+    owner_role: "qa-lead"
+    accountable_role: "qa-lead"
+    template_path: "docs/governance/templates/quality/test-scenarios.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "feature-enhancement", "security-change", "data-pipeline-change", "agent-tool-change"]
+    preconditions: ["ART-CAP-SPEC requirements enumerated."]
+    required_related_artifacts: ["ART-CAP-SPEC"]
+    validation_rules: ["VAL-FM-001", "VAL-ID-UNIQUE-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-6-VERIFY"
+      approvers: ["qa-lead"]
+
+  - artifact_id: "ART-TEST-CASES"
+    name: "Deterministic Executable Test Cases Specification"
+    purpose: "Machine-readable test case catalog (`TC-...`) mapping inputs, preconditions, assertions, mock boundaries, and test paths."
+    owner_role: "qa-lead"
+    accountable_role: "qa-lead"
+    template_path: "docs/governance/templates/quality/test-cases.template.yaml"
+    schema_path: null
+    scope_levels: ["capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "feature-enhancement", "security-change", "schema-migration", "data-pipeline-change", "agent-tool-change"]
+    preconditions: ["Requirements or test scenarios defined."]
+    required_related_artifacts: ["ART-TRACEABILITY"]
+    validation_rules: ["VAL-YAML-001", "VAL-ID-UNIQUE-001", "VAL-LINK-001"]
+    approval_requirements:
+      gate: "QG-6-VERIFY"
+      approvers: ["qa-lead"]
+
+  - artifact_id: "ART-TRACEABILITY"
+    name: "Bidirectional Traceability Matrix (traceability.yaml)"
+    purpose: "Connects Business Needs -> Requirements -> Rules/UCs -> Design -> Contracts -> Code Paths -> Tests -> Verification Evidence."
+    owner_role: "business-analyst"
+    accountable_role: "qa-lead"
+    template_path: "docs/governance/templates/quality/traceability.template.yaml"
+    schema_path: "docs/governance/schemas/traceability.schema.json"
+    scope_levels: ["capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "feature-enhancement", "security-change", "schema-migration", "api-contract-change", "data-pipeline-change", "agent-tool-change"]
+    preconditions: ["ART-CAP-MANIFEST and ART-CAP-SPEC exist cleanly."]
+    required_related_artifacts: ["ART-CAP-MANIFEST", "ART-CAP-SPEC"]
+    validation_rules: ["VAL-TRAC-SCHEMA-001", "VAL-LINK-001"]
+    approval_requirements:
+      gate: "QG-6-VERIFY"
+      approvers: ["qa-lead"]
+
+  - artifact_id: "ART-DEPLOY-DESC"
+    name: "Runtime Deployment & Environment Topology Specification"
+    purpose: "Documents container/service runtime units, env configuration keys, network segmentation, ports, and resource/health checks."
+    owner_role: "devops-sre"
+    accountable_role: "devops-sre"
+    template_path: "docs/governance/templates/operations/deployment-description.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane", "capability"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["platform-baseline", "plane-architecture", "new-capability"]
+    preconditions: ["Deployment topology or Compose/IaC definitions inspected."]
+    required_related_artifacts: ["ART-DIAG-DEP"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-7-OPS"
+      approvers: ["devops-sre"]
+
+  - artifact_id: "ART-RUNBOOK"
+    name: "Operational Runbook & Rollback Procedure"
+    purpose: "Provides operator procedures for startup checks, health diagnostics, backlog replay, schema rollback, and emergency mitigations."
+    owner_role: "devops-sre"
+    accountable_role: "devops-sre"
+    template_path: "docs/governance/templates/operations/runbook.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "schema-migration", "data-pipeline-change", "incident-remediation"]
+    preconditions: ["Operational failure modes and rollback actions identified."]
+    required_related_artifacts: []
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-7-OPS"
+      approvers: ["devops-sre"]
+
+  - artifact_id: "ART-OBS-SLO"
+    name: "Observability, SLIs, SLOs & Alerting Specification"
+    purpose: "Defines Prometheus metric cardinality discipline, trace spans, structured logging, SLIs, SLO targets, and alert thresholds."
+    owner_role: "devops-sre"
+    accountable_role: "devops-sre"
+    template_path: "docs/governance/templates/operations/observability-and-slo.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "data-pipeline-change", "agent-tool-change", "plane-architecture"]
+    preconditions: ["NFRs or telemetry emission paths identified."]
+    required_related_artifacts: ["ART-NFR-SPEC"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-7-OPS"
+      approvers: ["devops-sre"]
+
+  - artifact_id: "ART-INC-REC"
+    name: "Backup, Disaster Recovery & Incident Response Plan"
+    purpose: "Specifies RPO/RTO objectives, backup cadence, restore drills, replay recovery, and severity escalation protocols."
+    owner_role: "devops-sre"
+    accountable_role: "devops-sre"
+    template_path: "docs/governance/templates/operations/incident-and-recovery.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane", "capability"]
+    applicable_planes: ["platform", "data-plane", "application-plane"]
+    applicable_work_types: ["platform-baseline", "data-pipeline-change", "schema-migration", "incident-remediation"]
+    preconditions: ["Stateful persistence or critical streaming recovery paths exist."]
+    required_related_artifacts: ["ART-RUNBOOK"]
+    validation_rules: ["VAL-FM-001", "VAL-SEC-REQ-001"]
+    approval_requirements:
+      gate: "QG-7-OPS"
+      approvers: ["devops-sre"]
+
+  - artifact_id: "ART-DIAG-C4"
+    name: "C4 Context / Container / Component Diagram"
+    purpose: "Derived C4 architectural view linked strictly to an authoritative Architecture Description or Component Design."
+    owner_role: "system-architect"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/diagrams/c4-diagram.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane", "capability"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["platform-baseline", "plane-architecture", "new-capability"]
+    preconditions: ["Authoritative ART-ARCH-DESC or ART-COMP-DESIGN exists."]
+    required_related_artifacts: []
+    validation_rules: ["VAL-FM-001", "VAL-DIAG-SOT-001", "VAL-DIAG-MERMAID-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["system-architect"]
+
+  - artifact_id: "ART-DIAG-BPMN"
+    name: "BPMN 2.0.2 Swimlane Workflow Diagram"
+    purpose: "Derived multi-actor swimlane diagram showing handoffs, decision gateways, and SLA boundaries."
+    owner_role: "business-analyst"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/diagrams/bpmn-diagram.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "data-pipeline-change"]
+    preconditions: ["Authoritative ART-WORKFLOW exists."]
+    required_related_artifacts: ["ART-WORKFLOW"]
+    validation_rules: ["VAL-FM-001", "VAL-DIAG-SOT-001", "VAL-DIAG-MERMAID-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["system-architect"]
+
+  - artifact_id: "ART-DIAG-SEQ"
+    name: "UML 2.5.1 Sequence Diagram"
+    purpose: "Derived chronological interaction view detailing sync/async protocol hops, retries, auth validation, and failure paths."
+    owner_role: "fullstack-engineer"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/diagrams/sequence-diagram.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "api-contract-change", "feature-enhancement"]
+    preconditions: ["Authoritative ART-COMP-DESIGN or ART-USE-CASE exists."]
+    required_related_artifacts: ["ART-COMP-DESIGN"]
+    validation_rules: ["VAL-FM-001", "VAL-DIAG-SOT-001", "VAL-DIAG-MERMAID-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["system-architect"]
+
+  - artifact_id: "ART-DIAG-STATE"
+    name: "UML 2.5.1 State Machine Diagram"
+    purpose: "Derived lifecycle state transition diagram for entities, jobs, runs, or orders with >=3 states."
+    owner_role: "fullstack-engineer"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/diagrams/state-machine-diagram.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["capability"]
+    applicable_planes: ["data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "feature-enhancement", "data-pipeline-change"]
+    preconditions: ["Authoritative ART-COMP-DESIGN or ART-DATA-MODEL specifies >=3 states."]
+    required_related_artifacts: ["ART-COMP-DESIGN"]
+    validation_rules: ["VAL-FM-001", "VAL-DIAG-SOT-001", "VAL-DIAG-MERMAID-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["system-architect"]
+
+  - artifact_id: "ART-DIAG-ERD"
+    name: "Entity-Relationship Diagram (ERD)"
+    purpose: "Derived Crow's Foot data structure diagram illustrating keys, cardinalities, and foreign/logical joins."
+    owner_role: "database-architect"
+    accountable_role: "database-architect"
+    template_path: "docs/governance/templates/diagrams/erd-diagram.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["domain", "capability"]
+    applicable_planes: ["data-plane", "application-plane"]
+    applicable_work_types: ["new-capability", "schema-migration", "data-pipeline-change"]
+    preconditions: ["Authoritative ART-DATA-MODEL or ART-DB-DESIGN exists."]
+    required_related_artifacts: ["ART-DATA-MODEL"]
+    validation_rules: ["VAL-FM-001", "VAL-DIAG-SOT-001", "VAL-DIAG-MERMAID-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["database-architect"]
+
+  - artifact_id: "ART-DIAG-DFD"
+    name: "Data Flow & Medallion Lineage Diagram"
+    purpose: "Derived pipeline lineage view depicting sources, event topics, quality gates, DLQs, and serving sinks."
+    owner_role: "data-architect"
+    accountable_role: "data-architect"
+    template_path: "docs/governance/templates/diagrams/data-flow-diagram.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["data-plane", "application-plane"]
+    applicable_work_types: ["new-capability", "data-pipeline-change", "plane-architecture"]
+    preconditions: ["Authoritative data flow, stream contract, or plane architecture exists."]
+    required_related_artifacts: ["ART-DATA-CONTRACT"]
+    validation_rules: ["VAL-FM-001", "VAL-DIAG-SOT-001", "VAL-DIAG-MERMAID-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["data-architect"]
+
+  - artifact_id: "ART-DIAG-DEP"
+    name: "Deployment & Network Topology Diagram"
+    purpose: "Derived runtime container, port, volume, and network zone diagram matching verified deployment configurations."
+    owner_role: "devops-sre"
+    accountable_role: "devops-sre"
+    template_path: "docs/governance/templates/diagrams/deployment-diagram.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane", "capability"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["platform-baseline", "plane-architecture", "new-capability"]
+    preconditions: ["Authoritative ART-DEPLOY-DESC exists."]
+    required_related_artifacts: ["ART-DEPLOY-DESC"]
+    validation_rules: ["VAL-FM-001", "VAL-DIAG-SOT-001", "VAL-DIAG-MERMAID-001"]
+    approval_requirements:
+      gate: "QG-7-OPS"
+      approvers: ["devops-sre"]
+
+  - artifact_id: "ART-DIAG-TM"
+    name: "Security Threat Model & Trust Boundary Diagram"
+    purpose: "Derived trust-boundary DFD depicting entry points, protected assets, threat IDs (`THR-###`), and control IDs (`SEC-###`)."
+    owner_role: "security-architect"
+    accountable_role: "security-architect"
+    template_path: "docs/governance/templates/diagrams/threat-model-diagram.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["platform", "plane", "capability"]
+    applicable_planes: ["platform", "data-plane", "application-plane", "intelligence-plane"]
+    applicable_work_types: ["new-capability", "security-change", "agent-tool-change"]
+    preconditions: ["Authoritative ART-THREAT-MODEL exists."]
+    required_related_artifacts: ["ART-THREAT-MODEL"]
+    validation_rules: ["VAL-FM-001", "VAL-DIAG-SOT-001", "VAL-DIAG-MERMAID-001"]
+    approval_requirements:
+      gate: "QG-4-SECURITY"
+      approvers: ["security-architect"]
+
+  - artifact_id: "ART-DIAG-AGENT"
+    name: "Agent Execution Workflow & Tool-Guard Diagram"
+    purpose: "Derived orchestrator node graph highlighting read/write tool gates, human approval checkpoints, iteration budgets, and fallbacks."
+    owner_role: "ai-engineer"
+    accountable_role: "system-architect"
+    template_path: "docs/governance/templates/diagrams/agent-workflow-diagram.template.md"
+    schema_path: "docs/governance/schemas/document-frontmatter.schema.json"
+    scope_levels: ["plane", "capability"]
+    applicable_planes: ["intelligence-plane"]
+    applicable_work_types: ["new-capability", "agent-tool-change", "security-change"]
+    preconditions: ["Authoritative ART-AGENT-SPEC exists."]
+    required_related_artifacts: ["ART-AGENT-SPEC"]
+    validation_rules: ["VAL-FM-001", "VAL-DIAG-SOT-001", "VAL-DIAG-MERMAID-001"]
+    approval_requirements:
+      gate: "QG-3-SPEC-DESIGN"
+      approvers: ["system-architect"]

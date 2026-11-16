@@ -237,7 +237,8 @@ def build_observability_ws_router(runtime: PlatformRuntimeContainer) -> APIRoute
         await websocket.accept()
         loop = asyncio.get_running_loop()
         sub_id, queue = runtime.trace_registry.subscribe(loop)
-        try:
+
+        async def _send_loop() -> None:
             overview = await runtime.get_observability_overview()
             await websocket.send_json({"type": "snapshot", "overview": overview})
             while True:
@@ -247,6 +248,30 @@ def build_observability_ws_router(runtime: PlatformRuntimeContainer) -> APIRoute
                 except TimeoutError:
                     hb_overview = await runtime.get_observability_overview()
                     await websocket.send_json({"type": "heartbeat", "overview": hb_overview})
+
+        async def _recv_loop() -> None:
+            while True:
+                raw_msg = await websocket.receive_text()
+                with contextlib.suppress(Exception):
+                    parsed = json.loads(raw_msg)
+                    if isinstance(parsed, dict) and parsed.get("type") == "ping":
+                        await websocket.send_json(
+                            {"type": "pong", "timestamp": parsed.get("timestamp")}
+                        )
+
+        sender = asyncio.create_task(_send_loop())
+        receiver = asyncio.create_task(_recv_loop())
+        try:
+            done, pending = await asyncio.wait(
+                {sender, receiver}, return_when=asyncio.FIRST_COMPLETED
+            )
+            for task in pending:
+                task.cancel()
+                with contextlib.suppress(BaseException):
+                    await task
+            for task in done:
+                with contextlib.suppress(WebSocketDisconnect):
+                    task.result()
         except WebSocketDisconnect:
             pass
         finally:

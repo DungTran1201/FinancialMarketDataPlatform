@@ -23,6 +23,25 @@ def build_agent_api_router(runtime: PlatformRuntimeContainer) -> Any:
     """Build the FastAPI APIRouter for Plane C Agent Workflow Orchestration."""
     router = APIRouter()
 
+    @router.get("/runs")
+    async def list_agent_runs(limit: int = 20) -> dict[str, Any]:
+        runs = list(reversed(list(runtime.agent_runs.values())))[: max(1, min(limit, 200))]
+        return {
+            "data": [
+                {
+                    "run_id": st.run_id,
+                    "symbol": st.symbol,
+                    "trigger_mode": st.trigger_mode,
+                    "status": st.status,
+                    "visited_nodes": st.visited_nodes,
+                    "tokens_consumed": st.tokens_consumed,
+                    "prompt_summary": st.prompt_summary,
+                }
+                for st in runs
+            ],
+            "meta": {"count": len(runs)},
+        }
+
     @router.post("/runs", status_code=202)
     async def create_agent_run(
         payload: dict[str, Any] = Body(...),

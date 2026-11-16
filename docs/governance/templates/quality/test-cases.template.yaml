@@ -1,0 +1,24 @@
+# Test Cases Template (Instantiate as <capability>/quality/test-cases.yaml)
+schema_version: "2.0.0"
+capability_id: "CAP-<DOM>-001"
+owner_role: "qa-lead"
+document_status: "DRAFT"
+test_cases:
+  - test_case_id: "TC-<DOM>-001"
+    title: "<Concise deterministic test title>"
+    scenario_id: "TS-<DOM>-001"
+    test_type: "contract"                       # unit | contract | architecture | data_quality | integration | e2e | security | performance | resilience
+    severity: "HIGH"                            # CRITICAL | HIGH | MEDIUM | LOW
+    priority: "P0"                              # P0 | P1 | P2 | P3
+    verifies_ids:
+      - "FR-<DOM>-001"
+      - "AC-<DOM>-001"
+    preconditions:
+      - "<Explicit setup state>"
+    test_data_spec: "<Synthetic fixture description; zero real secrets/PII>"
+    steps:
+      - "<Action / request / payload>"
+    expected_result: "<Deterministic status code, invariant, or side-effect state>"
+    automated_test_path: "tests/<category>/<test_file.py>"
+    environment_mode: "in-process"              # in-process | live-containers
+    last_verified_status: "NOT_RUN"             # NOT_RUN | PASSED | FAILED

@@ -42,6 +42,13 @@ export class SseStreamClient {
         } catch {}
       });
 
+      this.eventSource.addEventListener('heartbeat', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data);
+          this.emit('heartbeat', data);
+        } catch {}
+      });
+
       this.eventSource.addEventListener('trace', (e: MessageEvent) => {
         try {
           const data = JSON.parse(e.data);

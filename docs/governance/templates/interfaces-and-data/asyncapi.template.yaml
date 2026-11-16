@@ -1,0 +1,76 @@
+# AsyncAPI 3.1.0 Contract Template (Channels & Operations decoupled per AsyncAPI 3.x standard)
+# Instantiate as contracts/asyncapi.yaml inside owning capability or shared-contracts/
+asyncapi: "3.1.0"
+info:
+  title: "<Capability Event / Stream Interface>"
+  version: "0.1.0"
+  description: "<Authoritative asynchronous event/Kafka/WS/SSE contract.>"
+  x-owner-role: "data-architect"
+  x-document-status: "DRAFT"
+  x-implementation-status: "NOT_IMPLEMENTED"
+defaultContentType: application/json
+servers:
+  eventBroker:
+    host: "<broker-host:port>"
+    protocol: kafka
+    description: "<Logical broker endpoint; do not embed secrets>"
+channels:
+  exampleEventChannel:
+    address: "<domain>.<stream>.v1"
+    description: "<Canonical topic/stream address; partition key and retention declared here>"
+    messages:
+      exampleEventMessage:
+        $ref: "#/components/messages/ExampleEnvelopeV1"
+    bindings:
+      kafka:
+        partitions: 6
+        replicas: 1
+        topicConfiguration:
+          retention.ms: 604800000
+operations:
+  publishExampleEvent:
+    action: send
+    channel:
+      $ref: "#/channels/exampleEventChannel"
+    summary: "<Producer component sending canonical events>"
+    messages:
+      - $ref: "#/channels/exampleEventChannel/messages/exampleEventMessage"
+  consumeExampleEvent:
+    action: receive
+    channel:
+      $ref: "#/channels/exampleEventChannel"
+    summary: "<Consumer group reading events with at-least-once + idempotent sink semantics>"
+    messages:
+      - $ref: "#/channels/exampleEventChannel/messages/exampleEventMessage"
+components:
+  messages:
+    ExampleEnvelopeV1:
+      name: ExampleEnvelopeV1
+      title: "Canonical Versioned Event Envelope"
+      contentType: application/json
+      payload:
+        $ref: "#/components/schemas/ExampleEnvelopePayload"
+  schemas:
+    ExampleEnvelopePayload:
+      type: object
+      required:
+        - event_id
+        - schema_version
+        - occurred_at_utc
+        - ingested_at_utc
+        - payload
+      properties:
+        event_id:
+          type: string
+          format: uuid
+        schema_version:
+          type: string
+          const: "1.0.0"
+        occurred_at_utc:
+          type: string
+          format: date-time
+        ingested_at_utc:
+          type: string
+          format: date-time
+        payload:
+          type: object

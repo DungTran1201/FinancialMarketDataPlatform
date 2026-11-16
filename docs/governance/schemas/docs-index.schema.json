@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fmdp.internal/docs/governance/schemas/docs-index.schema.json",
+  "title": "FMDP Documentation Root Index Schema (docs-index.yaml)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "documentation_phase",
+    "phase_2_started",
+    "repository",
+    "updated_at",
+    "root_entrypoint",
+    "validator_entrypoint",
+    "governance",
+    "planes",
+    "overview",
+    "agent_entrypoints"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "pattern": "^2\\.[0-9]+\\.[0-9]+$" },
+    "documentation_phase": {
+      "type": "string",
+      "enum": ["PHASE_1_FOUNDATION", "PHASE_2_ACTIVE"]
+    },
+    "phase_2_started": { "type": "boolean" },
+    "repository": { "type": "string", "minLength": 3 },
+    "updated_at": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "root_entrypoint": { "type": "string", "minLength": 1 },
+    "validator_entrypoint": { "type": "string", "minLength": 1 },
+    "governance": {
+      "type": "object",
+      "required": [
+        "readme",
+        "architecture",
+        "standards_readme",
+        "standards_register",
+        "templates_readme",
+        "artifact_catalog",
+        "applicability_matrix",
+        "schemas_dir",
+        "migration_inventory",
+        "migration_disposition"
+      ],
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "planes": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "target_root", "owner_role", "code_roots"],
+        "properties": {
+          "id": { "type": "string", "enum": ["data-plane", "application-plane", "intelligence-plane"] },
+          "status": { "type": "string", "enum": ["RESERVED_PHASE_2", "ACTIVE"] },
+          "target_root": { "type": "string", "minLength": 1 },
+          "owner_role": { "type": "string", "minLength": 1 },
+          "code_roots": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "overview": {
+      "type": "object",
+      "required": ["status", "target_root", "owner_role"],
+      "properties": {
+        "status": { "type": "string", "enum": ["RESERVED_PHASE_2", "ACTIVE"] },
+        "target_root": { "type": "string", "minLength": 1 },
+        "owner_role": { "type": "string", "minLength": 1 }
+      }
+    },
+    "agent_entrypoints": {
+      "type": "object",
+      "required": ["primary", "hooks_config", "reading_order"],
+      "properties": {
+        "primary": { "type": "string", "minLength": 1 },
+        "hooks_config": { "type": "string", "minLength": 1 },
+        "reading_order": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

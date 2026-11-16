@@ -8,6 +8,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import threading
+import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -76,8 +79,23 @@ class IcebergCompactionReport:
 class SilverLakehouseMergeEngine:
     """Executes idempotent Bronze -> Silver standardization, `MERGE INTO` deduplication, and Stage 9 compaction."""
 
+    _IO_LOCK = threading.RLock()
+
     def __init__(self, lakehouse_root: Path | str = ".local_lakehouse") -> None:
         self._root = Path(lakehouse_root)
+
+    @staticmethod
+    def _write_parquet_atomic(table: pa.Table, target_path: Path) -> None:
+        """Write Parquet to a non-.parquet temp file and atomically replace `target_path`."""
+        tmp_path = target_path.with_name(
+            f".{target_path.name}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp"
+        )
+        try:
+            pq.write_table(table, tmp_path, compression="ZSTD")
+            tmp_path.replace(target_path)
+        except Exception:
+            tmp_path.unlink(missing_ok=True)
+            raise
 
     def merge_bronze_klines_to_silver(
         self,
@@ -156,7 +174,8 @@ class SilverLakehouseMergeEngine:
         )
         out_path = silver_dir / "silver_market_klines.parquet"
         if silver_rows:
-            pq.write_table(pa.Table.from_pylist(silver_rows), out_path, compression="ZSTD")
+            with self._IO_LOCK:
+                self._write_parquet_atomic(pa.Table.from_pylist(silver_rows), out_path)
         return out_path, silver_rows
 
     def merge_bronze_trades_to_silver(
@@ -220,7 +239,8 @@ class SilverLakehouseMergeEngine:
         )
         out_path = silver_dir / "silver_market_trades.parquet"
         if silver_rows:
-            pq.write_table(pa.Table.from_pylist(silver_rows), out_path, compression="ZSTD")
+            with self._IO_LOCK:
+                self._write_parquet_atomic(pa.Table.from_pylist(silver_rows), out_path)
         return out_path, silver_rows
 
     def compact_and_snapshot_iceberg_table(
@@ -267,14 +287,14 @@ class SilverLakehouseMergeEngine:
         )
 
         compacted_file = table_dir / f"compacted_{layer}_{table_name}.parquet"
-        staging_file = table_dir / f".staging_compacted_{layer}_{table_name}.parquet"
 
         if deduped_rows:
-            pq.write_table(pa.Table.from_pylist(deduped_rows), staging_file, compression="ZSTD")
-            # Remove ALL prior uncompacted and compacted Parquet files so only the single compacted file remains
-            for f in pq_files:
-                f.unlink(missing_ok=True)
-            staging_file.replace(compacted_file)
+            with self._IO_LOCK:
+                self._write_parquet_atomic(pa.Table.from_pylist(deduped_rows), compacted_file)
+                # Remove ALL prior uncompacted Parquet files so only the single compacted file remains
+                for f in pq_files:
+                    if f != compacted_file:
+                        f.unlink(missing_ok=True)
 
         remaining_files = [p for p in table_dir.glob("*.parquet") if p.is_file()]
 
