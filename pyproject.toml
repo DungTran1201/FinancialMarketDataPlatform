@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fmdp-greenfield"
+version = "0.1.0"
+description = "Resource-aware Multi-Asset Market Data Platform & Quantitative Intelligence System"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6.0",
+    "psutil>=6.0",
+    "jsonschema>=4.20",
+]
+poc = [
+    "nats-py>=2.9.0",
+    "duckdb>=1.1.0",
+    "polars>=1.12.0",
+    "pyarrow>=18.0.0",
+    "httpx>=0.28.0",
+    "websockets>=14.0",
+    "psutil>=6.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 110
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "poc"]

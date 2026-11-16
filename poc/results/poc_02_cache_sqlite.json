@@ -1,0 +1,31 @@
+{
+  "probe": "POC-02",
+  "hot_cache": {
+    "updates": 50000,
+    "symbols": 20,
+    "elapsed_sec": 0.836,
+    "updates_per_sec": 59784.2,
+    "tracemalloc_current_mb": 2.64,
+    "tracemalloc_peak_mb": 2.66,
+    "rss_delta_mb": 3.23
+  },
+  "sqlite_wal": {
+    "sqlite_version": "3.45.3",
+    "writes": 1000,
+    "concurrent_readers": 5,
+    "total_reads": 125,
+    "lock_errors": 0,
+    "elapsed_sec": 0.045,
+    "write_latency_ms": {
+      "p50": 0.015,
+      "p95": 0.026,
+      "p99": 0.038
+    },
+    "read_latency_ms": {
+      "p50": 0.009,
+      "p95": 0.014,
+      "p99": 0.163
+    },
+    "db_wal_size_kb": 12.0
+  }
+}

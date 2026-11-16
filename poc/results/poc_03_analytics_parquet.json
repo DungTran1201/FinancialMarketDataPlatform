@@ -1,0 +1,46 @@
+{
+  "probe": "POC-03",
+  "duckdb_version": "2.0.0",
+  "polars_version": "2.1.0",
+  "rows_trades": 1000000,
+  "rows_decisions": 50000,
+  "zstd_parquet_size_mb": 3.66,
+  "dataset_gen_sec": 0.252,
+  "rss_start_mb": 44.8,
+  "duckdb": {
+    "rollup_bars": 3336,
+    "rollup_runs_ms": [
+      90.26,
+      24.9,
+      24.02,
+      23.95,
+      24.14
+    ],
+    "rollup_median_ms": 24.14,
+    "asof_join_rows": 50000,
+    "asof_runs_ms": [
+      127.76,
+      124.12,
+      122.98
+    ],
+    "peak_rss_mb": 367.35
+  },
+  "polars_streaming": {
+    "rollup_bars": 3336,
+    "rollup_runs_ms": [
+      112.36,
+      19.95,
+      19.53,
+      16.46,
+      17.69
+    ],
+    "rollup_median_ms": 19.53,
+    "asof_join_rows": 50000,
+    "asof_runs_ms": [
+      256.6,
+      223.09,
+      204.14
+    ],
+    "peak_rss_mb": 957.86
+  }
+}

@@ -1,0 +1,46 @@
+# Python bytecode & packaging
+__pycache__/
+*.py[codz]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments & secrets
+.venv/
+.venv-*/
+venv/
+.env
+.env.*
+!.env.example
+
+# Test, lint & tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Local data, SQLite WAL, JetStream state & temporary PoC outputs
+data/
+logs/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.parquet
+poc/.tmp/
+poc/results/*.log
+
+# Legacy untracked artifacts (if still present locally outside git tracking)
+.local_lakehouse/
+.local_storage/
+
+# Frontend dependencies & builds
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.cache/
