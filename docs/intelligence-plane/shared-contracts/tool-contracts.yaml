@@ -1,68 +1,86 @@
 schema_version: "2.0.0"
-contract_id: "INT-CTR-TOOLS-001"
-title: "Controlled Tool Gateway — 10 Approved Agent Tool Contracts"
-plane: "intelligence-plane"
-owner_role: "ai-engineer"
-accountable_role: "security-architect"
-document_status: "DRAFT"
+contract_id: "TC-INT-TOOLS-001"
+title: "Intelligence Plane Approved Agent Tool Contracts (10 Whitelisted Tools)"
+status: "DRAFT"
 implementation_status: "PARTIALLY_IMPLEMENTED"
-updated_at: "2026-11-16"
-source_code_references:
+owner_role: "ai-engineer"
+accountable_role: "system-architect"
+source_code_refs:
   - "src/intelligence/tools/contracts.py"
   - "src/intelligence/tools/gateway.py"
   - "src/serving/infrastructure/runtime.py"
+  - "src/shared/domain/quant.py"
+  - "src/streaming/consumers/anomaly_detector.py"
 
-provenance_metadata_schema:
+provenance_schema:
+  envelope_class: "ToolExecutionEnvelope"
+  metadata_class: "ToolProvenanceMetadata"
   fields:
-    invocation_id: "string (UUIDv4 generated per gateway call)"
-    tool_name: "ApprovedAgentTool enum string"
-    source_store: "string (policy.backing_store)"
-    symbol: "string (upper-cased params.symbol or MULTI)"
-    window_start: "ISO-8601 UTC datetime (params.start_time or now_utc)"
-    window_end: "ISO-8601 UTC datetime (params.end_time or now_utc)"
-    row_count: "integer (result_data.row_count, default 1)"
-    executed_at: "ISO-8601 UTC datetime"
+    invocation_id: "UUIDv4 string generated per execute_tool() call"
+    tool_name: "ApprovedAgentTool enum value"
+    source_store: "Copied from ToolGovernancePolicy.backing_store (declared metadata, not live probe)"
+    symbol: "Upper-cased params['symbol'] or 'MULTI' when omitted"
+    window_start: "params.get('start_time', now_utc) — AS-IS does not coerce string or reflect 7-day queries"
+    window_end: "params.get('end_time', now_utc)"
+    row_count: "int(result_data.get('row_count', 1))"
+    executed_at: "UTC datetime at gateway dispatch"
+
+gateway_common_errors:
+  - error_code: "UnauthorizedToolAccessError"
+    trigger: "tool_name not in ApprovedAgentTool OR policy.required_permission not in granted_permissions"
+    recorded_in_audit_log: false
+  - error_code: "ToolQueryLimitExceededError"
+    trigger: "int(params.get('limit') or params.get('lookback_periods') or 1) > policy.max_rows_or_periods"
+    recorded_in_audit_log: false
+  - error_code: "asyncio.TimeoutError"
+    trigger: "Registered handler execution exceeds policy.timeout_seconds"
+    recorded_in_audit_log: false
+  - error_code: "ValueError / TypeError"
+    trigger: "Unvalidated non-integer limit/lookback_periods or invalid quant math prices (<= 0)"
+    recorded_in_audit_log: false
 
 tools:
   - tool_name: "get_latest_price"
-    purpose: "Retrieve latest spot price and staleness status for a symbol."
+    purpose: "Fetch the latest spot price and staleness metadata for a monitored symbol."
     permission: "market:read"
     declared_backing_store: "redis_with_clickhouse_fallback"
-    actual_backing_store: "PlatformRuntimeContainer.latest_price_handler (in-memory HotStateProjector with ClickHouseBatchSink fallback)"
-    read_write_classification: "READ"
+    actual_backing_store_as_is: "PlatformRuntimeContainer.latest_price_handler.handle('binance', sym) -> HotStateProjector._price_store (dict) falling back to ClickHouseBatchSink._klines_table (dict). Provider param ignored."
+    read_write_classification: "READ_ONLY"
+    declared_is_read_only_market_data: true
     max_rows_or_periods: 1
     timeout_seconds: 1.5
-    side_effects: "None"
-    idempotency_requirement: "Inherently idempotent read"
+    side_effects: "None (reads in-memory hot/OLAP stores; appends ToolExecutionEnvelope to gateway._audit_log)."
+    idempotency: "Naturally idempotent read query."
     input_schema:
       type: "object"
       properties:
-        symbol: { type: "string", default: "BTCUSDT" }
+        symbol: { type: "string", default: "BTCUSDT", note: "Normalized to uppercase; not checked against catalog inside handler." }
+        limit: { type: "integer", minimum: 1, maximum: 1, optional: true }
     output_schema:
       type: "object"
       required: ["symbol", "last_price", "is_stale", "row_count"]
       properties:
         symbol: { type: "string" }
-        last_price: { type: "string" }
-        source: { type: "string" }
+        last_price: { type: "string", format: "decimal-string" }
+        source: { type: "string", enum: ["redis_hot_cache", "clickhouse_fallback"], optional: true }
         is_stale: { type: "boolean" }
-        age_ms: { type: "integer" }
-        row_count: { type: "integer" }
+        age_ms: { type: "integer", optional: true }
+        row_count: { type: "integer", enum: [0, 1] }
     error_conditions:
-      - "UnauthorizedToolAccessError (missing market:read)"
-      - "ToolQueryLimitExceededError (limit > 1)"
-      - "asyncio.TimeoutError (> 1.5s)"
+      - "Gateway common errors (whitelist, permission, limit > 1, timeout > 1.5s)."
+      - "Missing symbol returns row_count=0, last_price='0', is_stale=true (no exception)."
 
   - tool_name: "get_market_snapshot"
-    purpose: "Retrieve 24h market ticker snapshot from hot cache."
+    purpose: "Retrieve the 24h rolling ticker snapshot (high, low, volume, price change) for a symbol."
     permission: "market:read"
     declared_backing_store: "redis_with_clickhouse_fallback"
-    actual_backing_store: "PlatformRuntimeContainer.hot_redis_projector.get_hot_snapshot() (in-memory dict; no ClickHouse fallback in handler)"
-    read_write_classification: "READ"
+    actual_backing_store_as_is: "HotStateProjector._snapshot_store dict ONLY (provider hardcoded 'binance'; NO ClickHouse fallback implemented if snapshot missing)."
+    read_write_classification: "READ_ONLY"
+    declared_is_read_only_market_data: true
     max_rows_or_periods: 1
     timeout_seconds: 2.0
-    side_effects: "None"
-    idempotency_requirement: "Inherently idempotent read"
+    side_effects: "None (appends ToolExecutionEnvelope to gateway._audit_log)."
+    idempotency: "Naturally idempotent read query."
     input_schema:
       type: "object"
       properties:
@@ -73,28 +91,28 @@ tools:
       properties:
         symbol: { type: "string" }
         snapshot: { type: "object" }
-        row_count: { type: "integer" }
+        row_count: { type: "integer", enum: [0, 1] }
     error_conditions:
-      - "UnauthorizedToolAccessError (missing market:read)"
-      - "ToolQueryLimitExceededError (limit > 1)"
-      - "asyncio.TimeoutError (> 2.0s)"
+      - "Gateway common errors (whitelist, permission, limit > 1, timeout > 2.0s)."
+      - "Missing snapshot returns snapshot={}, row_count=0."
 
   - tool_name: "get_historical_candles"
-    purpose: "Retrieve bounded OHLCV historical candles over a 7-day lookback window."
+    purpose: "Query bounded historical OHLCV kline bars for technical and return analysis."
     permission: "historical:read"
     declared_backing_store: "clickhouse_agent_ro"
-    actual_backing_store: "PlatformRuntimeContainer.clickhouse_sink.query_klines() (in-memory OLAP sink)"
-    read_write_classification: "READ"
+    actual_backing_store_as_is: "ClickHouseBatchSink._klines_table in-memory dict via query_klines('binance', sym, interval, now-7d, now, limit=limit). Caller start_time/end_time params ignored by handler."
+    read_write_classification: "READ_ONLY"
+    declared_is_read_only_market_data: true
     max_rows_or_periods: 500
     timeout_seconds: 5.0
-    side_effects: "None"
-    idempotency_requirement: "Inherently idempotent read"
+    side_effects: "None (appends ToolExecutionEnvelope to gateway._audit_log)."
+    idempotency: "Naturally idempotent read query."
     input_schema:
       type: "object"
       properties:
         symbol: { type: "string", default: "BTCUSDT" }
         interval: { type: "string", default: "1m" }
-        limit: { type: "integer", default: 60, maximum: 500 }
+        limit: { type: "integer", default: 60, maximum: 500, note: "Gateway does not validate limit >= 1 AS-IS." }
     output_schema:
       type: "object"
       required: ["symbol", "interval", "candle_count", "latest_close", "row_count"]
@@ -102,23 +120,22 @@ tools:
         symbol: { type: "string" }
         interval: { type: "string" }
         candle_count: { type: "integer" }
-        latest_close: { type: "string" }
+        latest_close: { type: "string", format: "decimal-string" }
         row_count: { type: "integer" }
     error_conditions:
-      - "UnauthorizedToolAccessError (missing historical:read)"
-      - "ToolQueryLimitExceededError (limit > 500)"
-      - "asyncio.TimeoutError (> 5.0s)"
+      - "Gateway common errors (whitelist, permission, limit > 500, timeout > 5.0s)."
 
   - tool_name: "get_market_statistics"
     purpose: "Retrieve aggregated VWAP, base volume, and trade count for a symbol."
     permission: "analytics:read"
     declared_backing_store: "clickhouse_mv_agent_ro"
-    actual_backing_store: "PlatformRuntimeContainer.clickhouse_sink.compute_aggregated_statistics()"
-    read_write_classification: "READ"
+    actual_backing_store_as_is: "ClickHouseBatchSink.compute_aggregated_statistics('binance', sym) scanning in-memory _klines_table (no ClickHouse Materialized View active)."
+    read_write_classification: "READ_ONLY"
+    declared_is_read_only_market_data: true
     max_rows_or_periods: 1
     timeout_seconds: 5.0
-    side_effects: "None"
-    idempotency_requirement: "Inherently idempotent read"
+    side_effects: "None (appends ToolExecutionEnvelope to gateway._audit_log)."
+    idempotency: "Naturally idempotent read query."
     input_schema:
       type: "object"
       properties:
@@ -128,30 +145,30 @@ tools:
       required: ["symbol", "vwap", "total_base_volume", "trade_count", "row_count"]
       properties:
         symbol: { type: "string" }
-        vwap: { type: "string" }
-        total_base_volume: { type: "string" }
+        vwap: { type: "string", format: "decimal-string" }
+        total_base_volume: { type: "string", format: "decimal-string" }
         trade_count: { type: "integer" }
         row_count: { type: "integer" }
     error_conditions:
-      - "UnauthorizedToolAccessError (missing analytics:read)"
-      - "ToolQueryLimitExceededError (limit > 1)"
-      - "asyncio.TimeoutError (> 5.0s)"
+      - "Gateway common errors (whitelist, permission, limit > 1, timeout > 5.0s)."
+      - "Missing stats return string '0' defaults and row_count=1."
 
   - tool_name: "calculate_returns"
-    purpose: "Compute deterministic cumulative and mean log returns over close prices."
+    purpose: "Compute deterministic cumulative and mean logarithmic returns in Python without LLM arithmetic."
     permission: "analytics:read"
     declared_backing_store: "clickhouse_agent_ro_deterministic_math"
-    actual_backing_store: "clickhouse_sink.compute_aggregated_statistics() + shared.domain.quant.compute_deterministic_log_returns() (falls back to static 3-price list if empty)"
-    read_write_classification: "READ"
+    actual_backing_store_as_is: "ClickHouseBatchSink.compute_aggregated_statistics('binance', sym) (falls back to static [89500.0, 89550.0, 89600.0] if missing!) + quant.compute_deterministic_log_returns(). lookback_periods checked by gateway only, not sliced in handler."
+    read_write_classification: "READ_ONLY"
+    declared_is_read_only_market_data: true
     max_rows_or_periods: 720
     timeout_seconds: 5.0
-    side_effects: "None"
-    idempotency_requirement: "Deterministic pure math over input series"
+    side_effects: "None (appends ToolExecutionEnvelope to gateway._audit_log)."
+    idempotency: "Deterministic and idempotent for identical underlying close_prices."
     input_schema:
       type: "object"
       properties:
         symbol: { type: "string", default: "BTCUSDT" }
-        lookback_periods: { type: "integer", maximum: 720 }
+        lookback_periods: { type: "integer", maximum: 720, note: "Enforced as cap by gateway; ignored by AS-IS handler slicing." }
     output_schema:
       type: "object"
       required: ["symbol", "sample_size", "cumulative_log_return", "mean_log_return", "row_count"]
@@ -162,20 +179,20 @@ tools:
         mean_log_return: { type: "number" }
         row_count: { type: "integer" }
     error_conditions:
-      - "UnauthorizedToolAccessError (missing analytics:read)"
-      - "ToolQueryLimitExceededError (lookback_periods > 720)"
-      - "asyncio.TimeoutError (> 5.0s)"
+      - "Gateway common errors (whitelist, permission, lookback_periods > 720, timeout > 5.0s)."
+      - "ValueError if any price <= 0."
 
   - tool_name: "calculate_volatility"
-    purpose: "Compute deterministic annualized realized volatility over close prices."
+    purpose: "Compute deterministic annualized realized volatility from close prices."
     permission: "analytics:read"
     declared_backing_store: "clickhouse_agent_ro_deterministic_math"
-    actual_backing_store: "clickhouse_sink.compute_aggregated_statistics() + shared.domain.quant.compute_deterministic_realized_volatility()"
-    read_write_classification: "READ"
+    actual_backing_store_as_is: "ClickHouseBatchSink.compute_aggregated_statistics('binance', sym) (falls back to static [89500.0, 89550.0, 89600.0] if missing!) + quant.compute_deterministic_realized_volatility(). lookback_periods ignored by handler slicing."
+    read_write_classification: "READ_ONLY"
+    declared_is_read_only_market_data: true
     max_rows_or_periods: 720
     timeout_seconds: 5.0
-    side_effects: "None"
-    idempotency_requirement: "Deterministic pure math over input series"
+    side_effects: "None (appends ToolExecutionEnvelope to gateway._audit_log)."
+    idempotency: "Deterministic and idempotent for identical underlying close_prices."
     input_schema:
       type: "object"
       properties:
@@ -189,49 +206,48 @@ tools:
         realized_volatility_annualized: { type: "number" }
         row_count: { type: "integer" }
     error_conditions:
-      - "UnauthorizedToolAccessError (missing analytics:read)"
-      - "ToolQueryLimitExceededError (lookback_periods > 720)"
-      - "asyncio.TimeoutError (> 5.0s)"
+      - "Gateway common errors (whitelist, permission, lookback_periods > 720, timeout > 5.0s)."
+      - "ValueError if any price <= 0."
 
   - tool_name: "calculate_correlation"
-    purpose: "Compute deterministic Pearson correlation between two symbols."
+    purpose: "Compute deterministic Pearson correlation coefficient between log returns of two symbols."
     permission: "analytics:read"
     declared_backing_store: "clickhouse_agent_ro_deterministic_math"
-    actual_backing_store: "clickhouse_sink.compute_aggregated_statistics() + shared.domain.quant.compute_deterministic_pearson_correlation()"
-    read_write_classification: "READ"
+    actual_backing_store_as_is: "ClickHouseBatchSink.compute_aggregated_statistics for first two symbols (static fallback arrays if missing!) + quant.compute_deterministic_pearson_correlation()."
+    read_write_classification: "READ_ONLY"
+    declared_is_read_only_market_data: true
     max_rows_or_periods: 2160
     timeout_seconds: 8.0
-    side_effects: "None"
-    idempotency_requirement: "Deterministic pure math over symbol pair"
+    side_effects: "None (appends ToolExecutionEnvelope to gateway._audit_log)."
+    idempotency: "Deterministic and idempotent for identical underlying close_prices."
     input_schema:
       type: "object"
       properties:
-        symbols:
-          type: "array"
-          items: { type: "string" }
-          default: ["BTCUSDT", "ETHUSDT"]
+        symbols: { type: "array", items: { type: "string" }, default: ["BTCUSDT", "ETHUSDT"] }
+        lookback_periods: { type: "integer", maximum: 2160, optional: true }
     output_schema:
       type: "object"
       required: ["pair", "pearson_correlation", "row_count"]
       properties:
-        pair: { type: "string" }
+        pair: { type: "string", example: "BTCUSDT:ETHUSDT" }
         pearson_correlation: { type: "number" }
         row_count: { type: "integer" }
     error_conditions:
-      - "UnauthorizedToolAccessError (missing analytics:read)"
-      - "ToolQueryLimitExceededError (limit > 2160)"
-      - "asyncio.TimeoutError (> 8.0s)"
+      - "Gateway common errors (whitelist, permission, lookback_periods > 2160, timeout > 8.0s)."
+      - "ValueError if any price <= 0."
 
   - tool_name: "detect_anomalies"
-    purpose: "Evaluate Z-score price anomaly for a symbol and record detected anomalies."
+    purpose: "Evaluate rolling price series against statistical Z-score threshold (2.5) with 900s cooldown."
     permission: "analytics:read"
     declared_backing_store: "clickhouse_agent_ro_deterministic_math"
-    actual_backing_store: "clickhouse_sink + PlatformRuntimeContainer.anomaly_detector.evaluate_series() + self.detected_anomalies.append()"
-    read_write_classification: "READ_WITH_STATEFUL_SIDE_EFFECT"
+    actual_backing_store_as_is: "ClickHouseBatchSink.compute_aggregated_statistics('binance', sym) (static fallback [100.0, 101.0, 100.5, 100.2, 100.8]) + runtime.anomaly_detector.evaluate_series() + mutates runtime.detected_anomalies."
+    read_write_classification: "STATE_MUTATING"
+    declared_is_read_only_market_data: true
+    policy_discrepancy_note: "Declared permission is analytics:read and is_read_only_market_data defaults to True, yet AS-IS handler mutates cooldown registry and appends to runtime.detected_anomalies."
     max_rows_or_periods: 168
     timeout_seconds: 5.0
-    side_effects: "Appends AnomalyEvent to runtime.detected_anomalies and mutates anomaly_detector cooldown map when triggered."
-    idempotency_requirement: "Cooldown-throttled (900s) in anomaly_detector; no explicit idempotency key"
+    side_effects: "Mutates StatisticalAnomalyDetector._cooldown_registry (900s window blocking subsequent alerts) and appends DetectedMarketAnomaly to runtime.detected_anomalies when triggered."
+    idempotency: "NOT idempotent AS-IS: first triggering call mutates 900s cooldown state; repeated calls within 900s return anomaly_detected=false."
     input_schema:
       type: "object"
       properties:
@@ -246,20 +262,19 @@ tools:
         z_score: { type: "number" }
         row_count: { type: "integer" }
     error_conditions:
-      - "UnauthorizedToolAccessError (missing analytics:read)"
-      - "ToolQueryLimitExceededError (lookback_periods > 168)"
-      - "asyncio.TimeoutError (> 5.0s)"
+      - "Gateway common errors (whitelist, permission, lookback_periods > 168, timeout > 5.0s)."
 
   - tool_name: "get_data_freshness"
-    purpose: "Check Redis/ClickHouse staleness lag against market_staleness_threshold_ms."
+    purpose: "Check hot cache and OLAP data freshness lag (ms) relative to market_staleness_threshold_ms."
     permission: "market:read"
     declared_backing_store: "redis_and_clickhouse_metadata"
-    actual_backing_store: "PlatformRuntimeContainer.latest_price_handler.handle() age_ms check"
-    read_write_classification: "READ"
+    actual_backing_store_as_is: "latest_price_handler.handle('binance', sym) -> derives lag_ms from single dto.age_ms (or 999999) and assigns identical value to redis_lag_ms and clickhouse_lag_ms."
+    read_write_classification: "READ_ONLY"
+    declared_is_read_only_market_data: true
     max_rows_or_periods: 1
     timeout_seconds: 3.0
-    side_effects: "None"
-    idempotency_requirement: "Inherently idempotent read"
+    side_effects: "None (appends ToolExecutionEnvelope to gateway._audit_log)."
+    idempotency: "Idempotent read check."
     input_schema:
       type: "object"
       properties:
@@ -272,38 +287,38 @@ tools:
         redis_lag_ms: { type: "integer" }
         clickhouse_lag_ms: { type: "integer" }
         is_healthy: { type: "boolean" }
-        row_count: { type: "integer" }
+        row_count: { type: "integer", const: 1 }
     error_conditions:
-      - "UnauthorizedToolAccessError (missing market:read)"
-      - "ToolQueryLimitExceededError (limit > 1)"
-      - "asyncio.TimeoutError (> 3.0s)"
+      - "Gateway common errors (whitelist, permission, limit > 1, timeout > 3.0s)."
 
   - tool_name: "generate_analysis_report"
     purpose: "Persist a citation-validated StructuredAnalysisReport keyed by run_id."
     permission: "agent:trigger"
     declared_backing_store: "postgres_agent_rw"
-    actual_backing_store: "PlatformRuntimeContainer.reports[run_id] (in-memory dict)"
+    actual_backing_store_as_is: "Constructs StructuredAnalysisReport and overwrites runtime.reports[run_id] in process memory (Postgres agent_runs.structured_report unwired AS-IS)."
     read_write_classification: "WRITE"
+    declared_is_read_only_market_data: true
+    policy_discrepancy_note: "ToolGovernancePolicy leaves is_read_only_market_data=True by default on GENERATE_ANALYSIS_REPORT even though backing_store='postgres_agent_rw' and it mutates persistent/in-memory report storage."
     max_rows_or_periods: 1
     timeout_seconds: 3.0
-    side_effects: "Mutates runtime.reports[run_id] (overwrites if run_id already exists). Note: ToolGovernancePolicy.is_read_only_market_data erroneously defaults to True."
-    idempotency_requirement: "Keyed by run_id (last-write-wins overwrite in dict; TARGET requires PostgreSQL UPSERT or insert-once guard)"
+    side_effects: "Writes/overwrites runtime.reports[run_id] (TARGET: updates PostgreSQL agent_runs.structured_report)."
+    idempotency: "Idempotent per run_id overwrite AS-IS (TARGET: conditional write keyed by run_id to avoid overwriting COMPLETED reports)."
     input_schema:
       type: "object"
       required: ["symbol", "report"]
       properties:
         symbol: { type: "string" }
-        report: { type: "object" }
+        report:
+          type: "object"
+          description: "Validated dict containing run_id, symbol, summary, quantitative_evidence, anomalies_detected, data_quality_status, provenance_citations[], limitations_disclaimer."
     output_schema:
       type: "object"
       required: ["persisted_run_id", "citation_count", "row_count"]
       properties:
         persisted_run_id: { type: "string" }
         citation_count: { type: "integer" }
-        row_count: { type: "integer" }
+        row_count: { type: "integer", const: 1 }
     error_conditions:
-      - "UnauthorizedToolAccessError (missing agent:trigger)"
-      - "ToolQueryLimitExceededError (limit > 1)"
-      - "KeyError / ValueError on malformed provenance_citations"
-      - "asyncio.TimeoutError (> 3.0s)"
+      - "Gateway common errors (whitelist, missing agent:trigger permission, limit > 1, timeout > 3.0s)."
+      - "ValueError/KeyError if provenance_citations items lack required keys or valid ISO timestamps."
 

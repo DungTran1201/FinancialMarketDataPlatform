@@ -1,6 +1,6 @@
 ---
 doc_id: DIAG-INT-C4-001
-title: "Intelligence Plane C4 Container Diagram"
+title: "C4 Container Diagram: Intelligence Plane (AS-IS In-Process vs TARGET Worker)"
 doc_type: diagram
 plane: intelligence-plane
 scope_level: plane
@@ -15,66 +15,70 @@ source_of_truth:
   is_authoritative: false
   authoritative_source:
     - "docs/intelligence-plane/architecture/intelligence-architecture.md"
-    - "src/intelligence/orchestrator/graph.py"
-    - "src/serving/infrastructure/runtime.py"
+    - "docs/intelligence-plane/architecture/agent-runtime-architecture.md"
 related_docs:
   - INT-ARCH-ROOT-001
   - INT-ARCH-001
+  - INT-ARCH-RT-001
 revision_history:
   - version: "2.0.0"
     date: "2026-11-16"
     author_role: ai-engineer
-    summary: "Created Intelligence Plane C4 Container diagram distinguishing AS-IS inline execution from TARGET isolated worker."
+    summary: "Rendered C4 Level 2 container topology distinguishing AS-IS in-process execution inside PlatformRuntimeContainer from TARGET isolated agent-worker."
 ---
 
-# Intelligence Plane C4 Container Diagram
+# C4 Container Diagram: Intelligence Plane
+
+## 1. Diagram Metadata
 
 | Field | Value |
 |---|---|
 | **Diagram ID** | `DIAG-INT-C4-001` |
-| **Purpose** | Visualize Intelligence Plane containers, cross-plane boundaries, and AS-IS vs TARGET runtime wiring. |
-| **Scope & Owner** | `plane` (`intelligence-plane`) / `ai-engineer` |
+| **Title & Purpose** | C4 Level 2 Container View showing Intelligence Plane containers, external stores, and `AS-IS` vs `TARGET` process boundaries |
+| **Owner Role & Scope** | `ai-engineer / intelligence-plane` |
 | **Authoritative Source** | [intelligence-architecture.md](../intelligence-architecture.md) (`INT-ARCH-001`) |
-| **Notation** | Mermaid `flowchart TB` (C4 Level 2 Container View) |
-| **Version & Status** | `2.0.0` / `DRAFT` (`SIMULATED`) |
+| **Notation** | `Mermaid flowchart TB` (`C4 Level 2 Container`) |
+| **Version & Status** | `2.0.0 — DRAFT` |
+
+## 2. Diagram
 
 ```mermaid
 flowchart TB
-    subgraph APP["Application Plane (CAP-APP-AGT-001)"]
-        API["FastAPI Agent & Reporting Routers (/api/v1/agents, /reports)"]
-        RT["PlatformRuntimeContainer (In-Process DI Root AS-IS)"]
+    app_api["Application Plane: agent_api & reporting routers (Port 8000 / 8006)"]
+    kafka_anom["Data Plane: Kafka market.anomalies.v1 (NOT CONSUMED AS-IS)"]
+
+    subgraph plane_c_asis["Intelligence Plane AS-IS (Inside PlatformRuntimeContainer Process)"]
+        graph_py["MarketIntelligenceGraph (5-Node Pure Python Loop)"]
+        mock_llm["DeterministicMockLLMAdapter (Mock Planner & Synthesizer)"]
+        gw["ControlledToolGateway (10-Tool Firewall & Audit Log)"]
+        val["ReportValidator (invocation_id Check)"]
+        mem_state["In-Memory Dicts: runtime.agent_runs & runtime.reports"]
     end
 
-    subgraph INT["Intelligence Plane (CAP-INT-ORC-001)"]
-        GRAPH["MarketIntelligenceGraph (5-Node Pure Python Loop AS-IS)"]
-        LLM_MOCK["DeterministicMockLLMAdapter (AS-IS Mock)"]
-        LLM_EXT["External LLM Provider (TARGET)"]
-        GW["ControlledToolGateway (10-Tool Whitelist & Audit)"]
-        VAL["ReportValidator (Citation ID Check)"]
-        WORKER["agent-worker (src/intelligence/main.py — Stub AS-IS / LangGraph TARGET)"]
+    subgraph plane_c_target["TARGET Isolated Container (docker-compose --profile intelligence)"]
+        worker_stub["agent-worker (src/intelligence/main.py — Exits After Init AS-IS)"]
+        ext_llm["External LLM Provider API (UNWIRED AS-IS)"]
+        pg_db["PostgreSQL 16 (agent_runs, agent_tool_invocations — UNWIRED AS-IS)"]
     end
 
-    subgraph DATA["Data Plane & Control Stores"]
-        REDIS["Redis / HotStateProjector (In-Memory AS-IS)"]
-        CH["ClickHouse / ClickHouseBatchSink (In-Memory AS-IS)"]
-        ANOM["AnomalyDetector & detected_anomalies"]
-        PG["PostgreSQL agent_runs & agent_tool_invocations (TARGET)"]
-        KAFKA["Kafka market.anomalies.v1 (TARGET Event Trigger)"]
-    end
+    dp_mem["Data Plane In-Memory Stores (HotStateProjector & ClickHouseBatchSink)"]
 
-    API -->|"Sync await AS-IS"| RT
-    RT -->|"run_investigation()"| GRAPH
-    GRAPH -->|"plan / synthesize AS-IS"| LLM_MOCK
-    GRAPH -.->|"TARGET external call"| LLM_EXT
-    GRAPH -->|"execute_tool()"| GW
-    GRAPH -->|"validate_report()"| VAL
-    GW -->|"Read market/freshness"| REDIS
-    GW -->|"Read candles/stats/math"| CH
-    GW -->|"Evaluate & append anomaly"| ANOM
-    GW -->|"Write runtime.reports AS-IS"| RT
-    KAFKA -.->|"TARGET event trigger"| WORKER
-    WORKER -.->|"TARGET checkpoint & report"| PG
+    app_api -->|"Inline await execute_agent_investigation() (AS-IS)"| graph_py
+    app_api -.->|"TARGET: Enqueue QUEUED row"| pg_db
+    kafka_anom -.->|"TARGET: Consume anomaly events"| worker_stub
+
+    graph_py -->|"Plan & Synthesize (AS-IS)"| mock_llm
+    graph_py -.->|"TARGET: HTTPS JSON Tool Call"| ext_llm
+    graph_py -->|"Dispatch 10 Tools"| gw
+    graph_py -->|"Validate Citations"| val
+
+    gw -->|"Tools 1..9 Read In-Memory + Tool 8 Mutates Cooldown (AS-IS)"| dp_mem
+    gw -->|"Tool 10 Writes runtime.reports (AS-IS)"| mem_state
+    worker_stub -.->|"TARGET: Checkpoint State & Audit"| pg_db
 ```
 
-**Legend**: Solid arrows (`-->`) denote `AS-IS` implemented runtime paths; dashed arrows (`-.->`) denote `TARGET` unimplemented paths.
+## 3. Legend
+
+- **Solid Container / Solid Arrows (`-->`)**: Active `AS-IS` execution path inside `PlatformRuntimeContainer` (`src/serving/infrastructure/runtime.py`).
+- **Dashed Arrows (`-.->`)**: `TARGET` asynchronous worker, Kafka anomaly consumer, external LLM API, and PostgreSQL persistence not yet wired at runtime.
 

@@ -1,11 +1,11 @@
 ---
 doc_id: DIAG-INT-DEP-001
-title: "Intelligence Plane Dependency Diagram"
+title: "Intelligence Plane Dependency & Clean Architecture AST Boundary Diagram"
 doc_type: diagram
 plane: intelligence-plane
 scope_level: plane
 status: DRAFT
-implementation_status: IMPLEMENTED
+implementation_status: VERIFIED
 version: "2.0.0"
 owner_role: ai-engineer
 accountable_role: system-architect
@@ -19,51 +19,65 @@ source_of_truth:
 related_docs:
   - INT-ARCH-ROOT-001
   - INT-ARCH-001
+  - OVR-ARCH-3P-001
 revision_history:
   - version: "2.0.0"
     date: "2026-11-16"
     author_role: ai-engineer
-    summary: "Created Intelligence Plane module dependency DAG enforced by AST boundary tests."
+    summary: "Rendered AST-enforced Clean Architecture import boundaries around src/intelligence/."
 ---
 
-# Intelligence Plane Dependency Diagram
+# Intelligence Plane Dependency & Clean Architecture AST Boundary Diagram
+
+## 1. Diagram Metadata
 
 | Field | Value |
 |---|---|
 | **Diagram ID** | `DIAG-INT-DEP-001` |
-| **Purpose** | Show allowed and forbidden Python import dependencies inside `src/intelligence/` and across subsystems. |
-| **Scope & Owner** | `plane` (`intelligence-plane`) / `ai-engineer` |
+| **Title & Purpose** | Directed Acyclic Import Graph and AST Isolation Rules for `src/intelligence/` |
+| **Owner Role & Scope** | `ai-engineer / intelligence-plane` |
 | **Authoritative Source** | [intelligence-architecture.md](../intelligence-architecture.md) (`INT-ARCH-001`) |
-| **Notation** | Mermaid `flowchart TB` (Module Dependency Graph) |
-| **Version & Status** | `2.0.0` / `DRAFT` (`IMPLEMENTED`) |
+| **Notation** | `Mermaid flowchart TB` (`Component Dependency Graph`) |
+| **Version & Status** | `2.0.0 — DRAFT` |
+
+## 2. Diagram
 
 ```mermaid
 flowchart TB
-    subgraph INT_PKG["src/intelligence/"]
-        MAIN["main.py (agent-worker)"]
-        ORCH["orchestrator/graph.py"]
-        WF["workflows/investigation.py"]
-        REP["reporting/validator.py"]
-        GW["tools/gateway.py"]
-        CTR["tools/contracts.py"]
+    shared["src/shared/ (Config, Quant Math, Primitives)"]
+    composition["src/serving/infrastructure/runtime.py (Composition Root)"]
+
+    subgraph intelligence_pkg["src/intelligence/ (Isolated Plane C)"]
+        main_ep["main.py (Worker Entrypoint)"]
+        orch["orchestrator/graph.py"]
+        wf["workflows/investigation.py"]
+        rep["reporting/validator.py"]
+        gw["tools/gateway.py"]
+        ctr["tools/contracts.py"]
     end
 
-    SHARED["src/shared/ (PlatformConfig)"]
-    SERVING["src/serving/infrastructure/runtime.py (Composition Root)"]
-    DATA_PKG["src/ingestion, src/streaming, src/lakehouse"]
+    serving_api["src/serving/api/ (Routers & Services)"]
+    data_plane["src/ingestion/, src/streaming/, src/lakehouse/"]
 
-    MAIN -->|"imports config"| SHARED
-    ORCH -->|"imports state"| WF
-    ORCH -->|"imports validator"| REP
-    ORCH -->|"imports gateway"| GW
-    ORCH -->|"imports tool enum"| CTR
-    WF -->|"imports envelope"| CTR
-    GW -->|"imports policies"| CTR
-    SERVING -->|"wires handlers & graph"| ORCH
-    SERVING -->|"registers 10 handlers"| GW
-    ORCH -.->|"FORBIDDEN by AST test"| DATA_PKG
-    ORCH -.->|"FORBIDDEN by AST test"| SERVING
+    main_ep -->|"Imports PlatformConfig"| shared
+    orch -->|"Imports workflows, tools, reporting"| wf
+    orch --> rep
+    orch --> gw
+    orch --> ctr
+    wf --> ctr
+    gw --> ctr
+
+    composition -->|"Wires 10 Closures & Instantiates Graph"| orch
+    composition -->|"Injects Handlers"| gw
+    composition -->|"Wires Data Plane Engines"| data_plane
+
+    intelligence_pkg -.->|"FORBIDDEN BY AST TEST (TC-006)"| serving_api
+    intelligence_pkg -.->|"FORBIDDEN BY AST TEST (TC-006)"| data_plane
+    serving_api -.->|"FORBIDDEN BY AST TEST (TC-006)"| intelligence_pkg
 ```
 
-**Legend**: Solid arrows (`-->`) denote permitted Python imports verified by `test_clean_architecture_boundaries.py`; dashed arrows (`-.->`) denote prohibited dependencies.
+## 3. Legend
+
+- **Solid Arrows (`-->`)**: Permitted Python `import` dependencies verified by `tests/architecture/test_clean_architecture_boundaries.py`.
+- **Dashed Arrows (`-.->`)**: Strictly prohibited cross-plane imports enforced by AST static checks (`TC-006`).
 

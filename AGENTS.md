@@ -20,7 +20,7 @@ Before creating or updating documentation, specifications, or contracts, AI Agen
 
 ## 2. Current Documentation Phase Status
 
-- **Active Phase**: `PHASE_2_ACTIVE` (Foundation complete; `docs/overview/`, `docs/data-plane/`, `docs/application-plane/`, and `docs/intelligence-plane/` are active in `DRAFT` / `IN_REVIEW` status pending formal acceptance).
+- **Active Phase**: `PHASE_2_ACTIVE` (Governance foundation complete; `docs/overview/`, `docs/data-plane/`, `docs/application-plane/`, and `docs/intelligence-plane/` are active in `DRAFT` / `IN_REVIEW` status pending formal acceptance).
 - **Prohibition**: Agents MUST NOT create empty placeholder folders, speculative ungrounded claims, or `docs/archive/` directories.
 
 ---

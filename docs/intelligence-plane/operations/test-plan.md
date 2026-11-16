@@ -1,6 +1,6 @@
 ---
 doc_id: INT-QA-PLAN-001
-title: "Intelligence Plane Test Plan"
+title: "Intelligence Plane Quality & Verification Test Plan"
 doc_type: specification
 plane: intelligence-plane
 scope_level: plane
@@ -8,7 +8,7 @@ status: DRAFT
 implementation_status: PARTIALLY_IMPLEMENTED
 version: "2.0.0"
 owner_role: qa-lead
-accountable_role: ai-engineer
+accountable_role: qa-lead
 created_at: "2026-11-16"
 updated_at: "2026-11-16"
 source_of_truth:
@@ -17,27 +17,35 @@ source_of_truth:
     - "tests/integration/test_three_planes_framework.py"
     - "tests/contract/test_contracts_and_guardrails.py"
     - "tests/architecture/test_clean_architecture_boundaries.py"
+    - "tests/README.md"
 related_docs:
   - INT-ROOT-001
   - CAP-INT-ORC-TS-001
+  - APP-QA-PLAN-001
 revision_history:
   - version: "2.0.0"
     date: "2026-11-16"
     author_role: qa-lead
-    summary: "Consolidated Intelligence Plane test coverage and explicit verification gaps."
+    summary: "Defined Intelligence Plane test strategy, AS-IS test coverage vs missing suites, and execution constraints."
 ---
 
-# Intelligence Plane Test Plan
+# Intelligence Plane Quality & Verification Test Plan
 
-## 1. Existing Automated Tests (`AS-IS`)
+## 1. Verification Scope & Test Levels
 
-- **Integration (`tests/integration/test_three_planes_framework.py`)**: `TestPlaneCIntelligencePlaneIndependently` verifies 5-node workflow completion (`8` envelopes, `7` citations), unmonitored symbol rejection (`FAILED`), `ReportValidator` rejection of fabricated `invocation_id`, and gateway whitelist/row-limit guardrails. `TestInterPlaneCommunicationEndToEnd` verifies `POST /api/v1/agents/runs` (`202` + `Idempotency-Key`), SSE event replay, and `GET /api/v1/reports/{run_id}`.
-- **Contract (`tests/contract/test_contracts_and_guardrails.py`)**: Verifies `ControlledToolGateway` whitelist, RBAC permission check (`agent:trigger`), and `max_rows_or_periods` cap.
-- **Architecture (`tests/architecture/test_clean_architecture_boundaries.py`)**: AST check ensuring `src/intelligence/` only imports from `src/shared/`.
+| Test Level | Suite Path | What Is Verified (`AS-IS` Inspected) | Coverage Gaps (`TARGET` Required) |
+|---|---|---|---|
+| **Architecture (`AST`)** | `tests/architecture/test_clean_architecture_boundaries.py` | `src/intelligence/` package existence & zero prohibited imports (`ingestion`, `streaming`, `lakehouse`, `serving`). | None for import DAG (`TC-INT-006`). |
+| **Unit (`Quant Math`)** | `tests/contract/test_contracts_and_guardrails.py` | `compute_deterministic_log_returns`, `realized_volatility`, `pearson_correlation`. | Edge-case negative prices / empty lists in tool handlers. |
+| **Contract (`Tool Gateway`)** | `tests/contract/test_contracts_and_guardrails.py` | Unwhitelisted tool rejection, missing RBAC permission (`agent:trigger`), upper `limit` rejection (`>500`), provenance metadata creation. | Negative/zero limits, timeout envelope, fail-closed missing handler, input schemas, all 10 tool outputs individually. |
+| **Integration (Plane C & Cross-Plane)** | `tests/integration/test_three_planes_framework.py` | 5-node mock investigation (`BTCUSDT`), Node 1 unmonitored symbol rejection (`DOGEFAKEUSDT`), `ReportValidator` fabricated `invocation_id` rejection, `POST /agents/runs` + `Idempotency-Key` + SSE replay + `GET /reports/{run_id}`. | Empty citations validation, numeric prose consistency checks, `detect_anomalies` cooldown isolation, `VIEWER` role denial (`SEC-INT-001`), Postgres persistence, `agent-worker` loop, `market.anomalies.v1` trigger. |
+| **E2E / Live Containers** | `NOT_IMPLEMENTED` for Plane C | `tests/e2e/test_data_platform_v01_e2e.py` exercises Data Plane & microservices dispatch only (`svc-intelligence-agent` health only). | Live Compose `agent-worker` + Postgres + ClickHouse + Redis + external LLM golden eval suite (`OPEN`). |
 
-## 2. Explicit Coverage Gaps (`AS-IS`)
+## 2. Entry, Exit & Execution Status Disclosure
 
-- **Tool Timeout & Error Recovery**: No test exercises `asyncio.TimeoutError` inside `ControlledToolGateway` or uncaught exception handling in `MarketIntelligenceGraph`.
-- **Persistence & Worker**: Zero tests cover `src/intelligence/main.py` queue polling, PostgreSQL `agent_runs`/`agent_tool_invocations`, or Kafka `market.anomalies.v1` event triggers (`NOT_IMPLEMENTED`).
-- **Numeric Consistency & Prompt Injection Evals**: No evaluation harness tests numeric accuracy in narrative text or prompt injection resistance (`NOT_IMPLEMENTED`).
+- **Execution Disclosure**: Existing tests were audited by source inspection. Local execution via `.\.venv\Scripts\python.exe -m pytest tests/ -v` requires a populated `.venv` with project dependencies (`pytest`, `fastapi`, `pydantic`, `pyyaml`, etc.), which is absent in this workspace environment.
+- **Exit Criteria Before `VERIFIED` Status**:
+  1. Resolve `SEC-INT-001..005` (`BLOCKED` auth & side-effect gaps) and wire `agent-worker` + PostgreSQL state persistence.
+  2. Implement `TC-INT-007` and `TC-INT-008` covering timeouts, negative bounds, RBAC enforcement, side-effect isolation, and numeric consistency checks.
+  3. Execute full `pytest` suite and live-container integration tests with archived output logs.
 

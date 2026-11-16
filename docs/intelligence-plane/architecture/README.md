@@ -16,6 +16,10 @@ source_of_truth:
   authoritative_source:
     - "src/intelligence/orchestrator/graph.py"
     - "src/intelligence/tools/gateway.py"
+    - "src/intelligence/tools/contracts.py"
+    - "src/intelligence/workflows/investigation.py"
+    - "src/intelligence/reporting/validator.py"
+    - "src/intelligence/main.py"
 related_docs:
   - INT-ROOT-001
   - INT-ARCH-001
@@ -32,26 +36,27 @@ revision_history:
   - version: "2.0.0"
     date: "2026-11-16"
     author_role: ai-engineer
-    summary: "Indexed all Intelligence Plane architecture viewpoints, ADRs, and C4/Dependency/Trust-Boundary diagrams."
+    summary: "Indexed all Intelligence Plane architecture viewpoints, ADRs, and Plane-level C4, dependency, and trust-boundary diagrams."
 ---
 
 # Intelligence Plane Architecture Hub
 
+This hub organizes the Plane-level architecture descriptions, Architecture Decision Records (ADRs), and derived architectural diagrams for the **Intelligence Plane (`Plane C`)**.
+
 ## 1. Architecture Viewpoints
 
-| Document | ID | Focus | `AS-IS` Status |
+| Document | Doc ID | Scope & Focus | `AS-IS` Implementation |
 |---|---|---|---|
-| [intelligence-architecture.md](intelligence-architecture.md) | `INT-ARCH-001` | Holistic Intelligence Plane context, boundaries, topology, and gaps | `SIMULATED` |
-| [agent-runtime-architecture.md](agent-runtime-architecture.md) | `INT-ARCH-RT-001` | 5-node Python loop, state lifecycle, budgets, timeouts, and stubbed worker | `SIMULATED` |
-| [model-integration-architecture.md](model-integration-architecture.md) | `INT-ARCH-LLM-001` | `DeterministicMockLLMAdapter` vs `TARGET` external LLM providers | `SIMULATED` |
-| [tool-gateway-architecture.md](tool-gateway-architecture.md) | `INT-ARCH-GW-001` | `ControlledToolGateway` 10-tool registry, RBAC, bounds, audit, side effects | `PARTIALLY_IMPLEMENTED` |
-| [agent-security-architecture.md](agent-security-architecture.md) | `INT-ARCH-SEC-001` | Trust boundaries, hardcoded permissions, injection, and write-tool risks | `PARTIALLY_IMPLEMENTED` |
-| [evaluation-and-observability.md](evaluation-and-observability.md) | `INT-ARCH-EVAL-001` | `ReportValidator` provenance checks, telemetry, and evaluation gaps | `PARTIALLY_IMPLEMENTED` |
+| [intelligence-architecture.md](intelligence-architecture.md) | `INT-ARCH-001` | Holistic context, scope/ownership, building blocks, dependency DAG, cross-plane contracts, `AS-IS` vs `TARGET` topology, and risks | `SIMULATED` |
+| [agent-runtime-architecture.md](agent-runtime-architecture.md) | `INT-ARCH-RT-001` | Entrypoint stub, pure Python 5-node loop vs `TARGET` LangGraph worker, state lifecycle, budgets, timeouts, and recovery | `SIMULATED` |
+| [model-integration-architecture.md](model-integration-architecture.md) | `INT-ARCH-LLM-001` | Model adapter interface, `DeterministicMockLLMAdapter` (`AS-IS`), `TARGET` external LLM providers, prompt boundaries, and fallbacks | `SIMULATED` |
+| [tool-gateway-architecture.md](tool-gateway-architecture.md) | `INT-ARCH-GW-001` | 10-tool registry, declared vs actual backing stores, validation/RBAC/limits/timeouts, provenance, audit, and write side effects | `PARTIALLY_IMPLEMENTED` |
+| [agent-security-architecture.md](agent-security-architecture.md) | `INT-ARCH-SEC-001` | Trust boundaries, hardcoded agent permissions, side-effect risks, and `AS-IS` vs external-LLM threat vectors | `PARTIALLY_IMPLEMENTED` |
+| [evaluation-and-observability.md](evaluation-and-observability.md) | `INT-ARCH-EVAL-001` | Provenance citations, `ReportValidator` scope limits, token/latency/error telemetry, numeric consistency gap, and replay | `PARTIALLY_IMPLEMENTED` |
 
 ## 2. Decisions & Diagrams
 
-- **Decisions**: [decisions/README.md](decisions/README.md) (`INT-ADR-ROOT-001`) — [ADR-INT-0001](decisions/adr-0001-deterministic-gateway-over-freeform-sql.md).
-- **Diagrams**:
-  - [diagrams/intelligence-c4-container.md](diagrams/intelligence-c4-container.md) (`DIAG-INT-C4-001`) — C4 Container Diagram.
-  - [diagrams/intelligence-dependency-diagram.md](diagrams/intelligence-dependency-diagram.md) (`DIAG-INT-DEP-001`) — Intelligence Plane Dependency Diagram.
-  - [diagrams/tool-gateway-boundaries.md](diagrams/tool-gateway-boundaries.md) (`DIAG-INT-GW-001`) — Tool Gateway Trust Boundary Diagram.
+- **ADRs**: [decisions/README.md](decisions/README.md) (`INT-ADR-ROOT-001`) -> [ADR-INT-0001](decisions/adr-0001-deterministic-gateway-over-freeform-sql.md) (Deterministic Tool Gateway over Freeform LLM SQL/Math).
+- **C4 Container Diagram**: [diagrams/intelligence-c4-container.md](diagrams/intelligence-c4-container.md) (`DIAG-INT-C4-001` — `AS-IS` in-process monolith wiring vs `TARGET` isolated `agent-worker`).
+- **Dependency & Boundary Diagram**: [diagrams/intelligence-dependency-diagram.md](diagrams/intelligence-dependency-diagram.md) (`DIAG-INT-DEP-001` — Clean Architecture AST isolation rules).
+- **Tool Gateway Trust Boundary Diagram**: [diagrams/tool-gateway-boundaries.md](diagrams/tool-gateway-boundaries.md) (`DIAG-INT-GW-001` — Whitelist, RBAC, row cap, timeout, and side-effect boundaries).

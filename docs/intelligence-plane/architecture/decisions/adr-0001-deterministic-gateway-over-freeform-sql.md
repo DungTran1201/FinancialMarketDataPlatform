@@ -1,11 +1,11 @@
 ---
 doc_id: ADR-INT-0001
-title: "ADR-INT-0001: Deterministic Controlled Tool Gateway Over Freeform LLM SQL"
+title: "ADR-INT-0001: Deterministic Tool Gateway & Provenance Validation Over Freeform LLM SQL/Math"
 doc_type: adr
 plane: intelligence-plane
 scope_level: plane
 status: DRAFT
-implementation_status: IMPLEMENTED
+implementation_status: PARTIALLY_IMPLEMENTED
 version: "2.0.0"
 owner_role: ai-engineer
 accountable_role: system-architect
@@ -17,43 +17,42 @@ source_of_truth:
     - "src/intelligence/tools/contracts.py"
     - "src/intelligence/tools/gateway.py"
     - "src/intelligence/reporting/validator.py"
+    - "src/shared/domain/quant.py"
 related_docs:
   - INT-ADR-ROOT-001
-  - INT-ARCH-001
   - INT-ARCH-GW-001
   - ADR-OVR-003
 revision_history:
   - version: "2.0.0"
     date: "2026-11-16"
     author_role: ai-engineer
-    summary: "Documented MADR 4.0.0 decision enforcing ControlledToolGateway whitelist over free-form SQL or prompt arithmetic."
+    summary: "Documented MADR 4.0 decision for ControlledToolGateway and ReportValidator aligned with ADR-OVR-003."
 ---
 
-# ADR-INT-0001: Deterministic Controlled Tool Gateway Over Freeform LLM SQL
+# ADR-INT-0001: Deterministic Tool Gateway & Provenance Validation Over Freeform LLM SQL/Math
 
-## 1. Context and Problem Statement `[REQUIRED]`
+## 1. Context and Problem Statement
 
-Allowing an LLM to generate raw SQL against ClickHouse/PostgreSQL or perform floating-point financial calculations in prompt text introduces SQL injection, unbounded table-scan DoS, silent IEEE-754 rounding drift, and unverifiable hallucinated numbers.
+Quantitative market investigations require accurate OHLCV retrieval, log-return/volatility/correlation math, anomaly checks, and auditable provenance. Allowing an LLM to generate raw ClickHouse/PostgreSQL SQL or compute financial math inside token generation introduces SQL injection risks, unbounded query scans, floating-point drift, and fabricated numbers.
 
-## 2. Decision Drivers `[REQUIRED]`
+## 2. Considered Options
 
-- Prevent arbitrary query execution and unapproved data access.
-- Guarantee deterministic quantitative metrics (log returns, realized volatility, Pearson correlation, Z-score anomalies).
-- Attach verifiable `invocation_id` provenance to every data point used in reports.
+1. **Option 1 — Text-to-SQL + Prompt-Based Math**: Provide database schema descriptions to the LLM and allow read-only SQL generation plus inline LLM arithmetic.
+2. **Option 2 — Whitelisted Deterministic Tool Gateway + Provenance Citations**: Restrict all Agent actions to an enumerated registry (`ApprovedAgentTool`) mediated by `ControlledToolGateway`, run all financial math in Python (`src/shared/domain/quant.py`), attach UUID `ToolProvenanceMetadata`, and enforce `ReportValidator.validate_report()`.
 
-## 3. Considered Options `[REQUIRED]`
+## 3. Decision Outcome
 
-1. **Free-form LLM SQL + Prompt Math**: Provide ClickHouse/Postgres read-only credentials to an LLM SQL tool.
-2. **Whitelisted Deterministic `ControlledToolGateway`**: Restrict the orchestrator to 10 enumerated `ApprovedAgentTool` contracts mediated by `ControlledToolGateway` with RBAC, row caps, timeouts, and `ReportValidator`.
+Adopt **Option 2** (consistent with platform-wide `ADR-OVR-003`):
 
-## 4. Decision Outcome `[REQUIRED]`
+- All Agent tool calls MUST pass through `ControlledToolGateway.execute_tool()` enforcing whitelist membership, RBAC capability checks, `max_rows_or_periods` caps, and `asyncio.wait_for` timeouts.
+- All synthesized reports MUST cite `invocation_id`s verified against `state.evidence_trail` via `ReportValidator`.
+- State-mutating actions (`generate_analysis_report`, `detect_anomalies` cooldown/list appends) MUST be explicitly classified and controlled rather than masked under read-only framing.
 
-Adopt **Option 2 (`ControlledToolGateway`)**, reinforcing platform-level [ADR-OVR-003](../../../overview/architecture/decisions/adr-0003-decimal-precision-and-deterministic-tool-gateway.md):
-- Every tool call MUST pass `ApprovedAgentTool` enum validation, `required_permission` check, `max_rows_or_periods` check, and `asyncio.wait_for` timeout.
-- Every report MUST pass `ReportValidator.validate_report()` verifying non-empty `provenance_citations` matching `evidence_trail` `invocation_id`s.
+## 4. Consequences
 
-## 5. Consequences `[REQUIRED]`
-
-- **Positive**: Deterministic quant math, zero raw SQL exposure, verified in `tests/contract/test_contracts_and_guardrails.py` and `tests/integration/test_three_planes_framework.py`.
-- **Negative / Residual Gaps**: Requires explicit handler registration per tool; `ReportValidator` does not yet cross-check numeric values in narrative prose (`GAP-INT-006`), and `generate_analysis_report` / `detect_anomalies` have write side effects despite read-only framing (`GAP-INT-005`).
+- **Positive (`AS-IS` Verified)**: Unapproved tool names and excessive row limits are blocked deterministically (`test_contracts_and_guardrails.py`, `test_three_planes_framework.py`), and fabricated `invocation_id`s fail `ReportValidator`.
+- **Negative / Remaining Gaps (`OPEN`)**:
+  - `ToolGovernancePolicy.is_read_only_market_data` currently defaults to `True` even for `generate_analysis_report` and `detect_anomalies` side effects.
+  - `MarketIntelligenceGraph` hardcodes `_agent_permissions` instead of propagating caller RBAC claims.
+  - `ReportValidator` checks `invocation_id` existence only and does not validate numeric equality in prose narratives.
 

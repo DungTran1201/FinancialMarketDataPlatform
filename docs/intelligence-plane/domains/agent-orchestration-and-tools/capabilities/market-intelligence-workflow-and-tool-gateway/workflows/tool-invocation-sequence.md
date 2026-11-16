@@ -1,6 +1,6 @@
 ---
-doc_id: DIAG-INT-ORC-TOOL-SEQ-001
-title: "Tool Invocation Sequence Diagram"
+doc_id: DIAG-INT-ORC-SEQ-002
+title: "Sequence Diagram: ControlledToolGateway Invocation & Provenance Wrapping"
 doc_type: diagram
 plane: intelligence-plane
 scope_level: capability
@@ -10,14 +10,14 @@ status: DRAFT
 implementation_status: PARTIALLY_IMPLEMENTED
 version: "2.0.0"
 owner_role: ai-engineer
-accountable_role: security-architect
+accountable_role: system-architect
 created_at: "2026-11-16"
 updated_at: "2026-11-16"
 source_of_truth:
   is_authoritative: false
   authoritative_source:
     - "docs/intelligence-plane/domains/agent-orchestration-and-tools/capabilities/market-intelligence-workflow-and-tool-gateway/use-cases/uc-int-002-execute-approved-agent-tool.md"
-    - "src/intelligence/tools/gateway.py"
+    - "docs/intelligence-plane/architecture/tool-gateway-architecture.md"
 related_docs:
   - CAP-INT-ORC-UC-002
   - INT-ARCH-GW-001
@@ -25,45 +25,60 @@ revision_history:
   - version: "2.0.0"
     date: "2026-11-16"
     author_role: ai-engineer
-    summary: "Created Tool Invocation Sequence Diagram detailing gateway validation and handler dispatch."
+    summary: "Rendered ControlledToolGateway step-by-step gatekeeping sequence and failure branches."
 ---
 
-# Tool Invocation Sequence Diagram
+# Sequence Diagram: `ControlledToolGateway` Invocation & Provenance Wrapping
+
+## 1. Diagram Metadata
 
 | Field | Value |
 |---|---|
-| **Diagram ID** | `DIAG-INT-ORC-TOOL-SEQ-001` |
-| **Purpose** | Show step-by-step validation, timeout wrapping, provenance creation, and error paths in `ControlledToolGateway`. |
-| **Scope & Owner** | `capability` (`CAP-INT-ORC-001`) / `ai-engineer` |
+| **Diagram ID** | `DIAG-INT-ORC-SEQ-002` |
+| **Title & Purpose** | Chronological tool validation, timeout execution, provenance wrapping, and audit recording inside `ControlledToolGateway` |
+| **Owner Role & Scope** | `ai-engineer / CAP-INT-ORC-001` |
 | **Authoritative Source** | [uc-int-002-execute-approved-agent-tool.md](../use-cases/uc-int-002-execute-approved-agent-tool.md) (`CAP-INT-ORC-UC-002`) |
-| **Notation** | Mermaid `sequenceDiagram` (UML 2.5.1) |
-| **Version & Status** | `2.0.0` / `DRAFT` (`PARTIALLY_IMPLEMENTED`) |
+| **Notation** | `Mermaid sequenceDiagram` (`UML 2.5.1`) |
+| **Version & Status** | `2.0.0 — DRAFT` |
+
+## 2. Diagram
 
 ```mermaid
 sequenceDiagram
-    participant Caller as "MarketIntelligenceGraph"
-    participant GW as "ControlledToolGateway"
-    participant Pol as "APPROVED_TOOL_POLICIES"
-    participant H as "Registered Store Handler"
+    autonumber
+    participant ORCH as MarketIntelligenceGraph
+    participant GW as ControlledToolGateway
+    participant POL as APPROVED_TOOL_POLICIES
+    participant HND as Registered Handler Closure
 
-    Caller->>GW: execute_tool(tool_name, params, granted_permissions)
-    GW->>Pol: Validate ApprovedAgentTool(tool_name)
-    alt Unknown tool or missing permission
-        GW-->>Caller: raise UnauthorizedToolAccessError
-    else limit > max_rows_or_periods
-        GW-->>Caller: raise ToolQueryLimitExceededError
-    else Validated
-        alt Handler registered
-            GW->>H: asyncio.wait_for(handler(params), timeout=policy.timeout_seconds)
-            H-->>GW: result_data dict
-        else No handler registered
-            GW->>GW: result_data = {"status": "stub_ok"}
+    ORCH->>GW: execute_tool(tool_name, params, granted_permissions)
+    GW->>POL: ApprovedAgentTool(tool_name)
+    alt Not in ApprovedAgentTool Enum
+        GW-->>ORCH: Raise UnauthorizedToolAccessError
+    else In Whitelist
+        GW->>POL: Check policy.required_permission in granted_permissions
+        alt Missing Permission
+            GW-->>ORCH: Raise UnauthorizedToolAccessError
+        else Authorized
+            GW->>GW: Check int(limit or lookback_periods or 1) <= max_rows_or_periods
+            alt Cap Exceeded
+                GW-->>ORCH: Raise ToolQueryLimitExceededError
+            else Within Bounds
+                alt Handler Registered
+                    GW->>HND: asyncio.wait_for(handler(params), timeout=policy.timeout_seconds)
+                    HND-->>GW: result_data dict (or TimeoutError propagates)
+                else Handler is None
+                    GW->>GW: Return synthetic {"status": "stub_ok"}
+                end
+                GW->>GW: Generate UUIDv4 invocation_id + ToolProvenanceMetadata
+                GW->>GW: Append ToolExecutionEnvelope(SUCCESS) to _audit_log
+                GW-->>ORCH: Return ToolExecutionEnvelope
+            end
         end
-        GW->>GW: Build ToolProvenanceMetadata + ToolExecutionEnvelope(SUCCESS)
-        GW->>GW: Append to _audit_log
-        GW-->>Caller: Return ToolExecutionEnvelope
     end
 ```
 
-**Legend**: `alt` branches depict exception paths (`UnauthorizedToolAccessError`, `ToolQueryLimitExceededError`) vs normal handler or `stub_ok` execution.
+## 3. Legend
+
+- **Exception Branches**: Errors raised prior to or during handler execution propagate directly and are NOT appended to `_audit_log` `AS-IS`.
 
