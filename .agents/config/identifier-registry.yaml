@@ -1,0 +1,102 @@
+version: "2.0"
+metadata:
+  name: "Documentation V2 Identifier Registry"
+  description: "Maps canonical V2 document, capability, requirement, ADR, diagram, and test identifier patterns aligned to writing-standards.md and JSON schemas."
+  updated_at: "2026-11-16"
+  authoritative_sources:
+    - "docs/governance/standards/writing-standards.md"
+    - "docs/governance/schemas/document-frontmatter.schema.json"
+    - "docs/governance/schemas/capability-manifest.schema.json"
+    - "scripts/docs/validate_docs.py"
+
+preservation_policy:
+  preserve_existing_ids: true
+  prohibit_renumbering_for_continuity: true
+  enforce_uniqueness_across_docs: true
+
+namespaces:
+  DOC_ID:
+    prefix: "doc_id"
+    pattern: "^[A-Z][A-Z0-9-]*[A-Z0-9]$"
+    artifact_type: "Markdown Document Frontmatter Identifier"
+    canonical_location: "docs/**/*.md"
+  CAP:
+    prefix: "CAP"
+    pattern: "^CAP-[A-Z0-9-]+$"
+    artifact_type: "Capability Manifest Identifier"
+    canonical_location: "docs/<plane>/domains/<domain>/capabilities/<capability>/capability.yaml"
+  BR:
+    prefix: "BR"
+    pattern: "^BR-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Business Requirement"
+    canonical_location: "docs/overview/system-requirements.md and capability requirements/"
+  FR:
+    prefix: "FR"
+    pattern: "^FR-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Functional Requirement"
+    canonical_location: "docs/<plane>/domains/<domain>/capabilities/<capability>/requirements/capability-specification.md"
+  NFR:
+    prefix: "NFR"
+    pattern: "^NFR-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Non-Functional Requirement"
+    canonical_location: "docs/<plane>/domains/<domain>/capabilities/<capability>/requirements/nfr.md"
+  RULE:
+    prefix: "RULE"
+    pattern: "^RULE-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Domain Business Rule"
+    canonical_location: "docs/<plane>/domains/<domain>/capabilities/<capability>/requirements/business-rules.md"
+  UC:
+    prefix: "UC"
+    pattern: "^UC-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Use Case"
+    canonical_location: "docs/<plane>/domains/<domain>/capabilities/<capability>/use-cases/"
+  AC:
+    prefix: "AC"
+    pattern: "^AC-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Acceptance Criteria"
+    canonical_location: "docs/<plane>/domains/<domain>/capabilities/<capability>/requirements/"
+  CON:
+    prefix: "CON"
+    pattern: "^CON-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Constraint"
+    canonical_location: "docs/overview/ and capability requirements/"
+  THR:
+    prefix: "THR"
+    pattern: "^THR-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Security Threat"
+    canonical_location: "docs/<plane>/domains/<domain>/capabilities/<capability>/security/threat-model.md"
+  SEC:
+    prefix: "SEC"
+    pattern: "^SEC-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Security Control / Requirement"
+    canonical_location: "docs/<plane>/domains/<domain>/capabilities/<capability>/security/security-requirements.md"
+  TS:
+    prefix: "TS"
+    pattern: "^TS-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Test Scenario"
+    canonical_location: "docs/<plane>/domains/<domain>/capabilities/<capability>/quality/test-scenarios.md"
+  TC:
+    prefix: "TC"
+    pattern: "^TC-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Test Case"
+    canonical_location: "docs/<plane>/domains/<domain>/capabilities/<capability>/quality/test-cases.yaml"
+  ADR:
+    prefix: "ADR"
+    pattern: "^ADR-[A-Z][A-Z0-9-]*-\\d{3,4}$"
+    artifact_type: "Architecture Decision Record"
+    canonical_location: "docs/<scope>/architecture/decisions/"
+  DIAG:
+    prefix: "DIAG"
+    pattern: "^DIAG-[A-Z][A-Z0-9-]*-\\d{3}$"
+    artifact_type: "Derived Technical Diagram"
+    canonical_location: "docs/overview/diagrams/, docs/<plane>/architecture/diagrams/, and capability design/workflows/security/data/"
+  ART:
+    prefix: "ART"
+    pattern: "^ART-[A-Z0-9-]+$"
+    artifact_type: "Cataloged Documentation Artifact Type"
+    canonical_location: "docs/governance/catalog/artifact-catalog.yaml"
+  QG:
+    prefix: "QG"
+    pattern: "^QG-[1-7]-[A-Z-]+$"
+    artifact_type: "Documentation Lifecycle Quality Gate"
+    canonical_location: "docs/governance/quality-gates.md"

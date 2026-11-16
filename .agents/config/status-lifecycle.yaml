@@ -1,0 +1,43 @@
+version: "2.0"
+metadata:
+  name: "Documentation V2 Document & Implementation Status Lifecycle"
+  description: "Reflects strict separation between document approval status and software implementation reality."
+  updated_at: "2026-11-16"
+  authoritative_sources:
+    - "docs/governance/versioning-and-status.md"
+    - "docs/governance/review-and-approval.md"
+    - "docs/governance/schemas/document-frontmatter.schema.json"
+    - "docs/governance/schemas/capability-manifest.schema.json"
+
+document_statuses:
+  DRAFT:
+    description: "Initial authoring or revision in progress; MAY contain [OPEN] questions or [ASSUMPTION] tags."
+    can_transition_to: ["IN_REVIEW", "DEPRECATED"]
+    requires_human_approval: false
+  IN_REVIEW:
+    description: "Submitted for peer, architect, security, or QA review."
+    can_transition_to: ["DRAFT", "APPROVED", "DEPRECATED"]
+    requires_human_approval: false
+  APPROVED:
+    description: "Reviewed and signed off by accountable owner; change_metadata and matching revision_history required."
+    can_transition_to: ["IN_REVIEW", "DEPRECATED"]
+    requires_human_approval: true
+  DEPRECATED:
+    description: "Superseded or retired from active use (superseded_by recorded when replaced); terminal state."
+    can_transition_to: []
+    requires_human_approval: true
+
+implementation_statuses:
+  - "PLANNED"
+  - "NOT_IMPLEMENTED"
+  - "SIMULATED"
+  - "PARTIALLY_IMPLEMENTED"
+  - "IMPLEMENTED"
+  - "VERIFIED"
+  - "NOT_APPLICABLE"
+
+promotion_rules:
+  - "No document containing unresolved TBD, TODO, FIXME, or [TO BE COMPLETED] markers outside inline code may be marked APPROVED."
+  - "No speculative requirement or unverified assumption may be marked APPROVED without explicit human confirmation."
+  - "Setting status: APPROVED never implies implementation_status: IMPLEMENTED or VERIFIED."
+  - "scripts/docs/validate_docs.py MUST exit 0 before transition to APPROVED."

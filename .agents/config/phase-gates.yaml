@@ -1,0 +1,95 @@
+version: "2.0"
+metadata:
+  name: "Documentation V2 Lifecycle Stages & Quality Gates"
+  description: "Maps the 9-stage Documentation V2 lifecycle and automated/human quality gates QG-1-SCOPE through QG-7-OPS."
+  updated_at: "2026-11-16"
+  authoritative_sources:
+    - "docs/governance/documentation-lifecycle.md"
+    - "docs/governance/quality-gates.md"
+    - "docs/governance/roles-and-raci.md"
+
+lifecycle_stages:
+  - stage: 1
+    name: "Discovery and Scope"
+    primary_owner: "business-analyst"
+    supporting_roles: ["discovery-analyst", "system-architect"]
+    exit_gate: "QG-1-SCOPE"
+  - stage: 2
+    name: "Requirements Analysis"
+    primary_owner: "business-analyst"
+    supporting_roles: ["requirements-engineer"]
+    exit_gate: "QG-2-REQS"
+  - stage: 3
+    name: "Specification"
+    primary_owner: "business-analyst"
+    supporting_roles: ["domain-modeler", "api-architect", "security-reviewer"]
+    exit_gate: "QG-3-SPEC-DESIGN"
+  - stage: 4
+    name: "Architecture and Design"
+    primary_owner: "system-architect"
+    supporting_roles: ["architecture-modeler", "data-platform-architect", "security-reviewer", "ai-engineer"]
+    exit_gate: "QG-3-SPEC-DESIGN"
+  - stage: 5
+    name: "Review and Approval"
+    primary_owner: "documentation-architect"
+    supporting_roles: ["documentation-auditor"]
+    exit_gate: "QG-5-APPROVAL"
+  - stage: 6
+    name: "Implementation"
+    primary_owner: "fullstack-engineer"
+    supporting_roles: ["data-engineer", "streaming-data-engineer", "lakehouse-engineer", "analytics-engineer"]
+    exit_gate: "QG-6-VERIFY"
+  - stage: 7
+    name: "Verification"
+    primary_owner: "qa-lead"
+    supporting_roles: ["qa-reviewer", "financial-data-platform-reviewer", "security-reviewer"]
+    exit_gate: "QG-6-VERIFY"
+  - stage: 8
+    name: "Release and Operations"
+    primary_owner: "devops-sre"
+    supporting_roles: ["dataops-engineer"]
+    exit_gate: "QG-7-OPS"
+  - stage: 9
+    name: "Change and Deprecation"
+    primary_owner: "documentation-architect"
+    supporting_roles: ["documentation-auditor"]
+    exit_gate: "QG-5-APPROVAL"
+
+gates:
+  QG-1-SCOPE:
+    boundary: "Stage 1 -> Stage 2"
+    blocking_authority: "business-analyst"
+    validators:
+      - "scripts/docs/validate_docs.py"
+  QG-2-REQS:
+    boundary: "Stage 2 -> Stage 3"
+    blocking_authority: "business-analyst"
+    validators:
+      - "scripts/docs/validate_docs.py"
+  QG-3-SPEC-DESIGN:
+    boundary: "Stage 3/4 -> Stage 5"
+    blocking_authority: "system-architect"
+    validators:
+      - "scripts/docs/validate_docs.py"
+  QG-4-SECURITY:
+    boundary: "Stage 4 -> Stage 5 (HIGH_CRITICAL)"
+    blocking_authority: "security-architect"
+    validators:
+      - "scripts/docs/validate_docs.py"
+  QG-5-APPROVAL:
+    boundary: "Stage 5 -> Stage 6"
+    blocking_authority: "documentation-architect"
+    validators:
+      - "scripts/docs/validate_docs.py"
+      - "tools/validators/run_all.py"
+  QG-6-VERIFY:
+    boundary: "Stage 6 -> Stage 7/8"
+    blocking_authority: "qa-lead"
+    validators:
+      - "scripts/docs/validate_docs.py"
+      - "pytest tests/ -v"
+  QG-7-OPS:
+    boundary: "Stage 8 (Release)"
+    blocking_authority: "devops-sre"
+    validators:
+      - "scripts/docs/validate_docs.py"

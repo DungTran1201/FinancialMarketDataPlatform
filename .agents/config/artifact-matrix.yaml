@@ -1,0 +1,103 @@
+version: "2.0"
+metadata:
+  name: "Agent Artifact Selection Alignment"
+  description: "Maps work types and technical signals to Documentation V2 ART-* artifacts without overriding the normative applicability matrix."
+  updated_at: "2026-11-16"
+  authoritative_source: "docs/governance/catalog/artifact-applicability-matrix.yaml"
+  artifact_catalog: "docs/governance/catalog/artifact-catalog.yaml"
+
+capability_baseline_by_tier:
+  LOW:
+    required:
+      - "ART-CAP-MANIFEST"
+      - "ART-CAP-SPEC"
+      - "ART-COMP-DESIGN"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+  MEDIUM:
+    required:
+      - "ART-CAP-MANIFEST"
+      - "ART-CAP-SPEC"
+      - "ART-COMP-DESIGN"
+      - "ART-NFR-SPEC"
+      - "ART-TEST-PLAN"
+      - "ART-TEST-SCEN"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+      - "ART-RUNBOOK"
+  HIGH_CRITICAL:
+    required:
+      - "ART-CAP-MANIFEST"
+      - "ART-CAP-SPEC"
+      - "ART-USE-CASE"
+      - "ART-NFR-SPEC"
+      - "ART-COMP-DESIGN"
+      - "ART-ERR-CAT"
+      - "ART-THREAT-MODEL"
+      - "ART-SEC-REQ"
+      - "ART-DIAG-TM"
+      - "ART-TEST-PLAN"
+      - "ART-TEST-SCEN"
+      - "ART-TEST-CASES"
+      - "ART-TRACEABILITY"
+      - "ART-OBS-SLO"
+      - "ART-RUNBOOK"
+      - "ART-INC-REC"
+
+signal_overrides_summary:
+  handles_auth_or_rbac:
+    minimum_tier: "HIGH_CRITICAL"
+    required_artifacts: ["ART-THREAT-MODEL", "ART-SEC-REQ", "ART-AUTHZ-MATRIX", "ART-DIAG-TM", "ART-OPENAPI", "ART-ERR-CAT", "ART-DIAG-SEQ", "ART-TEST-CASES", "ART-TRACEABILITY"]
+  handles_user_or_financial_data:
+    minimum_tier: "MEDIUM"
+    required_artifacts: ["ART-BUS-RULE", "ART-DATA-CONTRACT", "ART-TEST-CASES", "ART-TRACEABILITY"]
+  external_exposure:
+    minimum_tier: "HIGH_CRITICAL"
+    required_artifacts: ["ART-THREAT-MODEL", "ART-SEC-REQ", "ART-DIAG-TM", "ART-OPENAPI", "ART-ERR-CAT", "ART-OBS-SLO"]
+  schema_or_db_migration:
+    minimum_tier: "MEDIUM"
+    required_artifacts: ["ART-DATA-MODEL", "ART-DB-DESIGN", "ART-DIAG-ERD", "ART-RUNBOOK", "ART-INC-REC", "ART-TEST-CASES", "ART-TRACEABILITY"]
+  realtime_or_event_streaming:
+    minimum_tier: "HIGH_CRITICAL"
+    required_artifacts: ["ART-ASYNCAPI", "ART-DATA-CONTRACT", "ART-DIAG-DFD", "ART-ERR-CAT", "ART-OBS-SLO", "ART-INC-REC", "ART-RUNBOOK", "ART-TEST-CASES", "ART-TRACEABILITY"]
+  agent_write_capable_tools:
+    minimum_tier: "HIGH_CRITICAL"
+    required_artifacts: ["ART-AGENT-SPEC", "ART-DIAG-AGENT", "ART-THREAT-MODEL", "ART-SEC-REQ", "ART-AUTHZ-MATRIX", "ART-DIAG-TM", "ART-TEST-CASES", "ART-TRACEABILITY"]
+  cross_plane_dependencies:
+    minimum_tier: "MEDIUM"
+    required_artifacts: ["ART-NFR-SPEC", "ART-DIAG-C4", "ART-TRACEABILITY"]
+
+work_type_routing:
+  new-capability:
+    target_scope: "docs/<plane>/domains/<domain>/capabilities/<capability>/"
+    primary_manifest: "capability.yaml"
+  feature-enhancement:
+    target_scope: "docs/<plane>/domains/<domain>/capabilities/<capability>/"
+    primary_manifest: "capability.yaml"
+  plane-architecture:
+    target_scope: "docs/<plane>/architecture/"
+    recommended_artifacts: ["ART-ARCH-DESC", "ART-DIAG-C4", "ART-ADR", "ART-TEST-PLAN"]
+  domain-modeling:
+    target_scope: "docs/<plane>/domains/<domain>/"
+    recommended_artifacts: ["ART-ROOT-README", "ART-DOM-SPEC", "ART-GLOSSARY"]
+  security-change:
+    target_scope: "docs/<plane>/domains/<domain>/capabilities/<capability>/security/"
+    mandatory_gate: "QG-4-SECURITY"
+  schema-migration:
+    target_scope: "docs/<plane>/domains/<domain>/capabilities/<capability>/data/"
+    mandatory_artifacts: ["ART-DATA-MODEL", "ART-DB-DESIGN", "ART-DIAG-ERD"]
+  api-contract-change:
+    target_scope: "docs/<plane>/domains/<domain>/capabilities/<capability>/contracts/"
+    mandatory_artifacts: ["ART-OPENAPI", "ART-ERR-CAT"]
+  data-pipeline-change:
+    target_scope: "docs/data-plane/"
+    mandatory_artifacts: ["ART-DATA-CONTRACT", "ART-ASYNCAPI", "ART-DIAG-DFD"]
+  agent-tool-change:
+    target_scope: "docs/intelligence-plane/domains/agent-orchestration-and-tools/capabilities/market-intelligence-workflow-and-tool-gateway/"
+    mandatory_artifacts: ["ART-AGENT-SPEC", "ART-DIAG-AGENT", "ART-AUTHZ-MATRIX"]
+  incident-remediation:
+    target_scope: "docs/<plane>/operations/"
+    mandatory_artifacts: ["ART-RUNBOOK", "ART-INC-REC"]
+  doc-refactoring:
+    target_scope: "docs/"
+    validation_command: "scripts/docs/validate_docs.py"

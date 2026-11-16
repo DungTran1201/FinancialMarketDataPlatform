@@ -38,7 +38,7 @@ Before creating or updating documentation, specifications, or contracts, AI Agen
    - Insecure current behavior MUST be reported as a gap, never described as an approved security control.
    - Real secrets, private keys, tokens, or PII MUST NEVER be placed in docs or tests.
 4. **Prevent Duplication & Monoliths**: Author specifications at the narrowest owning scope defined in [documentation-architecture.md](docs/governance/documentation-architecture.md) and choose only applicable artifacts per [artifact-applicability-matrix.yaml](docs/governance/catalog/artifact-applicability-matrix.yaml).
-5. **Follow Lifecycle Hooks**: Workspace lifecycle hooks are defined in [.agents/hooks.json](.agents/hooks.json). Legacy V1 `.agents/config/`, `.agents/rules/`, `models/`, and `work-items/` trees have been retired (preserved in Git tag `docs-v1-legacy-2026-11-16`).
+5. **Follow Agent OS & Lifecycle Hooks**: Workspace lifecycle hooks are defined in [.agents/hooks.json](.agents/hooks.json), and Documentation V2-aligned Agent roles, rules, skills, and configuration registries are indexed in [.agents/README.md](.agents/README.md). Legacy V1 `models/` and `work-items/` trees remain retired in Git history (`f0329d3b`, `dde3e816`).
 
 ---
 

@@ -1,0 +1,33 @@
+# Data Rule — Medallion Layer Ownership (`DATA-RULE-006`)
+
+| Metadata | Value |
+|---|---|
+| **Rule ID** | `DATA-RULE-006` |
+| **Rule Slug** | `medallion-layer-ownership` |
+| **Trigger Scope** | Bronze/Silver/Gold data, MinIO, Parquet, Iceberg, PySpark, dbt, and analytical marts |
+| **Activation Mode** | `Always Active` |
+| **Status** | `APPROVED` |
+| **Updated Date** | `2026-11-16` |
+
+---
+
+## 1. Purpose & Scope
+
+Enforces strict responsibility boundaries across the Lakehouse Medallion layers (Bronze append-only raw archive, Silver PySpark Iceberg standardization/deduplication, and Gold dbt Core semantic marts) per `docs/data-plane/architecture/data-storage-architecture.md` and `docs/data-plane/domains/lakehouse-analytics/`.
+
+## 2. Mandatory Directives
+
+1. **Immutable Bronze**: Keep Bronze append-only in MinIO (`Parquet`), preserving raw source payloads, `event_id`, `schema_version`, and ingestion lineage.
+2. **PySpark-Owned Silver**: Use PySpark (`src/lakehouse/silver/merge_engine.py`) exclusively for Bronze-to-Silver type standardization, UTC normalization, and deterministic deduplication via Iceberg `MERGE INTO`.
+3. **dbt-Owned Gold**: Keep curated business/analytical aggregations and marts in `dbt Core` (`src/lakehouse/gold/dbt/`), avoiding duplicate business logic across Spark and dbt.
+4. **Table Maintenance**: Govern Parquet file sizing, partition evolution, compaction, and Iceberg snapshot retention explicitly.
+
+## 3. Prohibited Actions
+
+- Do not mutate or overwrite Bronze into a cleaned business table.
+- Do not implement Gold business metrics in PySpark when owned by dbt Core.
+- Do not treat raw object-store Parquet paths as a substitute for transactional Apache Iceberg table metadata.
+
+## 4. Verification Mechanism
+
+- Model lineage inspection, `SilverMergeJobSpec` verification, dbt DAG/tests, and `scripts/docs/validate_docs.py` (`tools/validators/run_all.py`).

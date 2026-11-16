@@ -1,0 +1,78 @@
+version: "2.0"
+metadata:
+  name: "Documentation V2 Work Types & Risk Classification"
+  description: "Aligns Agent work classification with Documentation V2 work types, risk tiers, and quality gates."
+  updated_at: "2026-11-16"
+  authoritative_sources:
+    - "docs/governance/catalog/artifact-catalog.yaml"
+    - "docs/governance/catalog/artifact-applicability-matrix.yaml"
+    - "docs/governance/change-management.md"
+    - "docs/governance/quality-gates.md"
+
+work_types:
+  new-capability:
+    name: "New Capability Authoring"
+    default_risk_tier: "MEDIUM"
+    signals: ["capability", "new feature", "new module", "new endpoint", "new workflow"]
+    required_gates: ["QG-1-SCOPE", "QG-2-REQS", "QG-3-SPEC-DESIGN", "QG-5-APPROVAL", "QG-6-VERIFY", "QG-7-OPS"]
+  feature-enhancement:
+    name: "Capability Feature Enhancement"
+    default_risk_tier: "MEDIUM"
+    signals: ["enhancement", "screen", "ui", "query", "use case", "business rule"]
+    required_gates: ["QG-1-SCOPE", "QG-2-REQS", "QG-3-SPEC-DESIGN", "QG-5-APPROVAL", "QG-6-VERIFY"]
+  plane-architecture:
+    name: "Platform or Plane Architecture & ADR Change"
+    default_risk_tier: "HIGH_CRITICAL"
+    signals: ["architecture", "adr", "plane boundary", "microservices", "storage engine"]
+    required_gates: ["QG-1-SCOPE", "QG-3-SPEC-DESIGN", "QG-4-SECURITY", "QG-5-APPROVAL", "QG-6-VERIFY", "QG-7-OPS"]
+  domain-modeling:
+    name: "Domain Boundary & Glossary Modeling"
+    default_risk_tier: "MEDIUM"
+    signals: ["domain", "bounded context", "glossary", "ubiquitous language"]
+    required_gates: ["QG-1-SCOPE", "QG-2-REQS", "QG-5-APPROVAL"]
+  data-pipeline-change:
+    name: "Data Plane Ingestion, Streaming or Lakehouse Change"
+    default_risk_tier: "HIGH_CRITICAL"
+    signals: ["kafka", "asyncapi", "clickhouse", "iceberg", "parquet", "spark", "dbt", "collector", "dlq", "watermark"]
+    required_gates: ["QG-1-SCOPE", "QG-2-REQS", "QG-3-SPEC-DESIGN", "QG-4-SECURITY", "QG-5-APPROVAL", "QG-6-VERIFY", "QG-7-OPS"]
+  schema-migration:
+    name: "Database or Persistent Storage Schema Migration"
+    default_risk_tier: "MEDIUM"
+    signals: ["schema", "ddl", "migration", "postgres", "clickhouse", "iceberg", "erd"]
+    required_gates: ["QG-1-SCOPE", "QG-3-SPEC-DESIGN", "QG-5-APPROVAL", "QG-6-VERIFY", "QG-7-OPS"]
+  api-contract-change:
+    name: "HTTP OpenAPI or Error Contract Change"
+    default_risk_tier: "MEDIUM"
+    signals: ["openapi", "endpoint", "route", "rest", "error catalog", "dto"]
+    required_gates: ["QG-1-SCOPE", "QG-3-SPEC-DESIGN", "QG-5-APPROVAL", "QG-6-VERIFY"]
+  security-change:
+    name: "Authentication, RBAC, Secrets or Trust Boundary Change"
+    default_risk_tier: "HIGH_CRITICAL"
+    signals: ["security", "auth", "jwt", "rbac", "api key", "secret", "threat", "waf", "nginx"]
+    required_gates: ["QG-1-SCOPE", "QG-2-REQS", "QG-3-SPEC-DESIGN", "QG-4-SECURITY", "QG-5-APPROVAL", "QG-6-VERIFY"]
+  agent-tool-change:
+    name: "Intelligence Plane Workflow or Tool Gateway Change"
+    default_risk_tier: "HIGH_CRITICAL"
+    signals: ["agent", "langgraph", "tool gateway", "provenance", "llm", "mcp"]
+    required_gates: ["QG-1-SCOPE", "QG-2-REQS", "QG-3-SPEC-DESIGN", "QG-4-SECURITY", "QG-5-APPROVAL", "QG-6-VERIFY"]
+  incident-remediation:
+    name: "Operational Runbook, Recovery or Incident Change"
+    default_risk_tier: "MEDIUM"
+    signals: ["runbook", "recovery", "slo", "alert", "prometheus", "docker", "incident"]
+    required_gates: ["QG-5-APPROVAL", "QG-6-VERIFY", "QG-7-OPS"]
+  doc-refactoring:
+    name: "Documentation Structure, Links or Governance Update"
+    default_risk_tier: "LOW"
+    signals: ["documentation", "template", "readme", "diagram", "traceability", "governance"]
+    required_gates: ["QG-5-APPROVAL"]
+
+risk_tiers:
+  LOW:
+    description: "Read-only UI components, static configs, or documentation structure updates without schema, auth, streaming, or agent mutations."
+    required_gates: ["QG-1-SCOPE", "QG-5-APPROVAL", "QG-6-VERIFY"]
+  MEDIUM:
+    description: "Standard API endpoints, analytical query extensions, database schema changes without auth changes, or batch transforms."
+    required_gates: ["QG-1-SCOPE", "QG-2-REQS", "QG-3-SPEC-DESIGN", "QG-5-APPROVAL", "QG-6-VERIFY", "QG-7-OPS"]
+  HIGH_CRITICAL:
+    description: "Auth/RBAC, financial precision pipelines, external exposure, real-time streaming, write-capable agent tools, or multi-plane breaking changes."
+    required_gates: ["QG-1-SCOPE", "QG-2-REQS", "QG-3-SPEC-DESIGN", "QG-4-SECURITY", "QG-5-APPROVAL", "QG-6-VERIFY", "QG-7-OPS"]

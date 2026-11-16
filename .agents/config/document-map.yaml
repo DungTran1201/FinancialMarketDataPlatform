@@ -1,0 +1,207 @@
+version: "2.0"
+metadata:
+  name: "FinancialMarketDataPlatform Documentation V2 Map"
+  description: "Maps Documentation V2 root entrypoints, Platform Overview, Three Planes, Domains, Capabilities, diagrams, and reusable templates."
+  updated_at: "2026-11-16"
+  authoritative_sources:
+    - "docs/docs-index.yaml"
+    - "docs/governance/documentation-architecture.md"
+    - "docs/governance/catalog/artifact-catalog.yaml"
+
+root_entrypoints:
+  agent_contract: "AGENTS.md"
+  docs_root: "docs/README.md"
+  docs_index: "docs/docs-index.yaml"
+  validator: "scripts/docs/validate_docs.py"
+  validator_wrapper: "tools/validators/run_all.py"
+
+governance:
+  path: "docs/governance/"
+  readme: "docs/governance/README.md"
+  architecture: "docs/governance/documentation-architecture.md"
+  standards_dir: "docs/governance/standards/"
+  catalog: "docs/governance/catalog/artifact-catalog.yaml"
+  applicability_matrix: "docs/governance/catalog/artifact-applicability-matrix.yaml"
+  schemas_dir: "docs/governance/schemas/"
+  templates_dir: "docs/governance/templates/"
+  migration_dir: "docs/governance/migration/"
+  template_categories:
+    architecture: "docs/governance/templates/architecture/"
+    common: "docs/governance/templates/common/"
+    diagrams: "docs/governance/templates/diagrams/"
+    interfaces_and_data: "docs/governance/templates/interfaces-and-data/"
+    operations: "docs/governance/templates/operations/"
+    product_and_requirements: "docs/governance/templates/product-and-requirements/"
+    quality: "docs/governance/templates/quality/"
+    security: "docs/governance/templates/security/"
+
+overview:
+  path: "docs/overview/"
+  readme: "docs/overview/README.md"
+  architecture_dir: "docs/overview/architecture/"
+  decisions_dir: "docs/overview/architecture/decisions/"
+  diagrams_dir: "docs/overview/diagrams/"
+
+capability_structure:
+  pattern: "docs/<plane>/domains/<domain>/capabilities/<capability>/"
+  manifest: "capability.yaml"
+  readme: "README.md"
+  standard_subdirs:
+    - "requirements/"
+    - "use-cases/"
+    - "workflows/"
+    - "design/"
+    - "contracts/"
+    - "data/"
+    - "security/"
+    - "quality/"
+  diagram_placement_policy: "Scoped diagrams MUST live in overview/diagrams/, <plane>/architecture/diagrams/, or capability design/, workflows/, security/, and data/ directories; never create a detached docs/diagrams/ root."
+
+planes:
+  data_plane:
+    id: "data-plane"
+    path: "docs/data-plane/"
+    readme: "docs/data-plane/README.md"
+    architecture_dir: "docs/data-plane/architecture/"
+    decisions_dir: "docs/data-plane/architecture/decisions/"
+    diagrams_dir: "docs/data-plane/architecture/diagrams/"
+    shared_contracts_dir: "docs/data-plane/shared-contracts/"
+    operations_dir: "docs/data-plane/operations/"
+    code_roots:
+      - "src/ingestion"
+      - "src/streaming"
+      - "src/lakehouse"
+      - "src/shared/contracts"
+    domains:
+      market-data-ingestion:
+        path: "docs/data-plane/domains/market-data-ingestion/"
+        specification: "docs/data-plane/domains/market-data-ingestion/domain-specification.md"
+        capabilities:
+          - id: "CAP-DP-ING-001"
+            slug: "exchange-realtime-and-backfill-ingestion"
+            path: "docs/data-plane/domains/market-data-ingestion/capabilities/exchange-realtime-and-backfill-ingestion/"
+            manifest: "docs/data-plane/domains/market-data-ingestion/capabilities/exchange-realtime-and-backfill-ingestion/capability.yaml"
+            diagram_dirs:
+              - "docs/data-plane/domains/market-data-ingestion/capabilities/exchange-realtime-and-backfill-ingestion/design/"
+              - "docs/data-plane/domains/market-data-ingestion/capabilities/exchange-realtime-and-backfill-ingestion/workflows/"
+              - "docs/data-plane/domains/market-data-ingestion/capabilities/exchange-realtime-and-backfill-ingestion/data/"
+              - "docs/data-plane/domains/market-data-ingestion/capabilities/exchange-realtime-and-backfill-ingestion/security/"
+      event-streaming:
+        path: "docs/data-plane/domains/event-streaming/"
+        specification: "docs/data-plane/domains/event-streaming/domain-specification.md"
+        capabilities:
+          - id: "CAP-DP-STR-001"
+            slug: "kafka-event-bus-and-dlq"
+            path: "docs/data-plane/domains/event-streaming/capabilities/kafka-event-bus-and-dlq/"
+            manifest: "docs/data-plane/domains/event-streaming/capabilities/kafka-event-bus-and-dlq/capability.yaml"
+            diagram_dirs:
+              - "docs/data-plane/domains/event-streaming/capabilities/kafka-event-bus-and-dlq/design/"
+              - "docs/data-plane/domains/event-streaming/capabilities/kafka-event-bus-and-dlq/security/"
+          - id: "CAP-DP-STR-002"
+            slug: "realtime-hot-state-and-olap-projection"
+            path: "docs/data-plane/domains/event-streaming/capabilities/realtime-hot-state-and-olap-projection/"
+            manifest: "docs/data-plane/domains/event-streaming/capabilities/realtime-hot-state-and-olap-projection/capability.yaml"
+            diagram_dirs:
+              - "docs/data-plane/domains/event-streaming/capabilities/realtime-hot-state-and-olap-projection/design/"
+              - "docs/data-plane/domains/event-streaming/capabilities/realtime-hot-state-and-olap-projection/data/"
+              - "docs/data-plane/domains/event-streaming/capabilities/realtime-hot-state-and-olap-projection/security/"
+      lakehouse-analytics:
+        path: "docs/data-plane/domains/lakehouse-analytics/"
+        specification: "docs/data-plane/domains/lakehouse-analytics/domain-specification.md"
+        capabilities:
+          - id: "CAP-DP-LAK-001"
+            slug: "medallion-lakehouse-and-quality-gates"
+            path: "docs/data-plane/domains/lakehouse-analytics/capabilities/medallion-lakehouse-and-quality-gates/"
+            manifest: "docs/data-plane/domains/lakehouse-analytics/capabilities/medallion-lakehouse-and-quality-gates/capability.yaml"
+            diagram_dirs:
+              - "docs/data-plane/domains/lakehouse-analytics/capabilities/medallion-lakehouse-and-quality-gates/data/"
+
+  application_plane:
+    id: "application-plane"
+    path: "docs/application-plane/"
+    readme: "docs/application-plane/README.md"
+    architecture_dir: "docs/application-plane/architecture/"
+    decisions_dir: "docs/application-plane/architecture/decisions/"
+    diagrams_dir: "docs/application-plane/architecture/diagrams/"
+    shared_contracts_dir: "docs/application-plane/shared-contracts/"
+    operations_dir: "docs/application-plane/operations/"
+    code_roots:
+      - "src/serving"
+      - "frontend"
+      - "src/shared/security"
+    domains:
+      identity-and-access:
+        path: "docs/application-plane/domains/identity-and-access/"
+        specification: "docs/application-plane/domains/identity-and-access/domain-specification.md"
+        capabilities:
+          - id: "CAP-APP-IAM-001"
+            slug: "authentication-api-keys-and-edge-defense"
+            path: "docs/application-plane/domains/identity-and-access/capabilities/authentication-api-keys-and-edge-defense/"
+            manifest: "docs/application-plane/domains/identity-and-access/capabilities/authentication-api-keys-and-edge-defense/capability.yaml"
+            diagram_dirs:
+              - "docs/application-plane/domains/identity-and-access/capabilities/authentication-api-keys-and-edge-defense/workflows/"
+              - "docs/application-plane/domains/identity-and-access/capabilities/authentication-api-keys-and-edge-defense/data/"
+              - "docs/application-plane/domains/identity-and-access/capabilities/authentication-api-keys-and-edge-defense/security/"
+      market-experience-and-catalog:
+        path: "docs/application-plane/domains/market-experience-and-catalog/"
+        specification: "docs/application-plane/domains/market-experience-and-catalog/domain-specification.md"
+        capabilities:
+          - id: "CAP-APP-CAT-001"
+            slug: "instrument-and-data-catalog"
+            path: "docs/application-plane/domains/market-experience-and-catalog/capabilities/instrument-and-data-catalog/"
+            manifest: "docs/application-plane/domains/market-experience-and-catalog/capabilities/instrument-and-data-catalog/capability.yaml"
+            diagram_dirs:
+              - "docs/application-plane/domains/market-experience-and-catalog/capabilities/instrument-and-data-catalog/data/"
+          - id: "CAP-APP-MKT-001"
+            slug: "market-and-analytics-query-portal"
+            path: "docs/application-plane/domains/market-experience-and-catalog/capabilities/market-and-analytics-query-portal/"
+            manifest: "docs/application-plane/domains/market-experience-and-catalog/capabilities/market-and-analytics-query-portal/capability.yaml"
+            diagram_dirs:
+              - "docs/application-plane/domains/market-experience-and-catalog/capabilities/market-and-analytics-query-portal/workflows/"
+      agent-experience-and-reporting:
+        path: "docs/application-plane/domains/agent-experience-and-reporting/"
+        specification: "docs/application-plane/domains/agent-experience-and-reporting/domain-specification.md"
+        capabilities:
+          - id: "CAP-APP-AGT-001"
+            slug: "agent-run-and-report-portal"
+            path: "docs/application-plane/domains/agent-experience-and-reporting/capabilities/agent-run-and-report-portal/"
+            manifest: "docs/application-plane/domains/agent-experience-and-reporting/capabilities/agent-run-and-report-portal/capability.yaml"
+            diagram_dirs:
+              - "docs/application-plane/domains/agent-experience-and-reporting/capabilities/agent-run-and-report-portal/workflows/"
+      platform-operations-and-control:
+        path: "docs/application-plane/domains/platform-operations-and-control/"
+        specification: "docs/application-plane/domains/platform-operations-and-control/domain-specification.md"
+        capabilities:
+          - id: "CAP-APP-OPS-001"
+            slug: "observability-control-and-gateway"
+            path: "docs/application-plane/domains/platform-operations-and-control/capabilities/observability-control-and-gateway/"
+            manifest: "docs/application-plane/domains/platform-operations-and-control/capabilities/observability-control-and-gateway/capability.yaml"
+            diagram_dirs:
+              - "docs/application-plane/domains/platform-operations-and-control/capabilities/observability-control-and-gateway/design/"
+              - "docs/application-plane/domains/platform-operations-and-control/capabilities/observability-control-and-gateway/workflows/"
+              - "docs/application-plane/domains/platform-operations-and-control/capabilities/observability-control-and-gateway/security/"
+
+  intelligence_plane:
+    id: "intelligence-plane"
+    path: "docs/intelligence-plane/"
+    readme: "docs/intelligence-plane/README.md"
+    architecture_dir: "docs/intelligence-plane/architecture/"
+    decisions_dir: "docs/intelligence-plane/architecture/decisions/"
+    diagrams_dir: "docs/intelligence-plane/architecture/diagrams/"
+    shared_contracts_dir: "docs/intelligence-plane/shared-contracts/"
+    operations_dir: "docs/intelligence-plane/operations/"
+    code_roots:
+      - "src/intelligence"
+    domains:
+      agent-orchestration-and-tools:
+        path: "docs/intelligence-plane/domains/agent-orchestration-and-tools/"
+        specification: "docs/intelligence-plane/domains/agent-orchestration-and-tools/domain-specification.md"
+        capabilities:
+          - id: "CAP-INT-ORC-001"
+            slug: "market-intelligence-workflow-and-tool-gateway"
+            path: "docs/intelligence-plane/domains/agent-orchestration-and-tools/capabilities/market-intelligence-workflow-and-tool-gateway/"
+            manifest: "docs/intelligence-plane/domains/agent-orchestration-and-tools/capabilities/market-intelligence-workflow-and-tool-gateway/capability.yaml"
+            diagram_dirs:
+              - "docs/intelligence-plane/domains/agent-orchestration-and-tools/capabilities/market-intelligence-workflow-and-tool-gateway/workflows/"
+              - "docs/intelligence-plane/domains/agent-orchestration-and-tools/capabilities/market-intelligence-workflow-and-tool-gateway/data/"
+              - "docs/intelligence-plane/domains/agent-orchestration-and-tools/capabilities/market-intelligence-workflow-and-tool-gateway/security/"

@@ -1,0 +1,91 @@
+version: "2.0"
+metadata:
+  name: "FinancialMarketDataPlatform Data Ownership and Boundaries"
+  updated_at: "2026-11-16"
+  evidence_policy: "Separate AS-IS current reality from TARGET intended design per docs/governance/source-of-truth-policy.md"
+
+planes:
+  data_plane:
+    purpose: "Ingestion, event distribution, persistence, transformation and data quality"
+    source_roots: ["src/ingestion", "src/shared/contracts", "src/streaming", "src/lakehouse"]
+    docs_root: "docs/data-plane/"
+    forbidden_dependencies: ["src/intelligence", "src/serving"]
+  application_control_plane:
+    purpose: "API serving, IAM, control metadata, platform configuration, and browser SPA"
+    source_roots: ["src/serving", "frontend", "src/shared/security", "deploy/postgres"]
+    docs_root: "docs/application-plane/"
+  intelligence_plane:
+    purpose: "Bounded agent orchestration and read-only analytical tools"
+    source_roots: ["src/intelligence"]
+    docs_root: "docs/intelligence-plane/"
+    access_policy: "Read-only market data through ControlledToolGateway; no arbitrary SQL"
+
+technology_ownership:
+  collectors:
+    owner_role: "streaming-data-engineer"
+    paths: ["src/ingestion", "docs/data-plane/domains/market-data-ingestion/"]
+    responsibilities: ["provider transport", "normalization", "rate limits", "watermark-aware backfill"]
+  event_contracts:
+    owner_role: "data-engineer"
+    paths: ["src/shared/contracts", "docs/data-plane/shared-contracts/data-contract.yaml", "docs/data-plane/shared-contracts/asyncapi.yaml"]
+    responsibilities: ["versioning", "schema compatibility", "natural keys", "partition keys"]
+  kafka_streaming:
+    owner_role: "streaming-data-engineer"
+    paths: ["src/streaming", "docker-compose.yml", "deploy/kafka", "docs/data-plane/domains/event-streaming/"]
+    responsibilities: ["topics", "consumer groups", "offset semantics", "DLQ", "backpressure"]
+  hot_state:
+    owner_role: "data-engineer"
+    paths: ["src/streaming/consumers/hot_redis.py", "docs/data-plane/domains/event-streaming/capabilities/realtime-hot-state-and-olap-projection/"]
+    datastore: "Redis"
+  olap:
+    owner_role: "analytics-engineer"
+    paths: ["deploy/clickhouse", "src/streaming/consumers/analytics_ch.py", "docs/data-plane/domains/event-streaming/capabilities/realtime-hot-state-and-olap-projection/"]
+    datastore: "ClickHouse"
+  lakehouse:
+    owner_role: "lakehouse-engineer"
+    paths: ["src/lakehouse/bronze", "src/lakehouse/silver", "src/lakehouse/catalog", "src/lakehouse/orchestration", "deploy/iceberg", "deploy/object-storage", "docs/data-plane/domains/lakehouse-analytics/"]
+    storage: ["MinIO", "Parquet", "Apache Iceberg"]
+    layer_owners:
+      bronze: "source-preserving append-only archive"
+      silver: "PySpark standardization and deduplication"
+      gold: "dbt Core curated business/analytical models"
+  analytical_models:
+    owner_role: "analytics-engineer"
+    paths: ["src/lakehouse/gold", "src/lakehouse/gold/dbt", "docs/data-plane/domains/lakehouse-analytics/"]
+    responsibilities: ["Gold semantic definitions", "incremental models", "data tests"]
+  data_quality:
+    owner_role: "data-quality-governance-engineer"
+    paths: ["src/lakehouse/quality", "tests/data_quality", "docs/data-plane/domains/lakehouse-analytics/capabilities/medallion-lakehouse-and-quality-gates/quality/", "docs/data-plane/operations/test-plan.md"]
+  platform_operations:
+    owner_role: "dataops-engineer"
+    paths: ["deploy", "docker-compose.yml", ".github/workflows", "docs/data-plane/operations/", "docs/application-plane/operations/", "docs/intelligence-plane/operations/"]
+
+contracts:
+  canonical_event_envelope: "EventEnvelopeV1"
+  canonical_topic_namespace: "market.raw.*.v1"
+  dead_letter_topic: "market.dlq.v1"
+  anomaly_topic: "market.anomalies.v1"
+  timestamp_standard: "timezone-aware UTC; preserve exchange_event_time and ingested_at separately"
+  numeric_standard: "Decimal for financial persistence and exact calculations"
+  delivery_assumption: "At-least-once paths must tolerate duplicates; do not assert end-to-end exactly-once without proof"
+
+medallion:
+  bronze:
+    immutable: true
+    transformation_owner: "lakehouse-engineer"
+  silver:
+    deduplication_required: true
+    transformation_engine: "PySpark"
+  gold:
+    transformation_engine: "dbt Core"
+    transformation_owner: "analytics-engineer"
+
+quality_requirements:
+  baseline: ["schema_validity", "completeness", "uniqueness", "freshness", "financial_invariants", "lineage"]
+  critical_failure_action: "block promotion or trusted serving and preserve validation evidence"
+
+implementation_state_policy:
+  implementation_statuses: ["PLANNED", "NOT_IMPLEMENTED", "SIMULATED", "PARTIALLY_IMPLEMENTED", "IMPLEMENTED", "VERIFIED", "NOT_APPLICABLE"]
+  uncertainty_tags: ["[ASSUMPTION]", "[OPEN]", "NEEDS_CLARIFICATION", "BLOCKED"]
+  require_evidence_paths: true
+  runtime_claim_requires: ["implementation", "configuration", "test or runtime evidence"]
